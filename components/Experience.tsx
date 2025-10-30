@@ -80,7 +80,7 @@ export default function Experience() {
 
             {experiences.map((exp, index) => (
               <motion.div
-                key={index}
+                key={exp.type}
                 initial={{ opacity: 0, x: -50 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
                 transition={{ 
@@ -147,12 +147,12 @@ export default function Experience() {
                     </div>
                   </div>
                   <ul className="space-y-2 ml-14">
-                    {exp.description.map((item, i) => (
+                    {exp.description.map((item) => (
                       <li
-                        key={i}
+                        key={item}
                         className="text-gray-600 dark:text-gray-400 flex items-start"
                       >
-                        <span className="text-primary-600 dark:text-primary-400 mr-2">▹</span>
+                        <span className="text-primary-600 dark:text-primary-400 mr-2">&#9655;</span>
                         {item}
                       </li>
                     ))}

@@ -29,7 +29,11 @@ export default function About() {
   ]
 
   return (
-    <section id="about" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50">
+    <section
+      id="about"
+      ref={ref}
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50"
+    >
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -50,8 +54,7 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-              Hello! I'm
-              {' '}
+              Hello! I&apos;m{" "}
               <span className="relative inline-block group">
                 <span className="relative z-10 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent font-bold cursor-pointer">
                   Darshan
@@ -66,24 +69,28 @@ export default function About() {
               </span>
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-              I'm a dedicated software developer and master's student at{' '}
+              I&apos;m a dedicated software developer and master&apos;s student
+              at{" "}
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 Northeastern University, Boston
               </span>
-              . My journey in software development has been driven by a passion for creating
-              impactful solutions and continuously learning new technologies.
+              {". "}My journey in software development has been driven by a
+              passion for creating impactful solutions and continuously learning
+              new technologies.
             </p>
             <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-              Currently, I'm actively seeking{' '}
+              Currently, I&apos;m actively seeking{" "}
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 coop opportunities
-              </span>
-              {' '}that will allow me to apply my technical skills in a professional environment,
-              collaborate with experienced teams, and contribute to meaningful projects.
+              </span>{" "}
+              that will allow me to apply my technical skills in a professional
+              environment, collaborate with experienced teams, and contribute to
+              meaningful projects.
             </p>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              When I'm not coding, I enjoy exploring new technologies, contributing to open-source
-              projects, and staying updated with the latest trends in software engineering.
+              When I&apos;m not coding, I enjoy exploring new technologies,
+              contributing to open-source projects, and staying updated with the
+              latest trends in software engineering.
             </p>
           </motion.div>
 
@@ -96,12 +103,14 @@ export default function About() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">Education</h4>
-                <p className="opacity-90">Master's in Computer Science</p>
+                <p className="opacity-90">Master&apos;s in Computer Science</p>
                 <p className="opacity-90">Northeastern University, Boston</p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Status</h4>
-                <p className="opacity-90">Actively seeking coop opportunities</p>
+                <p className="opacity-90">
+                  Actively seeking coop opportunities
+                </p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Location</h4>
@@ -126,12 +135,14 @@ export default function About() {
               <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
                 {highlight.title}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">{highlight.description}</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {highlight.description}
+              </p>
             </motion.div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }
 

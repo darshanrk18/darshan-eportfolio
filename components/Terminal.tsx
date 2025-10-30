@@ -19,24 +19,21 @@ export default function Terminal({ commands, delay = 100 }: TerminalProps) {
     let charIndex = 0
     setDisplayText('')
 
+    const handleNextCommand = () => {
+      if (currentCommandIndex < commands.length - 1) {
+        setCurrentCommandIndex((prev) => prev + 1)
+      } else {
+        setTimeout(() => setCurrentCommandIndex(0), 2000)
+      }
+    }
+
     const typingInterval = setInterval(() => {
       if (charIndex < command.length) {
         setDisplayText(command.slice(0, charIndex + 1))
         charIndex++
       } else {
         clearInterval(typingInterval)
-        // Wait before next command
-        const nextCommand = () => {
-          if (currentCommandIndex < commands.length - 1) {
-            setCurrentCommandIndex((prev) => prev + 1)
-          } else {
-            // Loop back to first command
-            setTimeout(() => {
-              setCurrentCommandIndex(0)
-            }, 2000)
-          }
-        }
-        setTimeout(nextCommand, 2000)
+        setTimeout(handleNextCommand, 2000)
       }
     }, delay)
 
