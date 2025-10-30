@@ -2,7 +2,7 @@
 
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
-import { FiCode, FiGraduationCap, FiTarget } from 'react-icons/fi'
+import { FiCode, FiBook, FiTarget } from 'react-icons/fi'
 
 export default function About() {
   const [ref, inView] = useInView({
@@ -17,7 +17,7 @@ export default function About() {
       description: 'Passionate about building scalable, efficient, and user-friendly applications.',
     },
     {
-      icon: FiGraduationCap,
+      icon: FiBook,
       title: 'Master\'s Student',
       description: 'Pursuing advanced education in Computer Science at Northeastern University.',
     },
@@ -50,7 +50,20 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-              Hello! I'm Darshan
+              Hello! I'm
+              {' '}
+              <span className="relative inline-block group">
+                <span className="relative z-10 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent font-bold cursor-pointer">
+                  Darshan
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-300 -z-10">
+                  Darshan
+                </span>
+                <motion.span
+                  className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
+                  whileHover={{ scaleX: 1 }}
+                />
+              </span>
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
               I'm a dedicated software developer and master's student at{' '}

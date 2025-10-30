@@ -9,7 +9,6 @@ import {
   SiNextdotjs,
   SiNodedotjs,
   SiPython,
-  SiJava,
   SiGit,
   SiDocker,
   SiMongodb,
@@ -19,6 +18,7 @@ import {
   SiHtml5,
   SiCss3,
 } from 'react-icons/si'
+import { FiCode } from 'react-icons/fi'
 
 export default function Skills() {
   const [ref, inView] = useInView({
@@ -44,7 +44,7 @@ export default function Skills() {
       skills: [
         { name: 'Node.js', icon: SiNodedotjs },
         { name: 'Python', icon: SiPython },
-        { name: 'Java', icon: SiJava },
+        { name: 'Java', icon: FiCode },
       ],
     },
     {

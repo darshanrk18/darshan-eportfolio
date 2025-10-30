@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiMail, FiDownload } from 'react-icons/fi'
 import { useInView } from 'react-intersection-observer'
+import Terminal from './Terminal'
 
 export default function Hero() {
   const [ref, inView] = useInView({
@@ -59,6 +59,24 @@ export default function Hero() {
             </span>
             {' '}seeking exciting coop opportunities to apply my skills and continue growing as a software engineer.
           </motion.p>
+
+          {/* Terminal Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 1.2 }}
+            className="mb-12"
+          >
+            <Terminal
+              commands={[
+                'git commit -m "Building the future, one line at a time"',
+                'npm run build',
+                'echo "Looking for my next opportunity..."',
+                'python -c "print(\'Hello, Coop Opportunities!\')"',
+              ]}
+              delay={80}
+            />
+          </motion.div>
 
           <motion.div
             className="flex flex-wrap justify-center gap-4 mb-12"

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { useTheme } from './ThemeProvider'
 import { FiMoon, FiSun, FiMenu, FiX } from 'react-icons/fi'
 
@@ -46,13 +47,21 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <a
+          <motion.a
             href="#home"
             onClick={(e) => handleNavClick(e, '#home')}
-            className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent"
+            className="relative text-2xl md:text-3xl font-bold cursor-pointer group"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            DK
-          </a>
+            <span className="relative z-10 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent">
+              DK
+            </span>
+            <span className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300">
+              DK
+            </span>
+            <span className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-primary-400 opacity-0 group-hover:opacity-30 blur-lg transition-opacity duration-300 -z-10"></span>
+          </motion.a>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">

@@ -81,15 +81,49 @@ export default function Experience() {
             {experiences.map((exp, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -50 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="relative mb-12 pl-20"
+                transition={{ 
+                  duration: 0.8, 
+                  delay: index * 0.3,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  x: 10,
+                  transition: { duration: 0.2 }
+                }}
+                className="relative mb-12 pl-20 group"
               >
-                {/* Timeline dot */}
-                <div className="absolute left-6 top-2 w-4 h-4 bg-primary-600 rounded-full border-4 border-white dark:border-gray-900"></div>
+                {/* Timeline dot with animation */}
+                <motion.div 
+                  className="absolute left-6 top-2 w-4 h-4 bg-primary-600 rounded-full border-4 border-white dark:border-gray-900 z-10"
+                  initial={{ scale: 0 }}
+                  animate={inView ? { scale: 1 } : {}}
+                  transition={{ duration: 0.5, delay: index * 0.3 + 0.3 }}
+                  whileHover={{ scale: 1.5, boxShadow: "0 0 20px rgba(14, 165, 233, 0.6)" }}
+                />
+                {/* Animated pulse ring */}
+                <motion.div
+                  className="absolute left-6 top-2 w-4 h-4 bg-primary-600 rounded-full opacity-0 group-hover:opacity-30"
+                  animate={inView ? {
+                    scale: [1, 2, 2.5],
+                    opacity: [0.3, 0.1, 0]
+                  } : {}}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity,
+                    delay: index * 0.3 + 1
+                  }}
+                />
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                <motion.div 
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-transparent group-hover:border-primary-500/50 transition-all duration-300"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: index * 0.3 + 0.2 }}
+                >
                   <div className="flex items-start mb-4">
                     <span className="text-3xl mr-4">{exp.icon}</span>
                     <div className="flex-1">
@@ -123,7 +157,7 @@ export default function Experience() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </div>

@@ -29,6 +29,24 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Hide default cursor on desktop only */
+@media (min-width: 768px) {
+  * {
+    cursor: none !important;
+  }
+  
+  a, button, input, textarea, select {
+    cursor: none !important;
+  }
+}
+
+/* Mobile devices should show normal cursor */
+@media (max-width: 767px) {
+  * {
+    cursor: auto !important;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
