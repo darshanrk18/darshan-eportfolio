@@ -35,7 +35,7 @@ export default function Hero() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Hi, I'm Darshan Konnur
+            Hi, I&apos;m Darshan Konnur
           </motion.h1>
 
           <motion.h2
@@ -53,11 +53,12 @@ export default function Hero() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Master's student at{' '}
+            Master&apos;s student at{" "}
             <span className="font-semibold text-primary-600 dark:text-primary-400">
               Northeastern University, Boston
-            </span>
-            {' '}seeking exciting coop opportunities to apply my skills and continue growing as a software engineer.
+            </span>{" "}
+            seeking exciting coop opportunities to apply my skills and continue
+            growing as a software engineer.
           </motion.p>
 
           {/* Terminal Animation */}
@@ -70,9 +71,9 @@ export default function Hero() {
             <Terminal
               commands={[
                 'git commit -m "Building the future, one line at a time"',
-                'npm run build',
+                "npm run build",
                 'echo "Looking for my next opportunity..."',
-                'python -c "print(\'Hello, Coop Opportunities!\')"',
+                "python -c \"print('Hello, Coop Opportunities!')\"",
               ]}
               delay={80}
             />
@@ -123,6 +124,6 @@ export default function Hero() {
         </motion.div>
       </div>
     </section>
-  )
+  );
 }
 
