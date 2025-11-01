@@ -41,8 +41,8 @@ export default function About() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-            About Me
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white font-mono">
+            {'// AboutMe'}
           </h2>
           <div className="w-24 h-1 bg-primary-600 mx-auto mb-8"></div>
         </motion.div>

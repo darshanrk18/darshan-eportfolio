@@ -67,7 +67,11 @@ export default function Contact() {
   ]
 
   return (
-    <section id="contact" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50">
+    <section
+      id="contact"
+      ref={ref}
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50"
+    >
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -75,13 +79,14 @@ export default function Contact() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-            Get In Touch
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white font-mono">
+            {"// Contact"}
           </h2>
           <div className="w-24 h-1 bg-primary-600 mx-auto mb-8"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            I'm currently seeking coop opportunities and would love to hear from you. Whether you
-            have a question or just want to connect, feel free to reach out!
+            I&apos;m currently seeking coop opportunities and would love to hear
+            from you. Whether you have a question or just want to connect, feel
+            free to reach out!
           </p>
         </motion.div>
 
@@ -155,7 +160,7 @@ export default function Contact() {
                 type="submit"
                 className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {submitted ? 'Message Sent!' : 'Send Message'}
+                {submitted ? "Message Sent!" : "Send Message"}
               </button>
             </form>
           </motion.div>
@@ -176,16 +181,24 @@ export default function Contact() {
                   <a
                     key={info.label}
                     href={info.href}
-                    target={info.href.startsWith('http') ? '_blank' : undefined}
-                    rel={info.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    target={info.href.startsWith("http") ? "_blank" : undefined}
+                    rel={
+                      info.href.startsWith("http")
+                        ? "noopener noreferrer"
+                        : undefined
+                    }
                     className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
                   >
                     <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-colors">
                       <info.icon className="w-6 h-6 text-primary-600 dark:text-primary-400 group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{info.label}</p>
-                      <p className="text-gray-600 dark:text-gray-400">{info.value}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {info.label}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {info.value}
+                      </p>
                     </div>
                   </a>
                 ))}
@@ -193,17 +206,20 @@ export default function Contact() {
             </div>
 
             <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl p-8 text-white">
-              <h3 className="text-2xl font-semibold mb-4">Looking for Coop Opportunities</h3>
+              <h3 className="text-2xl font-semibold mb-4">
+                Looking for Coop Opportunities
+              </h3>
               <p className="opacity-90 leading-relaxed">
-                I'm actively seeking coop opportunities where I can contribute my skills and learn
-                from experienced teams. If you're looking for a motivated software developer ready
-                to make an impact, let's connect!
+                I&apos;m actively seeking coop opportunities where I can
+                contribute my skills and learn from experienced teams. If
+                you&apos;re looking for a motivated software developer ready to
+                make an impact, let&apos;s connect!
               </p>
             </div>
           </motion.div>
         </div>
       </div>
     </section>
-  )
+  );
 }
 

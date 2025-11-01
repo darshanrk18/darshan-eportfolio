@@ -67,8 +67,8 @@ export default function Experience() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-            Experience & Education
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white font-mono">
+            {'// Experience'}
           </h2>
           <div className="w-24 h-1 bg-primary-600 mx-auto mb-8"></div>
         </motion.div>

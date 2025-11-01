@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiMail, FiDownload } from 'react-icons/fi'
 import { useInView } from 'react-intersection-observer'
 import Terminal from './Terminal'
+import LetterAnimation from './LetterAnimation'
 
 export default function Hero() {
   const [ref, inView] = useInView({
@@ -29,14 +30,21 @@ export default function Hero() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <motion.h1
-            className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 bg-clip-text text-transparent"
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-6"
           >
-            Hi, I&apos;m Darshan Konnur
-          </motion.h1>
+            <h1 className="text-5xl md:text-7xl font-bold mb-2">
+              <span className="text-gray-700 dark:text-gray-300">Hi, I&apos;m </span>
+              <LetterAnimation
+                text="Darshan Konnur"
+                delay={200}
+                className="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 bg-clip-text text-transparent font-mono"
+              />
+            </h1>
+          </motion.div>
 
           <motion.h2
             className="text-2xl md:text-3xl font-semibold mb-4 text-gray-700 dark:text-gray-300"

@@ -6,12 +6,12 @@ import { useTheme } from './ThemeProvider'
 import { FiMoon, FiSun, FiMenu, FiX } from 'react-icons/fi'
 
 const navItems = [
-  { href: '#home', label: 'Home' },
-  { href: '#about', label: 'About' },
-  { href: '#skills', label: 'Skills' },
-  { href: '#projects', label: 'Projects' },
-  { href: '#experience', label: 'Experience' },
-  { href: '#contact', label: 'Contact' },
+  { href: '#home', label: '</Home>' },
+  { href: '#about', label: '</AboutMe>' },
+  { href: '#skills', label: '</Skills>' },
+  { href: '#projects', label: '</Projects>' },
+  { href: '#experience', label: '</Experience>' },
+  { href: '#contact', label: '</Contact>' },
 ]
 
 export default function Navbar() {
@@ -70,7 +70,7 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 {item.label}
               </a>
@@ -123,7 +123,7 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className="block text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="block text-base font-mono font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 {item.label}
               </a>
