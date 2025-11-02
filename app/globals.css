@@ -2,6 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Name Gradient and Breathing Effect */
+.name-gradient {
+  background: linear-gradient(
+    135deg,
+    #3b82f6 0%,
+    #8b5cf6 50%,
+    #ec4899 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  animation: gradient-breathe 5s ease-in-out infinite;
+}
+
+.dark .name-gradient {
+  background: linear-gradient(
+    135deg,
+    #60a5fa 0%,
+    #a78bfa 50%,
+    #f472b6 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes gradient-breathe {
+  0% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+  25% {
+    background-position: 50% 0%;
+    filter: brightness(1.2);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: brightness(1.3);
+  }
+  75% {
+    background-position: 50% 100%;
+    filter: brightness(1.2);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -20,6 +72,88 @@ body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography System for Software Developer Portfolio */
+
+/* Main headings (h1) - Developer name - Monospace for tech feel */
+h1 {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Section headings (h2, h3) - Monospace for developer aesthetic */
+h2, h3 {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Section headers with // comments - Already monospace */
+h2.font-mono {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 700;
+}
+
+/* Body text - Inter for readability */
+p, li, span:not(.font-mono) {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Links - Monospace for developer feel, especially nav links with HTML tags */
+a {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* Navigation links specifically - Monospace for HTML tag style */
+nav a {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 500;
+}
+
+/* Buttons - Monospace for developer aesthetic */
+button {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Code, terminal, tech elements - JetBrains Mono */
+code, pre, .font-mono {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-variant-ligatures: none;
+}
+
+/* Navigation - Monospace for developer theme */
+nav {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+  font-weight: 500;
+}
+
+/* Footer - Monospace for consistency */
+footer {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+}
+
+/* Footer links - Monospace */
+footer a {
+  font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
+}
+
+/* Input fields and form elements - Clean sans-serif for readability */
+input, textarea, select {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Labels - Inter for readability */
+label {
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 .dark body {
