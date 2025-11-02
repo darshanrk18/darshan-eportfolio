@@ -2,8 +2,9 @@
 
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
-import { FiMail, FiLinkedin, FiGithub, FiMapPin } from 'react-icons/fi'
-import { useState } from 'react'
+import Image from 'next/image'
+import { FiMail, FiLinkedin, FiGithub, FiMapPin, FiDownload, FiX } from 'react-icons/fi'
+import { useState, useEffect, useRef } from 'react'
 import { CONTACT_INFO } from '@/lib/constants'
 
 export default function Contact() {
@@ -19,6 +20,22 @@ export default function Contact() {
   })
 
   const [submitted, setSubmitted] = useState(false)
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    if (isResumeModalOpen) {
+      dialogRef.current?.showModal()
+      document.body.style.overflow = 'hidden'
+    } else {
+      dialogRef.current?.close()
+      document.body.style.overflow = 'unset'
+    }
+  }, [isResumeModalOpen])
+
+  const handleBackdropClick = () => {
+    setIsResumeModalOpen(false)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -210,16 +227,89 @@ export default function Contact() {
               <h3 className="text-2xl font-semibold mb-4">
                 Looking for Coop Opportunities
               </h3>
-              <p className="opacity-90 leading-relaxed">
+              <p className="opacity-90 leading-relaxed mb-6">
                 I&apos;m actively seeking coop opportunities where I can
                 contribute my skills and learn from experienced teams. If
                 you&apos;re looking for a motivated software developer ready to
                 make an impact, let&apos;s connect!
               </p>
+              <button
+                onClick={() => setIsResumeModalOpen(true)}
+                className="w-full px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 border-2 border-white/30"
+              >
+                <FiDownload className="w-5 h-5" />
+                View Resume
+              </button>
             </div>
           </motion.div>
         </div>
       </div>
+
+      {/* Resume Modal */}
+      {isResumeModalOpen && (
+        <dialog
+          ref={dialogRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop:bg-black/50 backdrop:backdrop-blur-sm"
+          onCancel={(e) => {
+            e.preventDefault()
+            setIsResumeModalOpen(false)
+          }}
+        >
+          <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={handleBackdropClick} />
+        <div
+          className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl relative"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Download Resume
+            </h3>
+              <button
+                onClick={() => setIsResumeModalOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close"
+              >
+                <FiX className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center space-y-6">
+              {/* QR Code */}
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-lg">
+                <Image
+                  src="/resume/my_resume_qr.png"
+                  alt="Scan to view resume"
+                  width={200}
+                  height={200}
+                  className="w-50 h-50"
+                />
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                Scan QR code to view resume online
+              </p>
+
+              {/* Divider */}
+              <div className="w-full flex items-center gap-4">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">OR</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+
+              {/* Download Button */}
+              <a
+                href="/resume/Darshan_Ravindra_Konnur_Google_SWE_MS.pdf"
+                download="Darshan_Ravindra_Konnur_Resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                onClick={() => setIsResumeModalOpen(false)}
+              >
+                <FiDownload className="w-5 h-5" />
+                Download PDF
+              </a>
+            </div>
+          </div>
+        </dialog>
+      )}
     </section>
   );
 }
