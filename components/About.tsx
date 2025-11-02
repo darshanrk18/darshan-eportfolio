@@ -3,6 +3,7 @@
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
 import { FiCode, FiBook, FiTarget } from 'react-icons/fi'
+import Image from 'next/image'
 import { FULL_NAME } from '@/lib/constants'
 
 export default function About() {
@@ -48,11 +49,12 @@ export default function About() {
           <div className="w-24 h-1 bg-primary-600 mx-auto mb-8"></div>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+        <div className="grid md:grid-cols-2 gap-0 items-center mb-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-left"
           >
             <h3 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
               Hello! I&apos;m{" "}
@@ -97,30 +99,54 @@ export default function About() {
             initial={{ opacity: 0, x: 20 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-8 text-white shadow-2xl"
+            className="flex justify-center"
           >
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">Current Education</h4>
-                <p className="opacity-90">MS in Computer Science</p>
-                <p className="opacity-90">Northeastern University, Boston</p>
-                <p className="opacity-90 mt-1"></p>
-                <p className="opacity-75 text-sm mt-1">Jan 2025 -- Present</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Previous Education</h4>
-                <p className="opacity-90">BE in Computer Science</p>
-                <p className="opacity-90">MS Ramaiah Institute of Technology</p>
-                <p className="opacity-90 mt-1"></p>
-                <p className="opacity-75 text-sm mt-1">Aug 2017 -- Jul 2021</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Location</h4>
-                <p className="opacity-90">Boston, Massachusetts, USA</p>
+            {/* Professional Photo */}
+            <div className="relative w-full max-w-xs sm:max-w-sm aspect-square sm:aspect-[4/5] animated-frame">
+              <div className="relative w-full h-full overflow-hidden">
+                <Image
+                  src="/professional-photo/professional_pic.jpg"
+                  alt={`${FULL_NAME.split(' ')[0]} - Professional Photo`}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 640px) 250px, (max-width: 768px) 280px, 320px"
+                />
               </div>
             </div>
           </motion.div>
         </div>
+
+        {/* Education Info Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mb-16"
+        >
+          <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 sm:p-8 text-white shadow-2xl max-w-4xl mx-auto">
+            <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
+              <div>
+                <h4 className="font-semibold mb-2">Current Education</h4>
+                <p className="opacity-90 text-sm sm:text-base">MS in Computer Science</p>
+                <p className="opacity-90 text-sm sm:text-base">Northeastern University, Boston</p>
+                <p className="opacity-90 mt-1 text-sm sm:text-base"></p>
+                <p className="opacity-75 text-xs sm:text-sm mt-1">Jan 2025 -- Present</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Previous Education</h4>
+                <p className="opacity-90 text-sm sm:text-base">BE in Computer Science</p>
+                <p className="opacity-90 text-sm sm:text-base">MS Ramaiah Institute of Technology</p>
+                <p className="opacity-90 mt-1 text-sm sm:text-base"></p>
+                <p className="opacity-75 text-xs sm:text-sm mt-1">Aug 2017 -- Jul 2021</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Location</h4>
+                <p className="opacity-90 text-sm sm:text-base">Boston, Massachusetts, USA</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {highlights.map((highlight, index) => (
