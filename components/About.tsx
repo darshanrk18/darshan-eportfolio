@@ -2,7 +2,7 @@
 
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
-import { FiCode, FiBook, FiTarget } from 'react-icons/fi'
+import { FiCode, FiBook, FiTarget, FiMapPin, FiAward, FiCalendar } from 'react-icons/fi'
 import Image from 'next/image'
 import { FULL_NAME } from '@/lib/constants'
 
@@ -44,7 +44,7 @@ export default function About() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white font-mono">
-            {'// AboutMe'}
+            {"// AboutMe"}
           </h2>
           <div className="w-24 h-1 bg-primary-600 mx-auto mb-8"></div>
         </motion.div>
@@ -60,10 +60,10 @@ export default function About() {
               Hello! I&apos;m{" "}
               <span className="relative inline-block group">
                 <span className="relative z-10 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent font-bold cursor-pointer">
-                  {FULL_NAME.split(' ')[0]}
+                  {FULL_NAME.split(" ")[0]}
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-300 -z-10">
-                  {FULL_NAME.split(' ')[0]}
+                  {FULL_NAME.split(" ")[0]}
                 </span>
                 <motion.span
                   className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
@@ -76,22 +76,28 @@ export default function About() {
               at{" "}
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 Northeastern University, Boston
-              </span>
-              {" "}(GPA: 3.78/4.0). With experience as a Digital Workplace Engineer at Schneider Electric,
-              I&apos;ve developed full-stack applications serving 10k+ users and automated processes that reduced manual workload by 60%.
+              </span>{" "}
+              (GPA: 3.78/4.0). With experience as a Digital Workplace Engineer
+              at Schneider Electric, I&apos;ve developed full-stack applications
+              serving 10k+ users and automated processes that reduced manual
+              workload by 60%.
             </p>
             <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-              Currently, I serve as a Graduate Teaching Assistant for CS5010: Programming Design Paradigm,
-              mentoring 300+ MSCS students in Java OOP, design patterns, and software engineering best practices.
+              Currently, I serve as a Graduate Teaching Assistant for CS5010:
+              Programming Design Paradigm, mentoring 300+ MSCS students in Java
+              OOP, design patterns, and software engineering best practices.
               I&apos;m actively seeking{" "}
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 coop opportunities
               </span>{" "}
-              to further apply my technical skills in cloud computing, DevOps, and full-stack development.
+              to further apply my technical skills in cloud computing, DevOps,
+              and full-stack development.
             </p>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              My expertise spans Python, Java, JavaScript/TypeScript, React, Node.js, Docker, Kubernetes, AWS,
-              and various databases. I&apos;m passionate about building scalable systems and contributing to meaningful projects.
+              My expertise spans Python, Java, JavaScript/TypeScript, React,
+              Node.js, Docker, Kubernetes, AWS, and various databases. I&apos;m
+              passionate about building scalable systems and contributing to
+              meaningful projects.
             </p>
           </motion.div>
 
@@ -106,7 +112,7 @@ export default function About() {
               <div className="relative w-full h-full overflow-hidden">
                 <Image
                   src="/professional-photo/professional_pic.jpg"
-                  alt={`${FULL_NAME.split(' ')[0]} - Professional Photo`}
+                  alt={`${FULL_NAME.split(" ")[0]} - Professional Photo`}
                   fill
                   className="object-cover"
                   priority
@@ -117,34 +123,117 @@ export default function About() {
           </motion.div>
         </div>
 
-        {/* Education Info Card */}
+        {/* Education & Location Info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mb-16"
         >
-          <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 sm:p-8 text-white shadow-2xl max-w-4xl mx-auto">
-            <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
-              <div>
-                <h4 className="font-semibold mb-2">Current Education</h4>
-                <p className="opacity-90 text-sm sm:text-base">MS in Computer Science</p>
-                <p className="opacity-90 text-sm sm:text-base">Northeastern University, Boston</p>
-                <p className="opacity-90 mt-1 text-sm sm:text-base">GPA: 3.78/4.0</p>
-                <p className="opacity-75 text-xs sm:text-sm mt-1">Jan 2025 -- Present</p>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Current Education */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-primary-200 dark:border-primary-900/30 hover:border-primary-400 dark:hover:border-primary-700"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                  <FiAward className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Current Education
+                </h4>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">Previous Education</h4>
-                <p className="opacity-90 text-sm sm:text-base">BE in Computer Science</p>
-                <p className="opacity-90 text-sm sm:text-base">MS Ramaiah Institute of Technology</p>
-                <p className="opacity-90 mt-1 text-sm sm:text-base">GPA: 8.78/10.0</p>
-                <p className="opacity-75 text-xs sm:text-sm mt-1">Aug 2017 -- Jul 2021</p>
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  MS in Computer Science
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Northeastern University
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Boston, MA
+                </p>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <FiCalendar className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    Jan 2025 - Present
+                  </span>
+                </div>
+                <p className="text-sm font-mono text-primary-600 dark:text-primary-400">
+                  GPA: 3.78/4.0
+                </p>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">Location</h4>
-                <p className="opacity-90 text-sm sm:text-base">Boston, Massachusetts, USA</p>
+            </motion.div>
+
+            {/* Previous Education */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                  <FiBook className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Previous Education
+                </h4>
               </div>
-            </div>
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  BE in Computer Science
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  MS Ramaiah Institute of Technology
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Bengaluru, India
+                </p>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <FiCalendar className="w-4 h-4 text-gray-500 dark:text-gray-500" />
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    Aug 2017 - Jul 2021
+                  </span>
+                </div>
+                <p className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                  GPA: 8.78/10.0
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Location */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.9 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                  <FiMapPin className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Location
+                </h4>
+              </div>
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  Boston
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Massachusetts, USA
+                </p>
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">
+                    Available for on-site & remote opportunities
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 

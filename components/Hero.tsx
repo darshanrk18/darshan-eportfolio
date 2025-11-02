@@ -36,7 +36,7 @@ export default function Hero() {
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-4">
                 Hey, I&apos;m
               </p>
-              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-mono whitespace-nowrap text-primary-600 dark:text-primary-400">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-mono whitespace-nowrap name-gradient name-breathe">
                 {FULL_NAME}
               </h1>
             </div>
