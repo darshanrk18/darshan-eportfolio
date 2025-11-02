@@ -3,6 +3,7 @@
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
 import { FiCode, FiBook, FiTarget } from 'react-icons/fi'
+import { FULL_NAME } from '@/lib/constants'
 
 export default function About() {
   const [ref, inView] = useInView({
@@ -32,7 +33,7 @@ export default function About() {
     <section
       id="about"
       ref={ref}
-      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50"
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50 overflow-x-hidden w-full"
     >
       <div className="max-w-7xl mx-auto">
         <motion.div
@@ -57,10 +58,10 @@ export default function About() {
               Hello! I&apos;m{" "}
               <span className="relative inline-block group">
                 <span className="relative z-10 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent font-bold cursor-pointer">
-                  Darshan
+                  {FULL_NAME.split(' ')[0]}
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-300 -z-10">
-                  Darshan
+                  {FULL_NAME.split(' ')[0]}
                 </span>
                 <motion.span
                   className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
@@ -74,23 +75,21 @@ export default function About() {
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 Northeastern University, Boston
               </span>
-              {". "}My journey in software development has been driven by a
-              passion for creating impactful solutions and continuously learning
-              new technologies.
+              {" "}. With experience as a Digital Workplace Engineer at Schneider Electric,
+              I&apos;ve developed full-stack applications serving 10k+ users and automated processes that reduced manual workload by 60%.
             </p>
             <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-              Currently, I&apos;m actively seeking{" "}
+              Currently, I serve as a Graduate Teaching Assistant for CS5010: Programming Design Paradigm,
+              mentoring 300+ MSCS students in Java OOP, design patterns, and software engineering best practices.
+              I&apos;m actively seeking{" "}
               <span className="font-semibold text-primary-600 dark:text-primary-400">
                 coop opportunities
               </span>{" "}
-              that will allow me to apply my technical skills in a professional
-              environment, collaborate with experienced teams, and contribute to
-              meaningful projects.
+              to further apply my technical skills in cloud computing, DevOps, and full-stack development.
             </p>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              When I&apos;m not coding, I enjoy exploring new technologies,
-              contributing to open-source projects, and staying updated with the
-              latest trends in software engineering.
+              My expertise spans Python, Java, JavaScript/TypeScript, React, Node.js, Docker, Kubernetes, AWS,
+              and various databases. I&apos;m passionate about building scalable systems and contributing to meaningful projects.
             </p>
           </motion.div>
 
@@ -102,19 +101,22 @@ export default function About() {
           >
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2">Education</h4>
-                <p className="opacity-90">Master&apos;s in Computer Science</p>
+                <h4 className="font-semibold mb-2">Current Education</h4>
+                <p className="opacity-90">MS in Computer Science</p>
                 <p className="opacity-90">Northeastern University, Boston</p>
+                <p className="opacity-90 mt-1"></p>
+                <p className="opacity-75 text-sm mt-1">Jan 2025 -- Present</p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Status</h4>
-                <p className="opacity-90">
-                  Actively seeking coop opportunities
-                </p>
+                <h4 className="font-semibold mb-2">Previous Education</h4>
+                <p className="opacity-90">BE in Computer Science</p>
+                <p className="opacity-90">MS Ramaiah Institute of Technology</p>
+                <p className="opacity-90 mt-1"></p>
+                <p className="opacity-75 text-sm mt-1">Aug 2017 -- Jul 2021</p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Location</h4>
-                <p className="opacity-90">Boston, Massachusetts</p>
+                <p className="opacity-90">Boston, Massachusetts, USA</p>
               </div>
             </div>
           </motion.div>

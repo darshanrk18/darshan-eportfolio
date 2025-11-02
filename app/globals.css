@@ -16,6 +16,9 @@ body {
   color: var(--foreground);
   background: var(--background);
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 @layer utilities {
@@ -27,24 +30,16 @@ body {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
-/* Hide default cursor on desktop only */
-@media (min-width: 768px) {
-  * {
-    cursor: none !important;
-  }
-  
-  a, button, input, textarea, select {
-    cursor: none !important;
-  }
+/* Cursor styling for interactive elements */
+a, button, input, textarea, select, [role="button"] {
+  cursor: pointer;
 }
 
-/* Mobile devices should show normal cursor */
-@media (max-width: 767px) {
-  * {
-    cursor: auto !important;
-  }
+a:hover, button:hover {
+  cursor: pointer;
 }
 
 /* Custom scrollbar */
@@ -72,4 +67,5 @@ html {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
+
 

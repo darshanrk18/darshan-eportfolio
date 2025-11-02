@@ -4,6 +4,7 @@ import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
 import { FiMail, FiLinkedin, FiGithub, FiMapPin } from 'react-icons/fi'
 import { useState } from 'react'
+import { CONTACT_INFO } from '@/lib/constants'
 
 export default function Contact() {
   const [ref, inView] = useInView({
@@ -43,25 +44,25 @@ export default function Contact() {
     {
       icon: FiMail,
       label: 'Email',
-      value: 'your.email@example.com',
-      href: 'mailto:your.email@example.com',
+      value: CONTACT_INFO.email,
+      href: `mailto:${CONTACT_INFO.email}`,
     },
     {
       icon: FiLinkedin,
       label: 'LinkedIn',
-      value: 'linkedin.com/in/yourprofile',
-      href: 'https://linkedin.com',
+      value: CONTACT_INFO.linkedin,
+      href: `https://${CONTACT_INFO.linkedin}`,
     },
     {
       icon: FiGithub,
       label: 'GitHub',
-      value: 'github.com/yourusername',
-      href: 'https://github.com',
+      value: CONTACT_INFO.github,
+      href: `https://${CONTACT_INFO.github}`,
     },
     {
       icon: FiMapPin,
       label: 'Location',
-      value: 'Boston, Massachusetts',
+      value: CONTACT_INFO.location,
       href: '#',
     },
   ]
@@ -70,7 +71,7 @@ export default function Contact() {
     <section
       id="contact"
       ref={ref}
-      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50"
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50 overflow-x-hidden w-full"
     >
       <div className="max-w-7xl mx-auto">
         <motion.div

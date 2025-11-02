@@ -1,15 +1,9 @@
 'use client'
 
-import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
+import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
-
-  const socialLinks = [
-    { icon: FiGithub, href: 'https://github.com', label: 'GitHub' },
-    { icon: FiLinkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-    { icon: FiMail, href: 'mailto:your.email@example.com', label: 'Email' },
-  ]
 
   return (
     <footer className="bg-gray-900 dark:bg-black text-gray-300 py-12">
@@ -17,7 +11,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent mb-4">
-              Darshan Konnur
+              {FULL_NAME}
             </h3>
             <p className="text-gray-400">
               Software Developer & Graduate Student at Northeastern University, Boston
@@ -51,7 +45,7 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-white">Connect</h4>
             <div className="flex space-x-4">
-              {socialLinks.map((link) => (
+              {SOCIAL_LINKS.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
@@ -68,7 +62,7 @@ export default function Footer() {
         </div>
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
           <p>
-            © {currentYear} Darshan Konnur. Built with Next.js, TypeScript, and Tailwind CSS.
+            © {currentYear} {FULL_NAME}. Built with Next.js, TypeScript, and Tailwind CSS.
           </p>
         </div>
       </div>

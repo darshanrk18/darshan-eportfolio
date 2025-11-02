@@ -4,7 +4,6 @@ import './globals.css'
 import ThemeProvider from '@/components/ThemeProvider'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import CustomCursor from '@/components/CustomCursor'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,8 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${inter.className} cursor-none`}>
-        <CustomCursor />
+      <body className={`${inter.className} overflow-x-hidden`}>
         <ThemeProvider>
           <Navbar />
           <main className="min-h-screen">

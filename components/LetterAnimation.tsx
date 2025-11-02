@@ -25,27 +25,36 @@ export default function LetterAnimation({ text, delay = 0, className = '' }: Let
   }, [currentIndex, text, delay])
 
   return (
-    <motion.span className={className}>
-      {displayedText.split('').map((letter, index) => (
-        <motion.span
-          key={`${letter}-${index}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {letter === ' ' ? '\u00A0' : letter}
-        </motion.span>
-      ))}
-      {currentIndex < text.length && (
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
-          className="inline-block"
-        >
-          |
-        </motion.span>
-      )}
-    </motion.span>
+    <span className={`relative inline-block ${className}`}>
+      {/* Reserve space for full text to prevent layout shift */}
+      <span aria-hidden="true" className="invisible whitespace-pre inline-block">
+        {text}
+        {currentIndex < text.length && '|'}
+      </span>
+      {/* Actual animated text */}
+      <span className={`absolute left-0 top-0 whitespace-pre ${className}`}>
+        {displayedText.split('').map((letter, index) => (
+          <motion.span
+            key={`${letter}-${index}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
+            className="inline-block"
+          >
+            {letter === ' ' ? '\u00A0' : letter}
+          </motion.span>
+        ))}
+        {currentIndex < text.length && (
+          <motion.span
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
+            className="inline-block ml-1"
+          >
+            |
+          </motion.span>
+        )}
+      </span>
+    </span>
   )
 }
 
