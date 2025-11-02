@@ -1,81 +1,44 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiMail, FiDownload } from 'react-icons/fi'
-import { useInView } from 'react-intersection-observer'
+import { FiDownload } from 'react-icons/fi'
 import Terminal from './Terminal'
-import LetterAnimation from './LetterAnimation'
+import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
 
 export default function Hero() {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  })
-
-  const socialLinks = [
-    { icon: FiGithub, href: 'https://github.com', label: 'GitHub' },
-    { icon: FiLinkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-    { icon: FiMail, href: 'mailto:your.email@example.com', label: 'Email' },
-  ]
 
   return (
     <section
       id="home"
-      ref={ref}
-      className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20"
+      className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-32 md:pt-40 w-full"
     >
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-6"
-          >
-            <h1 className="text-5xl md:text-7xl font-bold mb-2">
-              <span className="text-gray-700 dark:text-gray-300">Hi, I&apos;m </span>
-              <LetterAnimation
-                text="Darshan Konnur"
-                delay={200}
-                className="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 bg-clip-text text-transparent font-mono"
-              />
-            </h1>
-          </motion.div>
+      <div className="max-w-4xl mx-auto text-left w-full">
+        <div>
+          <div className="mb-6">
+            <div className="flex flex-col items-start">
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-4">
+                Hi, I&apos;m
+              </p>
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-mono whitespace-nowrap text-primary-600 dark:text-primary-400">
+                {FULL_NAME}
+              </h1>
+            </div>
+          </div>
 
-          <motion.h2
-            className="text-2xl md:text-3xl font-semibold mb-4 text-gray-700 dark:text-gray-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
+          <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
             Software Developer & Graduate Student
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl">
             Master&apos;s student at{" "}
             <span className="font-semibold text-primary-600 dark:text-primary-400">
               Northeastern University, Boston
             </span>{" "}
             seeking exciting coop opportunities to apply my skills and continue
             growing as a software engineer.
-          </motion.p>
+          </p>
 
-          {/* Terminal Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 1.2 }}
-            className="mb-12"
-          >
+          {/* Terminal */}
+          <div className="mb-12">
             <Terminal
               commands={[
                 'git commit -m "Building the future, one line at a time"',
@@ -85,17 +48,12 @@ export default function Hero() {
               ]}
               delay={80}
             />
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="flex flex-wrap justify-center gap-4 mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          >
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
             <a
               href="#contact"
-              className="px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="px-4 sm:px-6 md:px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
             >
               Get In Touch
             </a>
@@ -103,20 +61,15 @@ export default function Hero() {
               href="/resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 rounded-lg font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2"
+              className="px-4 sm:px-6 md:px-8 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 rounded-lg font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 text-sm sm:text-base"
             >
               <FiDownload className="w-5 h-5" />
               Resume
             </a>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="flex justify-center space-x-6"
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.6, delay: 1 }}
-          >
-            {socialLinks.map((link, index) => (
+          <div className="flex justify-center space-x-6">
+            {SOCIAL_LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
@@ -128,8 +81,8 @@ export default function Hero() {
                 <link.icon className="w-6 h-6" />
               </a>
             ))}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );

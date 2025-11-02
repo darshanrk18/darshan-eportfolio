@@ -49,7 +49,7 @@ export default function Terminal({ commands, delay = 100 }: TerminalProps) {
   }, [])
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-gray-900 dark:bg-black rounded-lg shadow-2xl overflow-hidden font-mono border border-gray-700">
+    <div className="w-full max-w-2xl mx-auto bg-gray-900 dark:bg-black rounded-lg shadow-2xl overflow-hidden font-mono border border-gray-700 overflow-x-auto">
       {/* Terminal Header */}
       <div className="bg-gray-800 px-4 py-2 flex items-center gap-2">
         <div className="flex gap-2">

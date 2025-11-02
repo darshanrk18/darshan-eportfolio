@@ -2,23 +2,7 @@
 
 import { useInView } from 'react-intersection-observer'
 import { motion } from 'framer-motion'
-import {
-  SiJavascript,
-  SiTypescript,
-  SiReact,
-  SiNextdotjs,
-  SiNodedotjs,
-  SiPython,
-  SiGit,
-  SiDocker,
-  SiMongodb,
-  SiPostgresql,
-  SiAmazonaws,
-  SiTailwindcss,
-  SiHtml5,
-  SiCss3,
-} from 'react-icons/si'
-import { FiCode } from 'react-icons/fi'
+import Image from 'next/image'
 
 export default function Skills() {
   const [ref, inView] = useInView({
@@ -28,39 +12,64 @@ export default function Skills() {
 
   const skillCategories = [
     {
-      title: 'Frontend',
+      title: 'Languages',
       skills: [
-        { name: 'React', icon: SiReact },
-        { name: 'Next.js', icon: SiNextdotjs },
-        { name: 'TypeScript', icon: SiTypescript },
-        { name: 'JavaScript', icon: SiJavascript },
-        { name: 'HTML5', icon: SiHtml5 },
-        { name: 'CSS3', icon: SiCss3 },
-        { name: 'Tailwind CSS', icon: SiTailwindcss },
+        { name: 'Python', icon: 'python' },
+        { name: 'Java', icon: 'java' },
+        { name: 'C/C++', icon: 'cpp' },
+        { name: 'JavaScript', icon: 'javascript' },
+        { name: 'TypeScript', icon: 'typescript' },
+        { name: 'SQL', icon: 'mysql' },
       ],
     },
     {
-      title: 'Backend',
+      title: 'Frontend & Frameworks',
       skills: [
-        { name: 'Node.js', icon: SiNodedotjs },
-        { name: 'Python', icon: SiPython },
-        { name: 'Java', icon: FiCode },
+        { name: 'React', icon: 'react' },
+        { name: 'Redux', icon: 'redux' },
+        { name: 'Next.js', icon: 'nextjs' },
+        { name: 'Node.js', icon: 'nodejs' },
+        { name: 'Express', icon: 'expressjs' },
+        { name: 'Flask', icon: 'flask' },
+        { name: 'Django', icon: 'django' },
       ],
     },
     {
-      title: 'Tools & Technologies',
+      title: 'Cloud & DevOps',
       skills: [
-        { name: 'Git', icon: SiGit },
-        { name: 'Docker', icon: SiDocker },
-        { name: 'MongoDB', icon: SiMongodb },
-        { name: 'PostgreSQL', icon: SiPostgresql },
-        { name: 'AWS', icon: SiAmazonaws },
+        { name: 'AWS', icon: 'aws' },
+        { name: 'Docker', icon: 'docker' },
+        { name: 'Kubernetes', icon: 'kubernetes' },
+        { name: 'Terraform', icon: 'terraform' },
+        { name: 'Jenkins', icon: 'jenkins' },
+        { name: 'GitHub Actions', icon: 'githubactions' },
+        { name: 'Prometheus', icon: 'prometheus' },
+        { name: 'Grafana', icon: 'grafana' },
+      ],
+    },
+    {
+      title: 'Databases',
+      skills: [
+        { name: 'MySQL', icon: 'mysql' },
+        { name: 'PostgreSQL', icon: 'postgresql' },
+        { name: 'MongoDB', icon: 'mongodb' },
+        { name: 'Redis', icon: 'redis' },
+        { name: 'Kafka', icon: 'kafka' },
+      ],
+    },
+    {
+      title: 'Tools',
+      skills: [
+        { name: 'Git', icon: 'git' },
+        { name: 'Linux', icon: 'linux' },
+        { name: 'Jira', icon: 'jira' },
+        { name: 'Confluence', icon: 'confluence' },
       ],
     },
   ]
 
   return (
-    <section id="skills" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8">
+    <section id="skills" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 overflow-x-hidden w-full">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -77,7 +86,7 @@ export default function Skills() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {skillCategories.map((category, categoryIndex) => (
             <motion.div
               key={category.title}
@@ -101,7 +110,21 @@ export default function Skills() {
                     }}
                     className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors group cursor-pointer"
                   >
-                    <skill.icon className="w-8 h-8 text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors mb-2" />
+                    <div className="w-10 h-10 mb-2 flex items-center justify-center bg-transparent rounded-lg transition-all group-hover:scale-110">
+                      <Image
+                        src={`/skill-icons/${skill.icon}.svg`}
+                        alt={skill.name}
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                        unoptimized
+                        onError={(e) => {
+                          // Fallback: try with -auto suffix
+                          const target = e.target as HTMLImageElement;
+                          target.src = `/skill-icons/${skill.icon}-auto.svg`;
+                        }}
+                      />
+                    </div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
                       {skill.name}
                     </span>
