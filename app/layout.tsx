@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
-import ThemeProvider from '@/components/ThemeProvider'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import ThemeProvider from '@/components/providers/ThemeProvider'
+import ErrorBoundary from '@/components/providers/ErrorBoundary'
+import Navbar from '@/components/features/Navbar'
+import Footer from '@/components/features/Footer'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -37,15 +38,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
-        <ThemeProvider>
-          <Navbar />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
-        </ThemeProvider>
-      </body>
+              <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
+                <ErrorBoundary>
+                  <ThemeProvider>
+                    <Navbar />
+                    <main className="min-h-screen">
+                      {children}
+                    </main>
+                    <Footer />
+                  </ThemeProvider>
+                </ErrorBoundary>
+              </body>
     </html>
   )
 }

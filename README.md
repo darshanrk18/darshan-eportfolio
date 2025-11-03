@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website built with Next.js, TypeScript, and Tailwind CSS. Designed to showcase skills, projects, and experience as a software developer and graduate student at Northeastern University.
 
-## 🚀 Features
+## Features
 
 - **Modern Design**: Clean, professional, and visually appealing interface
 - **Fully Responsive**: Optimized for all devices (mobile, tablet, desktop)
@@ -12,7 +12,7 @@ A modern, responsive portfolio website built with Next.js, TypeScript, and Tailw
 - **Type Safe**: Written in TypeScript for better code quality
 - **Industry Best Practices**: Follows modern software engineering principles
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
@@ -21,7 +21,7 @@ A modern, responsive portfolio website built with Next.js, TypeScript, and Tailw
 - **Icons**: React Icons
 - **Deployment**: Vercel (Free forever)
 
-## 📦 Installation
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -41,18 +41,18 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🔧 Configuration
+## Configuration
 
 ### Personal Information
 
 Update the following files with your personal information:
 
 1. **Components** - Update contact information, social links, and content in:
-   - `components/Hero.tsx` - Main hero section
-   - `components/About.tsx` - About section
-   - `components/Contact.tsx` - Contact form and information
-   - `components/Projects.tsx` - Your projects
-   - `components/Experience.tsx` - Your experience and education
+   - `components/features/Hero.tsx` - Main hero section
+   - `components/features/About.tsx` - About section
+   - `components/features/Contact.tsx` - Contact form and information
+   - `components/features/Projects.tsx` - Your projects
+   - `components/features/Experience.tsx` - Your experience and education
 
 2. **Metadata** - Update SEO metadata in:
    - `app/layout.tsx` - Site metadata
@@ -60,19 +60,19 @@ Update the following files with your personal information:
 ### Social Links
 
 Update social media links in:
-- `components/Hero.tsx`
-- `components/Contact.tsx`
-- `components/Footer.tsx`
+- `components/features/Hero.tsx`
+- `components/features/Contact.tsx`
+- `components/features/Footer.tsx`
 
 ### Projects
 
-Update your projects in `components/Projects.tsx` with:
+Update your projects in `components/features/Projects.tsx` with:
 - Project titles and descriptions
 - Technologies used
 - GitHub repository links
 - Live demo links (if available)
 
-## 🚀 Deployment
+## Deployment
 
 This portfolio is configured for free deployment on Vercel:
 
@@ -101,7 +101,7 @@ Your site will be automatically deployed on every push to the main branch.
 - **GitHub Pages**: Requires static export (modify `next.config.js`)
 - **Cloudflare Pages**: Free and fast CDN
 
-## 📝 Customization
+## Customization
 
 ### Colors
 
@@ -125,55 +125,86 @@ import { YourFont } from 'next/font/google'
 
 All components are modular and can be easily customized or extended.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 portfolio/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # Root layout
-│   ├── page.tsx            # Home page
-│   └── globals.css         # Global styles
-├── components/             # React components
-│   ├── Hero.tsx            # Hero section
-│   ├── About.tsx           # About section
-│   ├── Skills.tsx          # Skills section
-│   ├── Projects.tsx        # Projects section
-│   ├── Experience.tsx      # Experience section
-│   ├── Contact.tsx         # Contact section
-│   ├── Navbar.tsx          # Navigation bar
-│   ├── Footer.tsx          # Footer
-│   └── ThemeProvider.tsx   # Dark mode provider
-├── public/                 # Static assets
-├── package.json            # Dependencies
-└── tailwind.config.ts      # Tailwind configuration
+├── app/                      # Next.js App Router
+│   ├── layout.tsx            # Root layout
+│   ├── page.tsx              # Home page
+│   ├── error.tsx             # Error boundary
+│   └── globals.css           # Global styles
+├── components/
+│   ├── features/             # Feature-specific components
+│   │   ├── Hero.tsx          # Hero section
+│   │   ├── About.tsx         # About section
+│   │   ├── Skills.tsx        # Skills section
+│   │   ├── Projects.tsx      # Projects section
+│   │   ├── Experience.tsx    # Experience section
+│   │   ├── Contact.tsx       # Contact section
+│   │   ├── Navbar.tsx        # Navigation bar
+│   │   ├── Footer.tsx        # Footer
+│   │   └── Terminal.tsx      # Terminal component
+│   ├── providers/            # Context providers
+│   │   ├── ThemeProvider.tsx # Dark mode provider
+│   │   └── ErrorBoundary.tsx # Error boundary
+│   └── ui/                   # Reusable UI components
+│       ├── BaseCard.tsx
+│       ├── Button.tsx
+│       ├── Modal.tsx
+│       ├── SectionHeader.tsx
+│       ├── SkillCard.tsx
+│       ├── ProjectCard.tsx
+│       ├── ExperienceCard.tsx
+│       ├── EducationCard.tsx
+│       ├── LocationCard.tsx
+│       └── ResumeModal.tsx
+├── hooks/                    # Custom React hooks
+│   ├── useEmailJS.ts
+│   └── useModal.ts
+├── lib/                      # Library code
+│   ├── config/               # Configuration
+│   │   ├── env.ts            # Environment variables
+│   │   └── theme.ts          # Theme config
+│   ├── styles/               # Style constants
+│   │   └── animations.ts    # Animations
+│   ├── utils/                # Utility functions
+│   ├── constants.ts          # Application constants
+│   ├── data.ts               # Static data
+│   ├── types.ts              # TypeScript types
+│   ├── validation.ts         # Validation functions
+│   └── resume.ts             # Resume constants
+├── public/                   # Static assets
+├── package.json              # Dependencies
+└── tailwind.config.ts        # Tailwind configuration
 ```
 
-## 🎨 Best Practices Implemented
+## Best Practices Implemented
 
-- ✅ Component-based architecture
-- ✅ TypeScript for type safety
-- ✅ Responsive design (mobile-first)
-- ✅ SEO optimization
-- ✅ Accessibility considerations
-- ✅ Performance optimization
-- ✅ Clean code structure
-- ✅ Reusable components
-- ✅ Modern CSS with Tailwind
-- ✅ Smooth animations
+- Component-based architecture
+- TypeScript for type safety
+- Responsive design (mobile-first)
+- SEO optimization
+- Accessibility considerations
+- Performance optimization
+- Clean code structure
+- Reusable components
+- Modern CSS with Tailwind
+- Smooth animations
 
-## 📄 License
+## License
 
 This project is open source and available under the MIT License.
 
-## 🤝 Contributing
+## Contributing
 
 Feel free to fork this project and customize it for your own portfolio!
 
-## 📧 Contact
+## Contact
 
 For questions or suggestions, feel free to reach out!
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and Tailwind CSS
+Built with Next.js, TypeScript, and Tailwind CSS
 

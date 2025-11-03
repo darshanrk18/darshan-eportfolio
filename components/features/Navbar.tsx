@@ -2,17 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from './ThemeProvider'
+import { useTheme } from '@/components/providers/ThemeProvider'
 import { FiMoon, FiSun, FiMenu, FiX } from 'react-icons/fi'
-
-const navItems = [
-  { href: '#home', label: '</Home>' },
-  { href: '#about', label: '</AboutMe>' },
-  { href: '#skills', label: '</Skills>' },
-  { href: '#projects', label: '</Projects>' },
-  { href: '#experience', label: '</Experience>' },
-  { href: '#contact', label: '</Contact>' },
-]
+import { NAV_ITEMS } from '@/lib/constants'
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -65,7 +57,7 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
@@ -118,7 +110,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 space-y-4 animate-fade-in">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
