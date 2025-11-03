@@ -11,6 +11,7 @@
 'use client'
 
 import { motion, type Variants } from 'framer-motion'
+import { cn, getAlignClasses } from '@/lib/utils'
 
 /**
  * Header size variants
@@ -98,12 +99,17 @@ export default function SectionHeader({
       </h2>
       {showUnderline && (
         <div
-          className={`${underlineWidth} h-1 ${underlineColor} ${align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''} mb-8`}
+          className={cn(underlineWidth, 'h-1', underlineColor, getAlignClasses(align), 'mb-8')}
         />
       )}
       {description && (
         <p
-          className={`${sizes.description} text-gray-600 dark:text-gray-400 ${align === 'center' ? 'max-w-2xl mx-auto' : 'max-w-2xl'} ${align === 'right' ? 'ml-auto' : ''}`}
+          className={cn(
+            sizes.description,
+            'text-gray-600 dark:text-gray-400',
+            'max-w-2xl',
+            getAlignClasses(align)
+          )}
         >
           {description}
         </p>

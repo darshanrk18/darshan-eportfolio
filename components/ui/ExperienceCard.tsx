@@ -2,7 +2,8 @@
 
 import { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { FiCalendar, FiMapPin, FiBriefcase } from 'react-icons/fi'
+import { FiCalendar, FiMapPin, FiBriefcase, FiArrowRight } from 'react-icons/fi'
+import { ANIMATION_DURATIONS, ANIMATION_EASING } from '@/lib/config'
 import type { Experience } from '@/lib/types'
 
 export type ExperienceCardVariant = 'default' | 'compact' | 'detailed'
@@ -80,40 +81,83 @@ interface ExperienceInfoProps {
 
 function ExperienceInfo({ experience, variant, showIcon }: ExperienceInfoProps) {
   const titleClass = variant === 'compact' ? 'text-xl' : 'text-2xl'
-  const gapClass = variant === 'compact' ? 'gap-2' : 'gap-4'
-  const listClass = variant === 'compact' ? 'space-y-1 text-sm' : 'space-y-2'
-  const marginLeft = showIcon ? 'ml-14' : ''
+  const gapClass = variant === 'compact' ? 'gap-2' : 'gap-3'
+  const listClass = variant === 'compact' ? 'space-y-2 text-sm' : 'space-y-3'
 
   return (
     <>
-      <div className="flex items-start mb-4">
-        {showIcon && <span className="text-3xl mr-4">{experience.icon}</span>}
-        <div className="flex-1">
-          <h3 className={`font-semibold mb-2 text-gray-900 dark:text-white ${titleClass}`}>
+      <div className="flex items-start mb-6">
+        {showIcon && (
+          <motion.div
+            className="flex-shrink-0 mr-5"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{
+              type: 'spring',
+              stiffness: 200,
+              damping: 15,
+              delay: 0.1,
+            }}
+          >
+            <div className="text-5xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 p-4 rounded-2xl shadow-lg">
+              {experience.icon}
+            </div>
+          </motion.div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-bold mb-4 text-gray-900 dark:text-white ${titleClass} leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300`}>
             {experience.title}
           </h3>
-          <div className={`flex flex-wrap items-center ${gapClass} mb-3 text-sm text-gray-600 dark:text-gray-400`}>
-            <span className="flex items-center gap-1">
+          <div className={`flex flex-wrap items-center ${gapClass} mb-5`}>
+            <motion.span
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/20 text-primary-700 dark:text-primary-300 rounded-lg font-medium text-sm shadow-sm"
+              whileHover={{ scale: 1.05, y: -2 }}
+              transition={{ duration: ANIMATION_DURATIONS.fast }}
+            >
               <FiBriefcase className="w-4 h-4" />
-              {experience.organization}
-            </span>
-            <span className="flex items-center gap-1">
-              <FiMapPin className="w-4 h-4" />
+              <span className="font-semibold">{experience.organization}</span>
+            </motion.span>
+            <motion.span
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium shadow-sm"
+              whileHover={{ scale: 1.05, y: -2 }}
+              transition={{ duration: ANIMATION_DURATIONS.fast }}
+            >
+              <FiMapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               {experience.location}
-            </span>
-            <span className="flex items-center gap-1">
-              <FiCalendar className="w-4 h-4" />
+            </motion.span>
+            <motion.span
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium shadow-sm"
+              whileHover={{ scale: 1.05, y: -2 }}
+              transition={{ duration: ANIMATION_DURATIONS.fast }}
+            >
+              <FiCalendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               {experience.period}
-            </span>
+            </motion.span>
           </div>
         </div>
       </div>
-      <ul className={`${listClass} ${marginLeft}`}>
-        {experience.description.map((item) => (
-          <li key={item} className="text-gray-600 dark:text-gray-400 flex items-start">
-            <span className="text-primary-600 dark:text-primary-400 mr-2">&#9655;</span>
-            {item}
-          </li>
+      <ul className={listClass}>
+        {experience.description.map((item, index) => (
+          <motion.li
+            key={item}
+            className="text-gray-700 dark:text-gray-300 flex items-start group/item"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              duration: ANIMATION_DURATIONS.medium,
+              delay: 0.3 + index * 0.1,
+              ease: ANIMATION_EASING.smooth,
+            }}
+          >
+            <motion.span
+              className="text-primary-600 dark:text-primary-400 mr-3 mt-1 flex-shrink-0"
+              whileHover={{ scale: 1.2, rotate: 90 }}
+              transition={{ duration: ANIMATION_DURATIONS.fast }}
+            >
+              <FiArrowRight className="w-5 h-5" />
+            </motion.span>
+            <span className="leading-relaxed text-base">{item}</span>
+          </motion.li>
         ))}
       </ul>
     </>
@@ -143,47 +187,65 @@ function ExperienceCard({
   showIcon = true,
   showTimeline = true,
 }: ExperienceCardProps) {
-  const paddingLeft = useMemo(() => (showTimeline ? 'pl-20' : 'pl-0'), [showTimeline])
-  const cardPadding = useMemo(() => (variant === 'compact' ? 'p-4' : 'p-6'), [variant])
-  const initialX = useMemo(() => (showTimeline ? -50 : 0), [showTimeline])
-  const hoverX = useMemo(() => (showTimeline ? 10 : 0), [showTimeline])
+  const paddingLeft = useMemo(() => (showTimeline ? 'pl-20 md:pl-24' : 'pl-0'), [showTimeline])
+  const cardPadding = useMemo(() => (variant === 'compact' ? 'p-5' : 'p-8 md:p-10'), [variant])
+  const initialX = useMemo(() => (showTimeline ? -60 : 0), [showTimeline])
+  const hoverX = useMemo(() => (showTimeline ? 8 : 0), [showTimeline])
   const whileHoverProps = useMemo(
     () =>
       variant === 'compact'
         ? {}
         : {
-            scale: 1.02,
+            scale: 1.015,
             x: hoverX,
-            transition: { duration: 0.2 },
+            transition: {
+              duration: ANIMATION_DURATIONS.normal,
+              ease: ANIMATION_EASING.smooth,
+            },
           },
     [variant, hoverX]
   )
-  const animationDelay = useMemo(() => delay + 0.2, [delay])
+  const animationDelay = useMemo(() => delay + 0.15, [delay])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: initialX }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{
-        duration: 0.8,
-        delay,
-        type: 'spring',
-        stiffness: 100,
-      }}
-      whileHover={whileHoverProps}
-      className={`relative mb-12 ${paddingLeft} group ${className}`}
-    >
+    <div className={`relative mb-16 ${paddingLeft} ${className}`}>
+      {/* Timeline dot - outside motion context to stay static */}
       {showTimeline && <TimelineDot timelineDotColor={timelineDotColor} inView={inView} delay={delay} />}
 
       <motion.div
-        className={`bg-white dark:bg-gray-800 rounded-xl ${cardPadding} shadow-lg border-2 border-transparent group-hover:border-primary-500/50 transition-all duration-300`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: animationDelay }}
+        initial={{ opacity: 0, x: initialX, scale: 0.95 }}
+        animate={inView ? { opacity: 1, x: 0, scale: 1 } : {}}
+        transition={{
+          duration: ANIMATION_DURATIONS.slower,
+          delay,
+          type: 'spring',
+          stiffness: 120,
+          damping: 20,
+          ease: ANIMATION_EASING.default,
+        }}
+        whileHover={whileHoverProps}
+        className="group"
       >
-        <ExperienceInfo experience={experience} variant={variant} showIcon={showIcon} />
+        <motion.div
+          className={`relative bg-white dark:bg-gray-800 rounded-2xl ${cardPadding} shadow-xl border-2 border-gray-100 dark:border-gray-700 group-hover:border-primary-400/60 dark:group-hover:border-primary-500/60 group-hover:shadow-2xl group-hover:shadow-primary-500/20 dark:group-hover:shadow-primary-500/30 transition-all duration-500 overflow-hidden backdrop-blur-sm`}
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{
+            duration: ANIMATION_DURATIONS.slow,
+            delay: animationDelay,
+            ease: ANIMATION_EASING.smooth,
+          }}
+        >
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-50/0 via-primary-50/0 to-primary-50/0 dark:from-primary-900/0 dark:via-primary-900/0 dark:to-primary-900/0 group-hover:from-primary-50/5 group-hover:via-primary-50/3 group-hover:to-primary-50/0 dark:group-hover:from-primary-900/10 dark:group-hover:via-primary-900/5 dark:group-hover:to-primary-900/0 rounded-2xl pointer-events-none transition-all duration-500" />
+          
+          {/* Content */}
+          <div className="relative z-10">
+            <ExperienceInfo experience={experience} variant={variant} showIcon={showIcon} />
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
 

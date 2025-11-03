@@ -6,4 +6,6 @@
  */
 
 export { getInputClassName, getTextareaClassName } from './formStyles'
+export { default as logger } from './logger'
+export { cn, getAlignClasses } from './className'
 

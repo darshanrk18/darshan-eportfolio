@@ -79,13 +79,26 @@ export function validateMessage(message: string, minLength = 10, maxLength = 100
 
 /**
  * Sanitizes user input to prevent XSS attacks
+ * Works in both browser and server-side environments
  * @param input - Input string to sanitize
  * @returns Sanitized string with HTML entities escaped
  */
 export function sanitizeInput(input: string): string {
-  const div = document.createElement('div')
-  div.textContent = input
-  return div.innerHTML
+  // Check if we're in a browser environment
+  if (typeof document !== 'undefined') {
+    const div = document.createElement('div')
+    div.textContent = input
+    return div.innerHTML
+  }
+  
+  // Server-side fallback: manually escape HTML entities
+  return input
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;')
+    .replaceAll('/', '&#x2F;')
 }
 
 /**

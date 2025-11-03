@@ -52,12 +52,17 @@ The contact form uses EmailJS to send emails. You need to set up the following e
 - `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID` - Your EmailJS template ID
 - `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` - Your EmailJS public key
 
+**Optional variables:**
+- `NEXT_PUBLIC_SITE_URL` - Your site URL (defaults to production domain: `https://darshan-eportfolio.vercel.app`)
+
 **For local development:**
 1. Create a `.env.local` file in the root directory:
 ```bash
 NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
 NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
 NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+# Optional: Override site URL for local development
+# NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 **For production (Vercel):**
