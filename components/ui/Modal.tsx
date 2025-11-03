@@ -156,13 +156,13 @@ export default function Modal({
                 {showCloseButton && (
                   <motion.button
                     onClick={onClose}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto"
+                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ml-4 flex items-center justify-center"
                     aria-label="Close modal"
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: ANIMATION_DURATIONS.fast }}
                   >
-                    <FiX className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                    <FiX className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </motion.button>
                 )}
               </motion.div>

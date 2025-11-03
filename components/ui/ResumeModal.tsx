@@ -97,7 +97,7 @@ function ResumeModal({
           download={RESUME.downloadFilename}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 mt-2"
           onClick={onClose}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
