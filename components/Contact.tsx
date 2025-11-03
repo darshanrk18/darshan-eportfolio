@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { FiMail, FiLinkedin, FiGithub, FiMapPin, FiDownload, FiX } from 'react-icons/fi'
 import { useState, useEffect, useRef } from 'react'
+import emailjs from '@emailjs/browser'
 import { CONTACT_INFO } from '@/lib/constants'
 
 export default function Contact() {
@@ -20,8 +21,16 @@ export default function Contact() {
   })
 
   const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  
+  // Initialize EmailJS (you'll need to replace these with your actual values)
+  useEffect(() => {
+    // Replace 'YOUR_PUBLIC_KEY' with your EmailJS public key
+    emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'YOUR_PUBLIC_KEY')
+  }, [])
 
   useEffect(() => {
     if (isResumeModalOpen) {
@@ -37,15 +46,87 @@ export default function Contact() {
     setIsResumeModalOpen(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real application, you would send this data to your backend
-    console.log('Form submitted:', formData)
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setFormData({ name: '', email: '', message: '' })
-    }, 3000)
+    setIsLoading(true)
+    setError(null)
+
+    // Get EmailJS credentials from environment variables
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+
+    try {
+      // Check if environment variables are set
+      if (!serviceId || !templateId || !publicKey || 
+          serviceId === 'YOUR_SERVICE_ID' || 
+          templateId === 'YOUR_TEMPLATE_ID' || 
+          publicKey === 'YOUR_PUBLIC_KEY') {
+        throw new Error('EmailJS is not configured. Please set up your environment variables.')
+      }
+
+      // Send email using EmailJS
+      // Note: Recipient email should be set in EmailJS template configuration, not here
+      const result = await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          message: formData.message,
+          reply_to: formData.email, // This allows you to reply directly to the sender
+        },
+        publicKey
+      )
+
+      if (result.text === 'OK') {
+        setSubmitted(true)
+        setFormData({ name: '', email: '', message: '' })
+        
+        // Reset success message after 5 seconds
+        setTimeout(() => {
+          setSubmitted(false)
+        }, 5000)
+      } else {
+        throw new Error('EmailJS returned an error')
+      }
+    } catch (err: unknown) {
+      // Enhanced error logging for debugging
+      console.error('EmailJS Error Details:', {
+        error: err,
+        serviceId: serviceId ? `${serviceId.substring(0, 4)}...` : 'not set',
+        templateId: templateId ? `${templateId.substring(0, 4)}...` : 'not set',
+        hasPublicKey: !!publicKey,
+      })
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Failed to send message. Please try again or contact me directly via email.'
+      
+      if (err instanceof Error) {
+        if (err.message.includes('EmailJS is not configured')) {
+          errorMessage = 'Contact form is not configured yet. Please contact me directly via email.'
+        } else if (err.message.includes('Invalid') || err.message.includes('not found')) {
+          errorMessage = 'EmailJS configuration error. Please check your service and template IDs in .env.local'
+        } else {
+          errorMessage = `Error: ${err.message}. Please contact me directly via email.`
+        }
+      } else if (err && typeof err === 'object' && 'status' in err) {
+        const statusErr = err as { status: number; text?: string }
+        if (statusErr.status === 400) {
+          errorMessage = 'Invalid request. Please check your EmailJS template configuration.'
+        } else if (statusErr.status === 401) {
+          errorMessage = 'Authentication failed. Please check your EmailJS public key.'
+        } else if (statusErr.status === 404) {
+          errorMessage = 'Service or template not found. Please verify your EmailJS IDs.'
+        } else {
+          errorMessage = `EmailJS error (${statusErr.status}): ${statusErr.text || 'Unknown error'}. Please contact me directly via email.`
+        }
+      }
+      
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (
@@ -174,11 +255,27 @@ export default function Contact() {
                   placeholder="Your message..."
                 ></textarea>
               </div>
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                disabled={isLoading || submitted}
+                className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-600 disabled:hover:translate-y-0"
               >
-                {submitted ? "Message Sent!" : "Send Message"}
+                {isLoading && (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </span>
+                )}
+                {!isLoading && submitted && "Message Sent! ✓"}
+                {!isLoading && !submitted && "Send Message"}
               </button>
             </form>
           </motion.div>

@@ -123,48 +123,66 @@ export default function About() {
           </motion.div>
         </div>
 
-        {/* Education & Location Info */}
+        {/* Education & Location Info - Premium Design */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mb-16"
         >
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
             {/* Current Education */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.7 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-primary-200 dark:border-primary-900/30 hover:border-primary-400 dark:hover:border-primary-700"
+              className="relative group flex flex-col"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                  <FiAward className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-blue-500/20 dark:from-primary-500/10 dark:to-blue-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-2xl border-2 border-primary-200 dark:border-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 transition-all transform hover:-translate-y-1 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiAward className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <div className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 rounded-full inline-block mb-1">
+                        <span className="text-xs font-bold text-primary-700 dark:text-primary-400 uppercase tracking-wide">Current</span>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                        Education
+                      </h4>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Current Education
-                </h4>
-              </div>
-              <div className="space-y-2">
-                <p className="text-base font-semibold text-gray-900 dark:text-white">
-                  MS in Computer Science
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Northeastern University
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Boston, MA
-                </p>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <FiCalendar className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                  <span className="text-xs text-gray-500 dark:text-gray-500">
-                    Jan 2025 - Present
-                  </span>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      MS in Computer Science
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      Northeastern University
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Boston, Massachusetts
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 pt-4 border-t-2 border-primary-200 dark:border-primary-800">
+                    <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-center">
+                      <FiCalendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Jan 2025 - Present</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">Currently Enrolled</p>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 rounded-lg">
+                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">GPA:</span>
+                      <span className="text-lg font-bold font-mono text-primary-700 dark:text-primary-400">3.78/4.0</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-mono text-primary-600 dark:text-primary-400">
-                  GPA: 3.78/4.0
-                </p>
               </div>
             </motion.div>
 
@@ -173,35 +191,53 @@ export default function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.8 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              className="relative group flex flex-col"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                  <FiBook className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-blue-500/20 dark:from-primary-500/10 dark:to-blue-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-2xl border-2 border-primary-200 dark:border-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 transition-all transform hover:-translate-y-1 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiBook className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full inline-block mb-1">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Completed</span>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                        Education
+                      </h4>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Previous Education
-                </h4>
-              </div>
-              <div className="space-y-2">
-                <p className="text-base font-semibold text-gray-900 dark:text-white">
-                  BE in Computer Science
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  MS Ramaiah Institute of Technology
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Bengaluru, India
-                </p>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <FiCalendar className="w-4 h-4 text-gray-500 dark:text-gray-500" />
-                  <span className="text-xs text-gray-500 dark:text-gray-500">
-                    Aug 2017 - Jul 2021
-                  </span>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      BE in Computer Science
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      MS Ramaiah Institute of Technology
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Bengaluru, India
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
+                    <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                      <FiCalendar className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Aug 2017 - Jul 2021</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">4 Years</p>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 rounded-lg">
+                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">GPA:</span>
+                      <span className="text-lg font-bold font-mono text-gray-700 dark:text-gray-300">8.78/10.0</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-mono text-gray-600 dark:text-gray-400">
-                  GPA: 8.78/10.0
-                </p>
               </div>
             </motion.div>
 
@@ -210,27 +246,46 @@ export default function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.9 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              className="relative group flex flex-col"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                  <FiMapPin className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-blue-500/20 dark:from-primary-500/10 dark:to-blue-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-2xl border-2 border-primary-200 dark:border-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 transition-all transform hover:-translate-y-1 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiMapPin className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full inline-block mb-1">
+                        <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">Base</span>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                        Location
+                      </h4>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Location
-                </h4>
-              </div>
-              <div className="space-y-2">
-                <p className="text-base font-semibold text-gray-900 dark:text-white">
-                  Boston
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Massachusetts, USA
-                </p>
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">
-                    Available for on-site & remote opportunities
-                  </p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      Boston
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      Massachusetts, USA
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      United States of America
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t-2 border-primary-200 dark:border-primary-800">
+                    <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-primary-50/50 to-blue-50/50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl border border-primary-200 dark:border-primary-800">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5 animate-pulse"></div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Available Now</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 font-mono">Open to on-site & remote opportunities</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
