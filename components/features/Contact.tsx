@@ -1,3 +1,17 @@
+/**
+ * Contact Section Component
+ * 
+ * Displays a contact form with EmailJS integration and contact information.
+ * Features include:
+ * - Client-side form validation
+ * - EmailJS integration for sending emails
+ * - Error handling and loading states
+ * - Contact information display
+ * - Resume modal trigger
+ * 
+ * @component
+ */
+
 'use client'
 
 import { useInView } from 'react-intersection-observer'
@@ -12,6 +26,12 @@ import ResumeModal from '@/components/ui/ResumeModal'
 import { CONTACT_INFO } from '@/lib/constants'
 import type { FormData } from '@/lib/types'
 
+/**
+ * Contact component - Contact form and information section
+ * Handles form submission via EmailJS with validation
+ * 
+ * @returns Contact section with form and information display
+ */
 export default function Contact() {
   const [ref, inView] = useInView(inViewConfig)
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)

@@ -1,12 +1,41 @@
+/**
+ * Terminal Component
+ * 
+ * Animated terminal component that displays a sequence of commands
+ * with typing animation. Cycles through commands automatically.
+ * 
+ * Features:
+ * - Typing animation effect
+ * - Blinking cursor
+ * - Automatic command cycling
+ * - Customizable delay between characters
+ * 
+ * @component
+ */
+
 'use client'
 
 import { useState, useEffect } from 'react'
 
+/**
+ * Props for Terminal component
+ */
 interface TerminalProps {
+  /** Array of commands to display sequentially */
   readonly commands: readonly string[]
+  /** Delay in milliseconds between typing each character (default: 100) */
   readonly delay?: number
 }
 
+/**
+ * Terminal component - Animated command-line display
+ * 
+ * Displays commands one at a time with typing animation,
+ * automatically cycles through all commands, then restarts.
+ * 
+ * @param props - Terminal configuration props
+ * @returns Animated terminal display component
+ */
 export default function Terminal({ commands, delay = 100 }: TerminalProps) {
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0)
   const [displayText, setDisplayText] = useState('')

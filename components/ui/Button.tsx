@@ -1,8 +1,26 @@
+/**
+ * Button Component
+ * 
+ * Highly reusable button component with multiple variants and sizes.
+ * Supports loading states, icons, and full-width layout.
+ * Fully extends HTML button attributes for maximum flexibility.
+ * 
+ * @component
+ * @module components/ui/Button
+ */
+
 'use client'
 
 import { memo, type ReactNode, type ButtonHTMLAttributes } from 'react'
 
+/**
+ * Visual style variants for the button
+ */
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
+
+/**
+ * Size variants for the button
+ */
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

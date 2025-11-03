@@ -1,7 +1,20 @@
+/**
+ * Section Header Component
+ * 
+ * Reusable component for consistent section titles across the portfolio.
+ * Features customizable size, alignment, and decorative underline.
+ * 
+ * @component
+ * @module components/ui/SectionHeader
+ */
+
 'use client'
 
 import { motion, type Variants } from 'framer-motion'
 
+/**
+ * Header size variants
+ */
 export type HeaderSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface SectionHeaderProps {
