@@ -14,8 +14,13 @@ export function getEmailJSConfig() {
   const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
 
   if (!serviceId || !templateId || !publicKey) {
+    const isProduction = process.env.NODE_ENV === 'production'
+    const envHint = isProduction
+      ? 'Please set them in your deployment platform (e.g., Vercel dashboard).'
+      : 'Please check your .env.local file.'
+    
     throw new Error(
-      'Missing required EmailJS environment variables. Please check your .env.local file.'
+      `Missing required EmailJS environment variables: NEXT_PUBLIC_EMAILJS_SERVICE_ID, NEXT_PUBLIC_EMAILJS_TEMPLATE_ID, NEXT_PUBLIC_EMAILJS_PUBLIC_KEY. ${envHint}`
     )
   }
 

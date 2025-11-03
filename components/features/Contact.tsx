@@ -21,6 +21,7 @@ import { useState, useCallback } from 'react'
 import { useEmailJS } from '@/hooks/useEmailJS'
 import { inViewConfig, slideInLeft, slideInRight } from '@/lib/styles/animations'
 import { validateFormData } from '@/lib/validation'
+import { getInputClassName, getTextareaClassName } from '@/lib/utils/formStyles'
 import SectionHeader from '@/components/ui/SectionHeader'
 import ResumeModal from '@/components/ui/ResumeModal'
 import { CONTACT_INFO } from '@/lib/constants'
@@ -151,11 +152,7 @@ export default function Contact() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 rounded-lg border ${
-                    fieldErrors.name
-                      ? 'border-red-500 dark:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all`}
+                  className={getInputClassName(!!fieldErrors.name)}
                   placeholder="Your name"
                   aria-invalid={!!fieldErrors.name}
                   aria-describedby={fieldErrors.name ? 'name-error' : undefined}
@@ -180,11 +177,7 @@ export default function Contact() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 rounded-lg border ${
-                    fieldErrors.email
-                      ? 'border-red-500 dark:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all`}
+                  className={getInputClassName(!!fieldErrors.email)}
                   placeholder="your.email@example.com"
                   aria-invalid={!!fieldErrors.email}
                   aria-describedby={fieldErrors.email ? 'email-error' : undefined}
@@ -209,11 +202,7 @@ export default function Contact() {
                   onChange={handleChange}
                   required
                   rows={5}
-                  className={`w-full px-4 py-3 rounded-lg border ${
-                    fieldErrors.message
-                      ? 'border-red-500 dark:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none`}
+                  className={getTextareaClassName(!!fieldErrors.message)}
                   placeholder="Your message..."
                   aria-invalid={!!fieldErrors.message}
                   aria-describedby={fieldErrors.message ? 'message-error' : undefined}

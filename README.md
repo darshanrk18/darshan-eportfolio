@@ -43,6 +43,32 @@ npm run dev
 
 ## Configuration
 
+### Environment Variables
+
+The contact form uses EmailJS to send emails. You need to set up the following environment variables:
+
+**Required variables:**
+- `NEXT_PUBLIC_EMAILJS_SERVICE_ID` - Your EmailJS service ID
+- `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID` - Your EmailJS template ID
+- `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` - Your EmailJS public key
+
+**For local development:**
+1. Create a `.env.local` file in the root directory:
+```bash
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+```
+
+**For production (Vercel):**
+1. Go to your project in [Vercel Dashboard](https://vercel.com/dashboard)
+2. Navigate to **Settings** → **Environment Variables**
+3. Add each variable with its value
+4. Make sure to select **Production**, **Preview**, and **Development** environments
+5. Redeploy your application after adding variables
+
+**Note:** The contact form will display an error message if these variables are not configured. The form will still render, but email sending will be disabled until the variables are set.
+
 ### Personal Information
 
 Update the following files with your personal information:
@@ -91,9 +117,17 @@ git push origin main
 
 4. Vercel will automatically detect Next.js and configure the project
 
-5. Click "Deploy" - Your site will be live in minutes!
+5. **Important:** Before deploying, add your EmailJS environment variables:
+   - Go to **Settings** → **Environment Variables** in your Vercel project
+   - Add `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`, and `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY`
+   - Select all environments (Production, Preview, Development)
+   - Click **Save**
+
+6. Click "Deploy" - Your site will be live in minutes!
 
 Your site will be automatically deployed on every push to the main branch.
+
+**Note:** If you see an error about missing EmailJS environment variables after deployment, make sure you've added them in Vercel's dashboard and redeployed.
 
 ### Alternative: Deploy to Other Platforms
 
@@ -158,17 +192,21 @@ portfolio/
 │       ├── ExperienceCard.tsx
 │       ├── EducationCard.tsx
 │       ├── LocationCard.tsx
-│       └── ResumeModal.tsx
+│       ├── ResumeModal.tsx
+│       ├── ThemeToggle.tsx
+│       └── README.md         # UI component documentation
 ├── hooks/                    # Custom React hooks
-│   ├── useEmailJS.ts
-│   └── useModal.ts
+│   ├── useEmailJS.ts         # EmailJS integration
+│   └── useModal.ts           # Modal state management
 ├── lib/                      # Library code
 │   ├── config/               # Configuration
 │   │   ├── env.ts            # Environment variables
 │   │   └── theme.ts          # Theme config
 │   ├── styles/               # Style constants
-│   │   └── animations.ts    # Animations
+│   │   └── animations.ts     # Animations
 │   ├── utils/                # Utility functions
+│   │   ├── formStyles.ts     # Form styling utilities
+│   │   └── index.ts          # Re-exports
 │   ├── constants.ts          # Application constants
 │   ├── data.ts               # Static data
 │   ├── types.ts              # TypeScript types

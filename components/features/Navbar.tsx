@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from '@/components/providers/ThemeProvider'
-import { FiMoon, FiSun, FiMenu, FiX } from 'react-icons/fi'
+import { FiMenu, FiX } from 'react-icons/fi'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { NAV_ITEMS } from '@/lib/constants'
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,32 +66,12 @@ export default function Navbar() {
                 {item.label}
               </a>
             ))}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <FiMoon className="w-5 h-5" />
-              ) : (
-                <FiSun className="w-5 h-5" />
-              )}
-            </button>
+            <ThemeToggle />
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <FiMoon className="w-5 h-5" />
-              ) : (
-                <FiSun className="w-5 h-5" />
-              )}
-            </button>
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"

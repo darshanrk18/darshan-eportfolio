@@ -39,11 +39,12 @@ portfolio/
 │       ├── EducationCard.tsx
 │       ├── LocationCard.tsx
 │       ├── ResumeModal.tsx
+│       ├── ThemeToggle.tsx
 │       └── README.md         # UI component documentation
 │
 ├── hooks/                    # Custom React hooks
-│   ├── useModal.ts
-│   └── useEmailJS.ts
+│   ├── useEmailJS.ts         # EmailJS integration hook
+│   └── useModal.ts           # Modal state management hook
 │
 ├── lib/                      # Library code & business logic
 │   ├── config/               # Configuration & environment setup
@@ -51,16 +52,15 @@ portfolio/
 │   │   └── theme.ts          # Theme configuration constants
 │   │
 │   ├── utils/                # Utility functions
-│   │   ├── format.ts         # Formatting utilities
-│   │   ├── date.ts           # Date utilities
+│   │   ├── formStyles.ts     # Form input styling utilities
 │   │   └── index.ts          # Re-exports
 │   │
 │   ├── styles/               # Style constants & design tokens
-│   │   ├── animations.ts     # Animation configurations
-│   │   └── design-tokens.ts  # Colors, spacing, typography
+│   │   └── animations.ts     # Animation configurations
 │   │
 │   ├── constants.ts          # Application constants
 │   ├── data.ts               # Static data (skills, projects, experience)
+│   ├── resume.ts             # Resume-related constants
 │   ├── types.ts              # TypeScript type definitions
 │   └── validation.ts         # Validation schemas & functions
 │
@@ -92,7 +92,8 @@ portfolio/
 - Reusable UI components in `components/ui/`
 - Centralized constants in `lib/constants.ts`
 - Shared data in `lib/data.ts`
-- Common utilities in `lib/utils/`
+- Common utilities in `lib/utils/` (e.g., `formStyles.ts` for consistent form styling)
+- Reusable hooks for common patterns (`useModal`, `useEmailJS`)
 
 ### 4. **Type Safety**
 - All types defined in `lib/types.ts`
@@ -189,8 +190,11 @@ DOM
 - Feature components organized in `components/features/`
 - Providers organized in `components/providers/`
 - Environment configuration in `lib/config/`
-- Utility functions structure in `lib/utils/`
+- Utility functions structure in `lib/utils/` with form styling utilities
 - Style constants in `lib/styles/`
+- Reusable UI components with variant systems
+- Theme toggle component extracted for reuse
+- Form styling utilities to eliminate className duplication
 
 ---
 
