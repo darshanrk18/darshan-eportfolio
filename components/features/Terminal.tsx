@@ -16,6 +16,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DELAYS } from '@/lib/config'
 
 /**
  * Props for Terminal component
@@ -23,7 +24,7 @@ import { useState, useEffect } from 'react'
 interface TerminalProps {
   /** Array of commands to display sequentially */
   readonly commands: readonly string[]
-  /** Delay in milliseconds between typing each character (default: 100) */
+  /** Delay in milliseconds between typing each character */
   readonly delay?: number
 }
 
@@ -36,7 +37,7 @@ interface TerminalProps {
  * @param props - Terminal configuration props
  * @returns Animated terminal display component
  */
-export default function Terminal({ commands, delay = 100 }: TerminalProps) {
+export default function Terminal({ commands, delay = DELAYS.typing }: TerminalProps) {
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0)
   const [displayText, setDisplayText] = useState('')
   const [showCursor, setShowCursor] = useState(true)
@@ -52,7 +53,7 @@ export default function Terminal({ commands, delay = 100 }: TerminalProps) {
       if (currentCommandIndex < commands.length - 1) {
         setCurrentCommandIndex((prev) => prev + 1)
       } else {
-        setTimeout(() => setCurrentCommandIndex(0), 2000)
+        setTimeout(() => setCurrentCommandIndex(0), DELAYS.commandCycle)
       }
     }
 
@@ -62,7 +63,7 @@ export default function Terminal({ commands, delay = 100 }: TerminalProps) {
         charIndex++
       } else {
         clearInterval(typingInterval)
-        setTimeout(handleNextCommand, 2000)
+        setTimeout(handleNextCommand, DELAYS.commandCycle)
       }
     }, delay)
 
@@ -73,7 +74,7 @@ export default function Terminal({ commands, delay = 100 }: TerminalProps) {
   useEffect(() => {
     const cursorInterval = setInterval(() => {
       setShowCursor((prev) => !prev)
-    }, 530)
+    }, DELAYS.cursorBlink)
     return () => clearInterval(cursorInterval)
   }, [])
 

@@ -14,6 +14,8 @@
 'use client'
 
 import React from 'react'
+import logger from '@/lib/utils/logger'
+import ErrorDisplay from '@/components/ui/ErrorDisplay'
 
 /**
  * Error boundary internal state
@@ -52,7 +54,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    logger.error('Error caught by boundary:', error, errorInfo)
   }
 
   resetError = () => {
@@ -67,23 +69,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Something went wrong
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We encountered an unexpected error. Please try refreshing the page.
-            </p>
-            <button
-              onClick={this.resetError}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
+        <ErrorDisplay
+          error={this.state.error}
+          onReset={this.resetError}
+          description="We encountered an unexpected error. Please try refreshing the page."
+        />
       )
     }
 

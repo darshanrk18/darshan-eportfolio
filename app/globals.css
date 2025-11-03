@@ -2,33 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Accessibility: Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
 /* Name Gradient and Breathing Effect */
 .name-gradient {
   background: linear-gradient(
     135deg,
-    #3b82f6 0%,
-    #8b5cf6 50%,
-    #ec4899 100%
+    var(--name-color-1) 0%,
+    var(--name-color-2) 50%,
+    var(--name-color-3) 100%
   );
-  background-size: 200% 200%;
+  background-size: var(--name-bg-size);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  animation: gradient-breathe 5s ease-in-out infinite;
-}
-
-.dark .name-gradient {
-  background: linear-gradient(
-    135deg,
-    #60a5fa 0%,
-    #a78bfa 50%,
-    #f472b6 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  animation: gradient-breathe var(--duration-name-gradient) ease-in-out infinite;
 }
 
 @keyframes gradient-breathe {
@@ -57,18 +79,80 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Animation durations (seconds) */
+  --duration-fast: 0.2s;
+  --duration-normal: 0.3s;
+  --duration-medium: 0.5s;
+  --duration-slow: 0.6s;
+  --duration-slower: 0.8s;
+  --duration-logo-gradient: 8s;
+  --duration-name-gradient: 5s;
+  --duration-shimmer: 3s;
+  
+  /* Animation delays (seconds) */
+  --delay-stagger: 0.1s;
+  --delay-stagger-medium: 0.2s;
+  --delay-stagger-large: 0.3s;
+  --delay-initial: 0.2s;
+  
+  /* Logo gradient colors */
+  --logo-color-1: #0ea5e9;
+  --logo-color-2: #38bdf8;
+  --logo-color-3: #60a5fa;
+  --logo-color-4: #0284c7;
+  
+  /* Logo gradient settings */
+  --logo-bg-size: 250% 250%;
+  --logo-filter-brightness: 1.1;
+  --logo-filter-saturation: 1.15;
+  --logo-filter-brightness-hover: 1.2;
+  --logo-filter-saturation-hover: 1.25;
+  
+  /* Name gradient colors */
+  --name-color-1: #3b82f6;
+  --name-color-2: #8b5cf6;
+  --name-color-3: #ec4899;
+  
+  /* Name gradient settings */
+  --name-bg-size: 200% 200%;
+  
+  /* Letter spacing */
+  --letter-spacing-logo: 0.2rem;
+  
+  /* Primary colors for reference */
+  --primary-400: #38bdf8;
+  --primary-500: #0ea5e9;
+  --primary-600: #0284c7;
 }
 
 .dark {
   --foreground: #ededed;
   scrollbar-color: rgba(96, 165, 250, 0.8) rgba(10, 10, 10, 0.2);
+  
+  /* Dark mode logo gradient colors */
+  --logo-color-1: #38bdf8;
+  --logo-color-2: #60a5fa;
+  --logo-color-3: #7dd3fc;
+  --logo-color-4: #0284c7;
+  
+  /* Dark mode logo gradient settings */
+  --logo-filter-brightness: 1.15;
+  --logo-filter-saturation: 1.2;
+  --logo-filter-brightness-hover: 1.3;
+  --logo-filter-saturation-hover: 1.3;
+  
+  /* Dark mode name gradient colors */
+  --name-color-1: #60a5fa;
+  --name-color-2: #a78bfa;
+  --name-color-3: #f472b6;
 }
 
 body {
   color: var(--foreground);
-  background: #ffffff;
+  background: var(--background);
   background-attachment: fixed;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color var(--duration-normal) ease, color var(--duration-normal) ease;
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
@@ -108,7 +192,7 @@ p, li, span:not(.font-mono) {
 a {
   font-family: var(--font-mono), 'Monaco', 'Consolas', monospace;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) ease;
 }
 
 /* Navigation links specifically - Monospace for HTML tag style */
@@ -609,4 +693,43 @@ a:hover, button:hover {
 
 .animate-fade-in {
   animation: fade-in 0.8s ease-out;
+}
+
+/* DK Logo Gradient - Blue Theme */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.dk-logo-text {
+  position: relative;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-logo);
+  background: linear-gradient(
+    135deg,
+    var(--logo-color-1) 0%,
+    var(--logo-color-2) 20%,
+    var(--logo-color-3) 40%,
+    var(--logo-color-4) 60%,
+    var(--logo-color-1) 80%,
+    var(--logo-color-2) 100%
+  );
+  background-size: var(--logo-bg-size);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift var(--duration-logo-gradient) ease-in-out infinite;
+  filter: brightness(var(--logo-filter-brightness)) saturate(var(--logo-filter-saturation));
+  transition: filter var(--duration-normal) ease;
+}
+
+.dk-logo-text:hover {
+  filter: brightness(var(--logo-filter-brightness-hover)) saturate(var(--logo-filter-saturation-hover));
 }

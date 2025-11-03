@@ -12,6 +12,8 @@ import { useState } from 'react'
 import emailjs from '@emailjs/browser'
 import type { FormData, EmailJSError } from '@/lib/types'
 import { getEmailJSConfig } from '@/lib/config/env'
+import { DELAYS } from '@/lib/config'
+import logger from '@/lib/utils/logger'
 
 /**
  * Options for configuring the EmailJS hook
@@ -38,8 +40,12 @@ interface UseEmailJSOptions {
  * @example
  * ```tsx
  * const { sendEmail, isLoading, error, submitted } = useEmailJS({
- *   onSuccess: () => console.log('Email sent!'),
- *   onError: (err) => console.error(err)
+ *   onSuccess: () => {
+ *     // Handle success
+ *   },
+ *   onError: (err) => {
+ *     // Handle error
+ *   }
  * })
  * ```
  */
@@ -102,7 +108,7 @@ export function useEmailJS({ onSuccess, onError }: UseEmailJSOptions = {}) {
         onSuccess?.()
         setTimeout(() => {
           setSubmitted(false)
-        }, 5000)
+        }, DELAYS.emailReset)
       } else {
         throw new Error('EmailJS returned an error')
       }
@@ -110,7 +116,7 @@ export function useEmailJS({ onSuccess, onError }: UseEmailJSOptions = {}) {
       const errorMessage = getErrorMessage(err)
       setError(errorMessage)
       onError?.(errorMessage)
-      console.error('EmailJS Error Details:', {
+      logger.error('EmailJS Error Details:', {
         error: err,
         serviceId: serviceId ? `${serviceId.substring(0, 4)}...` : 'not set',
         templateId: templateId ? `${templateId.substring(0, 4)}...` : 'not set',

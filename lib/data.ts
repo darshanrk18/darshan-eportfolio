@@ -130,5 +130,31 @@ export const EXPERIENCES_DATA: readonly Experience[] = [
     ],
     icon: '💼',
   },
+  {
+    type: 'engineer',
+    title: 'Graduate Engineering Trainee',
+    organization: 'Schneider Electric',
+    location: 'Bengaluru, India',
+    period: 'Aug 2021 -- Aug 2022',
+    description: [
+      'Designed and implemented automation scripts using Python and PowerShell, integrating with Microsoft Graph API to streamline O365 license provisioning and user access management.',
+      'Built API integrations and automated workflows for enterprise collaboration platforms, reducing manual operational tasks by 50% and improving system reliability.',
+      'Developed cloud automation solutions on Azure platform, managing service tickets and implementing automated provisioning pipelines for enterprise-scale deployments.',
+      'Created reusable automation frameworks and documented best practices, enabling team scalability and reducing onboarding time for new team members.',
+    ],
+    icon: '💼',
+  },
+  {
+    type: 'intern',
+    title: 'Intern - Global Messaging',
+    organization: 'Schneider Electric',
+    location: 'Bengaluru, India',
+    period: 'Feb 2021 -- Jul 2021',
+    description: [
+      'Developed automation scripts for Exchange Online and Outlook 365 management, enabling automated user provisioning and reducing manual configuration overhead.',
+      'Implemented cloud service integrations and scripting solutions, contributing to operational efficiency improvements in enterprise messaging infrastructure.',
+    ],
+    icon: '💼',
+  },
 ] as const
 

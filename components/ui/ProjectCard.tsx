@@ -4,6 +4,7 @@ import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { FiGithub, FiExternalLink } from 'react-icons/fi'
 import type { Project } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 export type ProjectCardVariant = 'default' | 'compact' | 'detailed'
 
@@ -60,8 +61,8 @@ function ProjectCard({
           </div>
         )}
       </div>
-      <div className={`p-6 ${variant === 'compact' ? 'p-4' : ''}`}>
-        <h3 className={`font-semibold mb-3 text-gray-900 dark:text-white ${variant === 'compact' ? 'text-xl' : 'text-2xl'}`}>
+      <div className={cn('p-6', { 'p-4': variant === 'compact' })}>
+        <h3 className={cn('font-semibold mb-3 text-gray-900 dark:text-white', { 'text-xl': variant === 'compact', 'text-2xl': variant !== 'compact' })}>
           {project.title}
           {project.isPaper && (
             <span className="ml-2 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-2 py-1 rounded-full">
@@ -69,11 +70,11 @@ function ProjectCard({
             </span>
           )}
         </h3>
-        <p className={`text-gray-600 dark:text-gray-400 mb-4 leading-relaxed ${variant === 'compact' ? 'text-sm mb-2' : ''}`}>
+        <p className={cn('text-gray-600 dark:text-gray-400 leading-relaxed', { 'text-sm mb-2': variant === 'compact', 'mb-4': variant !== 'compact' })}>
           {project.description}
         </p>
         {showTechnologies && (
-          <div className={`flex flex-wrap gap-2 mb-6 ${variant === 'compact' ? 'mb-4' : ''}`}>
+          <div className={cn('flex flex-wrap gap-2', { 'mb-4': variant === 'compact', 'mb-6': variant !== 'compact' })}>
             {project.technologies.map((tech) => (
               <span
                 key={tech}

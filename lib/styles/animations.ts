@@ -8,6 +8,8 @@
  * @module lib/styles/animations
  */
 
+import { ANIMATION_DURATIONS, ANIMATION_DELAYS } from '@/lib/config'
+
 /**
  * Fade in animation with upward motion
  * Use for general content appearance
@@ -15,7 +17,7 @@
 export const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
+  transition: { duration: ANIMATION_DURATIONS.slow },
 }
 
 /**
@@ -25,7 +27,7 @@ export const fadeIn = {
 export const slideInLeft = {
   initial: { opacity: 0, x: -20 },
   animate: { opacity: 1, x: 0 },
-  transition: { duration: 0.6, delay: 0.2 },
+  transition: { duration: ANIMATION_DURATIONS.slow, delay: ANIMATION_DELAYS.initial },
 }
 
 /**
@@ -35,7 +37,7 @@ export const slideInLeft = {
 export const slideInRight = {
   initial: { opacity: 0, x: 20 },
   animate: { opacity: 1, x: 0 },
-  transition: { duration: 0.6, delay: 0.4 },
+  transition: { duration: ANIMATION_DURATIONS.slow, delay: ANIMATION_DELAYS.staggerMedium * 2 },
 }
 
 /**
@@ -45,10 +47,10 @@ export const slideInRight = {
  * @param delay - Delay in seconds between each child animation (default: 0.1)
  * @returns Animation configuration object
  */
-export const staggerChildren = (delay = 0.1) => ({
+export const staggerChildren = (delay = ANIMATION_DELAYS.stagger) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay },
+  transition: { duration: ANIMATION_DURATIONS.slow, delay },
 })
 
 /**

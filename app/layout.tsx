@@ -60,6 +60,28 @@ export const metadata: Metadata = {
   title: 'Darshan Konnur | Software Developer & Graduate Student',
   description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
   keywords: ['software developer', 'portfolio', 'Northeastern University', 'coop', 'web development'],
+  openGraph: {
+    title: 'Darshan Konnur | Software Developer & Graduate Student',
+    description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Darshan Konnur | Software Developer & Graduate Student',
+    description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 /**
@@ -84,8 +106,14 @@ export default function RootLayout({
               <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
                 <ErrorBoundary>
                   <ThemeProvider>
+                    <a
+                      href="#main-content"
+                      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
+                    >
+                      Skip to main content
+                    </a>
                     <Navbar />
-                    <main className="min-h-screen">
+                    <main id="main-content" className="min-h-screen">
                       {children}
                     </main>
                     <Footer />
