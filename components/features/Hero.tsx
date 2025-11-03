@@ -1,3 +1,17 @@
+/**
+ * Hero Section Component
+ * 
+ * The main landing section of the portfolio that introduces the developer.
+ * Features include:
+ * - Animated gradient background blobs
+ * - Name and title display with animations
+ * - Call-to-action buttons (Contact and Resume)
+ * - Social media links
+ * - Interactive terminal component showcasing commands
+ * 
+ * @component
+ */
+
 'use client'
 
 import { useState } from 'react'
@@ -6,6 +20,12 @@ import Terminal from './Terminal'
 import ResumeModal from '@/components/ui/ResumeModal'
 import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
 
+/**
+ * Hero component - Main landing section
+ * Displays developer introduction, social links, and interactive terminal
+ * 
+ * @returns Hero section with introduction and call-to-action elements
+ */
 export default function Hero() {
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false)
 

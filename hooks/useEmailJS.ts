@@ -1,18 +1,62 @@
+/**
+ * EmailJS Integration Hook
+ * 
+ * Custom React hook for sending emails via EmailJS service.
+ * Provides state management for loading, errors, and submission status.
+ * Includes comprehensive error handling and validation.
+ * 
+ * @module hooks/useEmailJS
+ */
+
 import { useState } from 'react'
 import emailjs from '@emailjs/browser'
 import type { FormData, EmailJSError } from '@/lib/types'
 import { getEmailJSConfig } from '@/lib/config/env'
 
+/**
+ * Options for configuring the EmailJS hook
+ */
 interface UseEmailJSOptions {
+  /** Callback function called when email is successfully sent */
   readonly onSuccess?: () => void
+  /** Callback function called when an error occurs */
   readonly onError?: (error: string) => void
 }
 
+/**
+ * Custom hook for sending emails via EmailJS
+ * 
+ * Manages the email sending process including:
+ * - Loading state while sending
+ * - Error handling with user-friendly messages
+ * - Success state management
+ * - Environment variable validation
+ * 
+ * @param options - Configuration options with success/error callbacks
+ * @returns Object containing sendEmail function and state values
+ * 
+ * @example
+ * ```tsx
+ * const { sendEmail, isLoading, error, submitted } = useEmailJS({
+ *   onSuccess: () => console.log('Email sent!'),
+ *   onError: (err) => console.error(err)
+ * })
+ * ```
+ */
 export function useEmailJS({ onSuccess, onError }: UseEmailJSOptions = {}) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
+  /**
+   * Sends an email using EmailJS service
+   * 
+   * Validates environment variables, sends the email, and handles
+   * success/error states. Automatically resets submission state after 5 seconds.
+   * 
+   * @param formData - Form data containing name, email, and message
+   * @throws Error if EmailJS is not configured or if sending fails
+   */
   const sendEmail = async (formData: FormData) => {
     setIsLoading(true)
     setError(null)
@@ -78,14 +122,27 @@ export function useEmailJS({ onSuccess, onError }: UseEmailJSOptions = {}) {
   }
 
   return {
+    /** Function to send email with form data */
     sendEmail,
+    /** Loading state - true while email is being sent */
     isLoading,
+    /** Error message string if sending failed, null otherwise */
     error,
+    /** Success state - true when email was successfully sent */
     submitted,
+    /** Function to manually clear error state */
     setError,
   }
 }
 
+/**
+ * Extracts user-friendly error messages from various error types
+ * Handles EmailJS errors, network errors, and configuration errors
+ * 
+ * @param err - Unknown error object from catch block
+ * @returns Human-readable error message
+ * @private
+ */
 function getErrorMessage(err: unknown): string {
   let errorMessage = 'Failed to send message. Please try again or contact me directly via email.'
   

@@ -1,17 +1,45 @@
+/**
+ * Modal Component
+ * 
+ * Generic, reusable modal/dialog component built on HTMLDialogElement.
+ * Supports multiple sizes, customizable close behavior, and backdrop interactions.
+ * 
+ * Features:
+ * - Multiple size variants
+ * - Keyboard (Escape) and backdrop click closing
+ * - Body scroll locking when open
+ * - Customizable close button
+ * 
+ * @component
+ * @module components/ui/Modal
+ */
+
 'use client'
 
 import { useRef, useEffect, type ReactNode } from 'react'
 import { FiX } from 'react-icons/fi'
 
+/**
+ * Props for Modal component
+ */
 interface ModalProps {
+  /** Whether the modal is currently open */
   readonly isOpen: boolean
+  /** Callback function called when modal should close */
   readonly onClose: () => void
+  /** Optional title displayed in modal header */
   readonly title?: string
+  /** Modal content */
   readonly children: ReactNode
+  /** Modal size variant */
   readonly size?: 'sm' | 'md' | 'lg' | 'xl'
+  /** Additional CSS classes for modal container */
   readonly className?: string
+  /** Whether to show close button (default: true) */
   readonly showCloseButton?: boolean
+  /** Whether clicking backdrop closes modal (default: true) */
   readonly closeOnBackdropClick?: boolean
+  /** Whether Escape key closes modal (default: true) */
   readonly closeOnEscape?: boolean
 }
 
