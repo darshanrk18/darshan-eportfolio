@@ -1,6 +1,6 @@
 'use client'
 
-import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
+import { FULL_NAME, SOCIAL_LINKS, FOOTER_LINKS } from '@/lib/constants'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -20,26 +20,13 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-white">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <a href="#home" className="hover:text-primary-400 transition-colors">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="#about" className="hover:text-primary-400 transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="#projects" className="hover:text-primary-400 transition-colors">
-                  Projects
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-primary-400 transition-colors">
-                  Contact
-                </a>
-              </li>
+              {FOOTER_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} className="hover:text-primary-400 transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
           <div>
