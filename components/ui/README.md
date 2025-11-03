@@ -17,6 +17,7 @@ This directory contains all reusable UI components following best practices for 
 - **EducationCard**: Education information cards (extends BaseCard)
 - **LocationCard**: Location information cards (extends BaseCard)
 - **ResumeModal**: Resume download modal (extends Modal)
+- **ThemeToggle**: Reusable theme switcher button component
 
 ## Design Principles
 
@@ -84,6 +85,12 @@ All components accept:
 >
   Download
 </Button>
+```
+
+### ThemeToggle Component
+```tsx
+<ThemeToggle />
+<ThemeToggle showLabel className="custom-class" />
 ```
 
 ## Variant System

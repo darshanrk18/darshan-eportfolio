@@ -64,6 +64,12 @@ All UI components are now **well-designed, highly modular, and fully extensible*
    - Customizable title
    - QR code + PDF download
 
+8. **ThemeToggle** - Theme switcher component
+   - Reusable across application
+   - Light/dark mode support
+   - Accessible with ARIA labels
+   - Optional label display
+
 ## Design Quality
 
 ### Consistency
@@ -178,6 +184,8 @@ All components are highly modular, extensible, well-designed, and future-proof. 
 8. **JSDoc Documentation** - All components fully documented
 9. **Performance Optimized** - React.memo where appropriate
 10. **Future-Proof Architecture** - Easy to extend and customize
+11. **Created ThemeToggle** - Reusable theme switcher component extracted from Navbar
+12. **Form Styling Utilities** - Centralized form input styling in `lib/utils/formStyles.ts`
 
 ## Future Enhancements (Optional)
 
