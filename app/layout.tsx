@@ -60,6 +60,15 @@ export const metadata: Metadata = {
   title: 'Darshan Konnur | Software Developer & Graduate Student',
   description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
   keywords: ['software developer', 'portfolio', 'Northeastern University', 'coop', 'web development'],
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
     title: 'Darshan Konnur | Software Developer & Graduate Student',
     description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
