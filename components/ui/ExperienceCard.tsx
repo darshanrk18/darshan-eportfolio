@@ -83,6 +83,7 @@ function ExperienceInfo({ experience, variant, showIcon }: ExperienceInfoProps) 
   const titleClass = variant === 'compact' ? 'text-xl' : 'text-2xl'
   const gapClass = variant === 'compact' ? 'gap-2' : 'gap-3'
   const listClass = variant === 'compact' ? 'space-y-2 text-sm' : 'space-y-3'
+  const isPresent = experience.period.toLowerCase().includes('present')
 
   return (
     <>
@@ -99,15 +100,33 @@ function ExperienceInfo({ experience, variant, showIcon }: ExperienceInfoProps) 
               delay: 0.1,
             }}
           >
-            <div className="text-5xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 p-4 rounded-2xl shadow-lg">
+            <div className={`text-5xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 p-4 rounded-2xl shadow-lg ${isPresent ? 'ring-4 ring-primary-400 dark:ring-primary-500 ring-opacity-50' : ''}`}>
               {experience.icon}
             </div>
           </motion.div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className={`font-bold mb-4 text-gray-900 dark:text-white ${titleClass} leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300`}>
-            {experience.title}
-          </h3>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className={`font-bold text-gray-900 dark:text-white ${titleClass} leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300`}>
+              {experience.title}
+            </h3>
+            {isPresent && (
+              <motion.span
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold rounded-full shadow-lg uppercase tracking-wide"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 200,
+                  damping: 15,
+                  delay: 0.2,
+                }}
+              >
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse" aria-hidden="true"></span>
+                <span>Present</span>
+              </motion.span>
+            )}
+          </div>
           <div className={`flex flex-wrap items-center ${gapClass} mb-5`}>
             <motion.span
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/20 text-primary-700 dark:text-primary-300 rounded-lg font-medium text-sm shadow-sm"
@@ -227,7 +246,11 @@ function ExperienceCard({
         className="group"
       >
         <motion.div
-          className={`relative bg-white dark:bg-gray-800 rounded-2xl ${cardPadding} shadow-xl border-2 border-gray-100 dark:border-gray-700 group-hover:border-primary-400/60 dark:group-hover:border-primary-500/60 group-hover:shadow-2xl group-hover:shadow-primary-500/20 dark:group-hover:shadow-primary-500/30 transition-all duration-500 overflow-hidden backdrop-blur-sm`}
+          className={`relative bg-white dark:bg-gray-800 rounded-2xl ${cardPadding} shadow-xl border-2 ${
+            experience.period.toLowerCase().includes('present')
+              ? 'border-primary-400 dark:border-primary-500 shadow-primary-500/20 dark:shadow-primary-500/30'
+              : 'border-gray-100 dark:border-gray-700 group-hover:border-primary-400/60 dark:group-hover:border-primary-500/60'
+          } group-hover:shadow-2xl group-hover:shadow-primary-500/20 dark:group-hover:shadow-primary-500/30 transition-all duration-500 overflow-hidden backdrop-blur-sm`}
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{

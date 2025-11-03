@@ -17,7 +17,9 @@
 'use client'
 
 import { useRef, useEffect, type ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
+import { ANIMATION_DURATIONS, ANIMATION_EASING } from '@/lib/config'
 
 /**
  * Props for Modal component
@@ -93,48 +95,93 @@ export default function Modal({
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <dialog
-      ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop:bg-black/50 backdrop:backdrop-blur-sm"
-      onCancel={(e) => {
-        if (closeOnEscape) {
-          e.preventDefault()
-          onClose()
-        }
-      }}
-    >
-      <div
-        className="fixed inset-0 -z-10"
-        aria-hidden="true"
-        onClick={handleBackdropClick}
-      />
-      <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-8 ${sizeClasses[size]} w-full mx-4 shadow-2xl relative ${className}`}
-      >
-        {(title || showCloseButton) && (
-          <div className="flex justify-between items-center mb-6">
-            {title && (
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {title}
-              </h3>
-            )}
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto"
-                aria-label="Close modal"
+    <AnimatePresence>
+      {isOpen && (
+        <dialog
+          ref={dialogRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop:bg-transparent"
+          onCancel={(e) => {
+            if (closeOnEscape) {
+              e.preventDefault()
+              onClose()
+            }
+          }}
+        >
+          {/* Animated Backdrop */}
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            aria-hidden="true"
+            onClick={handleBackdropClick}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: ANIMATION_DURATIONS.normal,
+              ease: ANIMATION_EASING.smooth,
+            }}
+          />
+
+          {/* Animated Modal Content */}
+          <motion.div
+            className={`bg-white dark:bg-gray-800 rounded-2xl p-8 ${sizeClasses[size]} w-full mx-4 shadow-2xl relative ${className}`}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{
+              duration: ANIMATION_DURATIONS.medium,
+              ease: ANIMATION_EASING.default,
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(title || showCloseButton) && (
+              <motion.div
+                className="flex justify-between items-center mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: ANIMATION_DURATIONS.normal,
+                  delay: ANIMATION_DURATIONS.fast,
+                  ease: ANIMATION_EASING.smooth,
+                }}
               >
-                <FiX className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-              </button>
+                {title && (
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {title}
+                  </h3>
+                )}
+                {showCloseButton && (
+                  <motion.button
+                    onClick={onClose}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto"
+                    aria-label="Close modal"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: ANIMATION_DURATIONS.fast }}
+                  >
+                    <FiX className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                  </motion.button>
+                )}
+              </motion.div>
             )}
-          </div>
-        )}
-        {children}
-      </div>
-    </dialog>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: ANIMATION_DURATIONS.medium,
+                delay: ANIMATION_DURATIONS.normal,
+                ease: ANIMATION_EASING.smooth,
+              }}
+            >
+              {children}
+            </motion.div>
+          </motion.div>
+        </dialog>
+      )}
+    </AnimatePresence>
   )
 }
 
