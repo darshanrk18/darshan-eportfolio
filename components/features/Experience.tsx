@@ -10,7 +10,7 @@ export default function Experience() {
   const [ref, inView] = useInView(inViewConfig)
 
   return (
-    <section id="experience" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 overflow-x-hidden w-full">
+    <section id="experience" ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900/30 overflow-x-hidden w-full">
       <div className="max-w-7xl mx-auto">
         <SectionHeader title="// Experience" />
 
