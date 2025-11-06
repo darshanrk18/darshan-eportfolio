@@ -8,4 +8,14 @@
 export { getInputClassName, getTextareaClassName } from './formStyles'
 export { default as logger } from './logger'
 export { cn, getAlignClasses } from './className'
+export {
+  trackEvent,
+  trackPageView,
+  trackResumeDownload,
+  trackProjectClick,
+  trackSocialClick,
+  trackContactFormSubmission,
+  trackSectionView,
+  trackSkillCategoryToggle,
+} from './analytics'
 

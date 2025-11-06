@@ -32,12 +32,30 @@ export function getEmailJSConfig() {
 }
 
 /**
+ * Retrieves Google Analytics 4 configuration
+ * Returns null if not configured (optional feature)
+ * @returns Object containing GA4 measurement ID or null
+ */
+export function getGA4Config() {
+  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+
+  if (!measurementId) {
+    return null
+  }
+
+  return {
+    measurementId,
+  }
+}
+
+/**
  * Gets all environment configuration
  * Use this for validating required env vars on app startup
  */
 export function getEnvConfig() {
   return {
     emailjs: getEmailJSConfig(),
+    ga4: getGA4Config(),
     nodeEnv: process.env.NODE_ENV || 'development',
     isProduction: process.env.NODE_ENV === 'production',
   }

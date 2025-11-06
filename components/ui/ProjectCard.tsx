@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiExternalLink } from 'react-icons/fi'
 import type { Project } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { trackProjectClick } from '@/lib/utils/analytics'
 
 export type ProjectCardVariant = 'default' | 'compact' | 'detailed'
 
@@ -92,6 +93,7 @@ function ProjectCard({
             rel="noopener noreferrer"
             className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             aria-label={`View ${project.title} on GitHub`}
+            onClick={() => trackProjectClick(project.title, project.github)}
           >
             <FiGithub className="w-5 h-5" />
             <span>Code</span>
@@ -103,6 +105,7 @@ function ProjectCard({
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               aria-label={project.isPaper ? `View ${project.title} paper` : `View ${project.title} live demo`}
+              onClick={() => project.demo && trackProjectClick(project.title, project.demo)}
             >
               <FiExternalLink className="w-5 h-5" />
               <span>{project.isPaper ? 'View Paper' : 'Live Demo'}</span>

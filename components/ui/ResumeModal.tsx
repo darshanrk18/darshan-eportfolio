@@ -7,12 +7,14 @@ import { FiDownload } from 'react-icons/fi'
 import Modal from './Modal'
 import { RESUME } from '@/lib/resume'
 import { ANIMATION_DURATIONS, ANIMATION_EASING } from '@/lib/config'
+import { trackResumeDownload } from '@/lib/utils/analytics'
 
 interface ResumeModalProps {
   readonly isOpen: boolean
   readonly onClose: () => void
   readonly title?: string
   readonly className?: string
+  readonly source?: string
 }
 
 /**
@@ -29,6 +31,7 @@ function ResumeModal({
   onClose,
   title,
   className = '',
+  source = 'modal',
 }: ResumeModalProps) {
   return (
     <Modal
@@ -98,7 +101,10 @@ function ResumeModal({
           target="_blank"
           rel="noopener noreferrer"
           className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 mt-2"
-          onClick={onClose}
+          onClick={() => {
+            trackResumeDownload(source)
+            onClose()
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
