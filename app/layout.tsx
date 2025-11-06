@@ -20,6 +20,7 @@ import { Suspense } from 'react'
 import './globals.css'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import ErrorBoundary from '@/components/providers/ErrorBoundary'
+import PageLoadProvider from '@/components/providers/PageLoadProvider'
 import GoogleAnalytics from '@/components/providers/GoogleAnalytics'
 import Navbar from '@/components/features/Navbar'
 import Footer from '@/components/features/Footer'
@@ -124,22 +125,33 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
+        <div id="initial-loading-screen">
+          <div className="loading-logo">DK</div>
+          <div className="loading-text">Loading portfolio...</div>
+          <div className="loading-dots">
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+          </div>
+        </div>
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
         <ErrorBoundary>
           <ThemeProvider>
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
-            >
-              Skip to main content
-            </a>
-            <Navbar />
-            <main id="main-content" className="min-h-screen">
-              {children}
-            </main>
-            <Footer />
+            <PageLoadProvider>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
+              >
+                Skip to main content
+              </a>
+              <Navbar />
+              <main id="main-content" className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+            </PageLoadProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </body>
