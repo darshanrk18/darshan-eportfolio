@@ -15,11 +15,16 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { FiDownload } from 'react-icons/fi'
 import Terminal from './Terminal'
-import ResumeModal from '@/components/ui/ResumeModal'
 import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
 import { trackSocialClick } from '@/lib/utils/analytics'
+
+// Lazy load ResumeModal since it's only shown on user interaction
+const ResumeModal = dynamic(() => import('@/components/ui/ResumeModal'), {
+  ssr: true,
+})
 
 /**
  * Hero component - Main landing section

@@ -15,8 +15,8 @@
 'use client'
 
 import Script from 'next/script'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
 /**
  * Google Analytics 4 component
@@ -24,28 +24,29 @@ import { useEffect, useState } from 'react'
  */
 export default function GoogleAnalytics() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const [measurementId, setMeasurementId] = useState<string | null>(null)
-
-  // Get measurement ID on client side only
-  useEffect(() => {
-    const id = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || null
-    setMeasurementId(id)
-  }, [])
+  
+  // NEXT_PUBLIC_* env vars are available at build time
+  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
 
   useEffect(() => {
-    if (!measurementId || typeof globalThis.window === 'undefined') {
+    if (!measurementId || globalThis.window === undefined) {
       return
     }
 
-    // Track page view on route change
-    if (globalThis.window.gtag) {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
-      globalThis.window.gtag('config', measurementId, {
-        page_path: url,
-      })
-    }
-  }, [pathname, searchParams, measurementId])
+    // Wait for gtag to be available
+    const checkGtag = setInterval(() => {
+      if (globalThis.window.gtag) {
+        clearInterval(checkGtag)
+        const url = pathname + (globalThis.window.location.search || '')
+        globalThis.window.gtag('config', measurementId, {
+          page_path: url,
+        })
+      }
+    }, 100)
+
+    // Cleanup after 5 seconds
+    setTimeout(() => clearInterval(checkGtag), 5000)
+  }, [pathname, measurementId])
 
   // Don't render if measurement ID is not configured
   if (!measurementId) {
@@ -55,12 +56,12 @@ export default function GoogleAnalytics() {
   return (
     <>
       <Script
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
       />
       <Script
         id="google-analytics"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];

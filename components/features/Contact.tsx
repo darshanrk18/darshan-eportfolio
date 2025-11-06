@@ -22,7 +22,7 @@ import { useEmailJS } from '@/hooks/useEmailJS'
 import { inViewConfig, slideInLeft, slideInRight } from '@/lib/styles/animations'
 import { validateFormData } from '@/lib/validation'
 import { getInputClassName, getTextareaClassName } from '@/lib/utils/formStyles'
-import { trackContactFormSubmission, trackResumeDownload } from '@/lib/utils/analytics'
+import { trackContactFormSubmission } from '@/lib/utils/analytics'
 import SectionHeader from '@/components/ui/SectionHeader'
 import ResumeModal from '@/components/ui/ResumeModal'
 import { CONTACT_INFO } from '@/lib/constants'
@@ -157,6 +157,7 @@ export default function Contact() {
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  autoComplete="name"
                   className={getInputClassName(!!fieldErrors.name)}
                   placeholder="Your name"
                   aria-invalid={!!fieldErrors.name}
@@ -182,6 +183,7 @@ export default function Contact() {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  autoComplete="email"
                   className={getInputClassName(!!fieldErrors.email)}
                   placeholder="your.email@example.com"
                   aria-invalid={!!fieldErrors.email}
@@ -207,6 +209,7 @@ export default function Contact() {
                   onChange={handleChange}
                   required
                   rows={5}
+                  autoComplete="off"
                   className={getTextareaClassName(!!fieldErrors.message)}
                   placeholder="Your message..."
                   aria-invalid={!!fieldErrors.message}
