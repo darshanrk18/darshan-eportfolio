@@ -64,8 +64,3 @@ export const inViewConfig = {
   threshold: 0.1,
 } as const
 
-/**
- * Alias for inViewConfig (backward compatibility)
- */
-export const useInViewConfig = inViewConfig
-

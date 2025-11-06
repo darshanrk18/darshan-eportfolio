@@ -45,25 +45,3 @@ export const ANIMATION_EASING = {
   bounce: [0.68, -0.55, 0.265, 1.55] as const,
 } as const
 
-/**
- * Framer Motion animation variants
- */
-export const MOTION_VARIANTS = {
-  fadeIn: {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  },
-  slideLeft: {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 },
-  },
-  slideRight: {
-    hidden: { opacity: 0, x: 20 },
-    visible: { opacity: 1, x: 0 },
-  },
-  scale: {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1 },
-  },
-} as const
-

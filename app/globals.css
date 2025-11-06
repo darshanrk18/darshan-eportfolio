@@ -2,6 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Initial Loading Screen - Shows before React loads */
+#initial-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  transition: opacity 0.3s ease-out;
+}
+
+.dark #initial-loading-screen {
+  background: #111827;
+}
+
+#initial-loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0369a1, #075985);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
+  animation: loading-pulse 2s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.loading-text {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.dark .loading-text {
+  color: #d1d5db;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  animation: loading-dot-bounce 1s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loading-dot-bounce {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
 /* Accessibility: Screen reader only class */
 .sr-only {
   position: absolute;
