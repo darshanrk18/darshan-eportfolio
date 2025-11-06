@@ -7,12 +7,26 @@
  * @module app/page
  */
 
+import dynamic from 'next/dynamic'
 import Hero from '@/components/features/Hero'
-import About from '@/components/features/About'
-import Skills from '@/components/features/Skills'
-import Projects from '@/components/features/Projects'
-import Experience from '@/components/features/Experience'
-import Contact from '@/components/features/Contact'
+
+// Dynamically import below-the-fold sections to reduce initial bundle size
+// This improves First Contentful Paint and reduces unused JavaScript
+const About = dynamic(() => import('@/components/features/About'), {
+  ssr: true,
+})
+const Skills = dynamic(() => import('@/components/features/Skills'), {
+  ssr: true,
+})
+const Projects = dynamic(() => import('@/components/features/Projects'), {
+  ssr: true,
+})
+const Experience = dynamic(() => import('@/components/features/Experience'), {
+  ssr: true,
+})
+const Contact = dynamic(() => import('@/components/features/Contact'), {
+  ssr: true,
+})
 
 /**
  * Home page component

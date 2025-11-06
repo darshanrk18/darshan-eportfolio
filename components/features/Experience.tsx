@@ -21,7 +21,7 @@ export default function Experience() {
 
             {EXPERIENCES_DATA.map((exp, index) => (
               <ExperienceCard
-                key={exp.type}
+                key={`${exp.title}-${exp.period}-${index}`}
                 experience={exp}
                 delay={index * 0.3}
                 inView={inView}

@@ -32,6 +32,8 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'arial'],
 })
 
 /**
@@ -42,6 +44,8 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   display: 'swap',
+  preload: false,
+  fallback: ['monospace'],
 })
 
 /**
@@ -52,7 +56,9 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',
+  preload: false,
   weight: ['400', '500', '600', '700'],
+  fallback: ['system-ui', 'arial'],
 })
 
 /**
@@ -93,6 +99,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  other: {
+    'dns-prefetch': 'https://www.googletagmanager.com',
+  },
 }
 
 /**
@@ -114,26 +123,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-              <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
-                <Suspense fallback={null}>
-                  <GoogleAnalytics />
-                </Suspense>
-                <ErrorBoundary>
-                  <ThemeProvider>
-                    <a
-                      href="#main-content"
-                      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
-                    >
-                      Skip to main content
-                    </a>
-                    <Navbar />
-                    <main id="main-content" className="min-h-screen">
-                      {children}
-                    </main>
-                    <Footer />
-                  </ThemeProvider>
-                </ErrorBoundary>
-              </body>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
+            >
+              Skip to main content
+            </a>
+            <Navbar />
+            <main id="main-content" className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
+          </ThemeProvider>
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }
