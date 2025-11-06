@@ -19,6 +19,7 @@ import { FiDownload } from 'react-icons/fi'
 import Terminal from './Terminal'
 import ResumeModal from '@/components/ui/ResumeModal'
 import { FULL_NAME, SOCIAL_LINKS } from '@/lib/constants'
+import { trackSocialClick } from '@/lib/utils/analytics'
 
 /**
  * Hero component - Main landing section
@@ -123,6 +124,7 @@ export default function Hero() {
                     rel="noopener noreferrer"
                     className="group relative p-2.5 sm:p-3 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-600 hover:text-white dark:hover:bg-primary-600 transition-all transform hover:-translate-y-1 hover:scale-110 shadow-md hover:shadow-xl border border-gray-200 dark:border-gray-700 hover:border-primary-600 flex-shrink-0"
                     aria-label={link.label}
+                    onClick={() => trackSocialClick(link.label.toLowerCase(), link.href)}
                   >
                     <link.icon className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity blur-sm"></div>
@@ -158,7 +160,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} />
+      <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} source="hero" />
     </section>
   );
 }

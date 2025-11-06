@@ -22,6 +22,7 @@ import { useEmailJS } from '@/hooks/useEmailJS'
 import { inViewConfig, slideInLeft, slideInRight } from '@/lib/styles/animations'
 import { validateFormData } from '@/lib/validation'
 import { getInputClassName, getTextareaClassName } from '@/lib/utils/formStyles'
+import { trackContactFormSubmission, trackResumeDownload } from '@/lib/utils/analytics'
 import SectionHeader from '@/components/ui/SectionHeader'
 import ResumeModal from '@/components/ui/ResumeModal'
 import { CONTACT_INFO } from '@/lib/constants'
@@ -47,6 +48,10 @@ export default function Contact() {
     onSuccess: () => {
       setFormData({ name: '', email: '', message: '' })
       setFieldErrors({})
+      trackContactFormSubmission(true)
+    },
+    onError: () => {
+      trackContactFormSubmission(false)
     },
   })
 
@@ -299,7 +304,7 @@ export default function Contact() {
         </div>
       </div>
 
-      <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} />
+      <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} source="contact" />
     </section>
   );
 }

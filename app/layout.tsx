@@ -16,9 +16,11 @@
 
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
+import { Suspense } from 'react'
 import './globals.css'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import ErrorBoundary from '@/components/providers/ErrorBoundary'
+import GoogleAnalytics from '@/components/providers/GoogleAnalytics'
 import Navbar from '@/components/features/Navbar'
 import Footer from '@/components/features/Footer'
 
@@ -113,6 +115,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
               <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
+                <Suspense fallback={null}>
+                  <GoogleAnalytics />
+                </Suspense>
                 <ErrorBoundary>
                   <ThemeProvider>
                     <a
