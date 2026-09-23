@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-09-23T19:43:41.394Z",
+  "totalFirstLoadGzKb": 166.1,
+  "sharedGzKb": 100.4,
+  "routes": [
+    {
+      "route": "/",
+      "firstLoadGzKb": 166.1
+    },
+    {
+      "route": "/_not-found",
+      "firstLoadGzKb": 100.5
+    },
+    {
+      "route": "/cv",
+      "firstLoadGzKb": 100.5
+    },
+    {
+      "route": "/work/[slug]",
+      "firstLoadGzKb": 111.4
+    }
+  ]
+}
