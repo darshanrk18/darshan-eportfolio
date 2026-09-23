@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+    branches: [main, 'rebuild/**']
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build # runs next build + scripts/measure-bundle.mjs
+      # TODO(spec §8.6): once installed, add —
+      #   size-limit (enforce §6.5 budgets from .size-limit.json)
+      #   Playwright smoke + @axe-core/playwright (e2e/smoke.spec.ts)
+      #   @lhci/cli autorun against the Vercel preview URL (lighthouserc.json)
