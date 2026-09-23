@@ -1,161 +1,142 @@
 /**
- * Root Layout
- * 
- * Next.js App Router root layout component.
- * Sets up fonts, metadata, and global providers.
- * 
- * Features:
- * - Font optimization with next/font
- * - SEO metadata configuration
- * - Theme provider for dark/light mode
- * - Error boundary for error handling
- * - Global navigation and footer
- * 
- * @module app/layout
+ * Root layout (spec §4/§6) — RSC only. Fonts, pre-paint inline scripts
+ * (theme / motion / boot eligibility), GA4, skip link, metadata, JSON-LD.
+ * No client components here: /cv shares this layout and must stay zero-JS.
  */
 
-import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
-import { Suspense } from 'react'
+import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono, Instrument_Serif } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
-import ThemeProvider from '@/components/providers/ThemeProvider'
-import ErrorBoundary from '@/components/providers/ErrorBoundary'
-import PageLoadProvider from '@/components/providers/PageLoadProvider'
-import GoogleAnalytics from '@/components/providers/GoogleAnalytics'
-import Navbar from '@/components/features/Navbar'
-import Footer from '@/components/features/Footer'
+import { profile, siteUrl } from '@/lib/data/profile'
 
-/**
- * Inter font configuration
- * Primary sans-serif font for body text
- */
-const inter = Inter({ 
+/** The machine voice — labels, nav, terminal, code, metadata, numbers. */
+const jbMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jbmono',
+  display: 'swap',
+})
+
+/** Body prose. */
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-  preload: true,
-  fallback: ['system-ui', 'arial'],
 })
 
-/**
- * JetBrains Mono font configuration
- * Monospace font for code and terminal displays
- */
-const jetbrainsMono = JetBrains_Mono({ 
+/** The human voice — hero name + one line per section (≤6 uses sitewide). */
+const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
-  variable: '--font-mono',
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-instrument',
   display: 'swap',
-  preload: false,
-  fallback: ['monospace'],
 })
 
-/**
- * Space Grotesk font configuration
- * Heading font for titles and headings
- */
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ['latin'],
-  variable: '--font-heading',
-  display: 'swap',
-  preload: false,
-  weight: ['400', '500', '600', '700'],
-  fallback: ['system-ui', 'arial'],
-})
-
-/**
- * SEO metadata for the portfolio
- */
 export const metadata: Metadata = {
-  title: 'Darshan Konnur | Software Developer & Graduate Student',
-  description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
-  keywords: ['software developer', 'portfolio', 'Northeastern University', 'coop', 'web development'],
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Darshan Konnur — Software Engineer',
+    template: '%s — Darshan Konnur',
   },
+  description:
+    'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'Darshan Konnur | Software Developer & Graduate Student',
-    description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
     type: 'website',
-    locale: 'en_US',
+    url: siteUrl,
+    siteName: 'SIGNAL — Darshan Konnur',
+    title: 'Darshan Konnur — Software Engineer',
+    description:
+      'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Darshan Konnur | Software Developer & Graduate Student',
-    description: 'Portfolio of Darshan Konnur, a software developer and master\'s student at Northeastern University Boston, currently seeking coop opportunities.',
+    title: 'Darshan Konnur — Software Engineer',
+    description:
+      'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published.',
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  other: {
-    'dns-prefetch': 'https://www.googletagmanager.com',
-  },
+  robots: { index: true, follow: true },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#050607' },
+    { media: '(prefers-color-scheme: light)', color: '#050607' },
+  ],
+  colorScheme: 'dark light',
 }
 
 /**
- * Root layout component
- * 
- * Wraps the entire application with:
- * - Font CSS variables
- * - Theme provider
- * - Error boundary
- * - Navigation and footer
- * 
- * @param children - Page content
- * @returns Root layout with all providers and global elements
+ * Pre-paint boot script (runs as the first element in <body>, before any
+ * content paints):
+ *  - theme:  localStorage['signal.theme']  → html[data-theme]  (fallback dark)
+ *  - motion: localStorage['signal.motion'] → html[data-motion] (else system)
+ *  - boot:   html[data-boot='1'] only when eligible (§4.1): motion not
+ *            reduced AND sessionStorage['signal.boot'] absent.
  */
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+const prePaintScript = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('signal.theme');d.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){d.setAttribute('data-theme','dark');}var r=false;try{var m=localStorage.getItem('signal.motion');r=m?m==='reduced':matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}d.setAttribute('data-motion',r?'reduced':'full');try{if(!r&&!sessionStorage.getItem('signal.boot')){d.setAttribute('data-boot','1');}}catch(e){}})();`
+
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  alternateName: profile.displayName,
+  jobTitle: profile.role,
+  // Incoming role stated in the description only — no worksFor claim until
+  // the employment actually starts (CONTENT_FINAL rule).
+  description: `Software engineer in ${profile.location} — incoming ${profile.incoming.role} at ${profile.incoming.company} (${profile.incoming.start}). ${profile.education.degree} @ ${profile.education.school}, expected ${profile.education.expectedGrad}.`,
+  email: `mailto:${profile.email}`,
+  url: siteUrl,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Boston',
+    addressRegion: 'MA',
+    addressCountry: 'US',
+  },
+  sameAs: [profile.githubUrl, profile.linkedinUrl],
+  alumniOf: [
+    { '@type': 'CollegeOrUniversity', name: profile.education.school },
+    { '@type': 'CollegeOrUniversity', name: profile.educationPrior.school },
+  ],
+}
+
+const gaId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans overflow-x-hidden`}>
-        <div id="initial-loading-screen">
-          <div className="loading-logo">DK</div>
-          <div className="loading-text">Loading portfolio...</div>
-          <div className="loading-dots">
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-          </div>
-        </div>
-        <Suspense fallback={null}>
-          <GoogleAnalytics />
-        </Suspense>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <PageLoadProvider>
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:font-semibold"
-              >
-                Skip to main content
-              </a>
-              <Navbar />
-              <main id="main-content" className="min-h-screen">
-                {children}
-              </main>
-              <Footer />
-            </PageLoadProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+    <html
+      lang="en"
+      className={`${jbMono.variable} ${inter.variable} ${instrumentSerif.variable}`}
+      // data-theme / data-motion / data-boot are written pre-paint by the
+      // inline script below; the server intentionally renders none of them.
+      suppressHydrationWarning
+    >
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: prePaintScript }} />
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        {children}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        {gaId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${gaId}', { page_path: window.location.pathname, send_page_view: true });`}
+            </Script>
+          </>
+        ) : null}
       </body>
     </html>
   )
 }
-
