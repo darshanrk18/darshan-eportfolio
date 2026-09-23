@@ -1,0 +1,8 @@
+[
+  {
+    "name": "TODO: size-limit not installed yet — install size-limit + @size-limit/file, then enforce §6.5 budgets in CI",
+    "path": ".next/static/chunks/**/*.js",
+    "limit": "140 KB",
+    "gzip": true
+  }
+]
