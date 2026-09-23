@@ -1,0 +1,15 @@
+{
+  "_TODO": "@lhci/cli is not installed yet. Install it, then run `lhci autorun` in CI against the Vercel preview URL (spec §8.6). Build must fail on LCP > 2s.",
+  "ci": {
+    "collect": {
+      "settings": { "preset": "desktop" }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2000 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 200 }]
+      }
+    }
+  }
+}

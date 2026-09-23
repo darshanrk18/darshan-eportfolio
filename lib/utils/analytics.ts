@@ -1,131 +1,101 @@
 /**
- * Analytics Utility Functions
- * 
- * Provides helper functions for tracking custom events with Google Analytics 4.
- * All functions are safe to call even if GA4 is not configured.
- * 
+ * Analytics — Google Analytics 4 (spec §7.3).
+ *
+ * Extends the pre-rebuild util: same GA4 config pattern (reads the optional
+ * NEXT_PUBLIC_GA4_MEASUREMENT_ID at build time; every function is safe to call
+ * when GA4 is not configured or gtag has not loaded), now self-contained and
+ * carrying the SIGNAL event taxonomy.
+ *
+ * The <Script> tags that load gtag.js live in app/layout.tsx.
+ *
  * @module lib/utils/analytics
  */
 
-import { getGA4Config } from '@/lib/config/env'
-import logger from './logger'
-
-/**
- * Tracks a custom event in Google Analytics 4
- * @param eventName - Name of the event (e.g., 'download_resume', 'click_project')
- * @param eventParams - Additional parameters for the event
- */
-export function trackEvent(
-  eventName: string,
-  eventParams?: Record<string, string | number | boolean>
-): void {
-  if (typeof globalThis.window === 'undefined') {
-    return
-  }
-
-  const ga4Config = getGA4Config()
-
-  if (!ga4Config?.measurementId || !globalThis.window.gtag) {
-    // Silently fail if GA4 is not configured
-    return
-  }
-
-  try {
-    globalThis.window.gtag('event', eventName, eventParams)
-  } catch (error) {
-    logger.error('Failed to track event:', error)
+declare global {
+  interface Window {
+    dataLayer?: unknown[]
+    gtag?: (command: string, targetId: string, config?: Record<string, unknown>) => void
   }
 }
 
+export type AnalyticsParams = Record<string, string | number | boolean>
+
+/** GA4 measurement id, or null when analytics are disabled. */
+export function getGa4MeasurementId(): string | null {
+  return process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? null
+}
+
 /**
- * Tracks a page view manually (usually handled automatically by GoogleAnalytics component)
- * @param pagePath - Path of the page being viewed
- * @param pageTitle - Title of the page
+ * Tracks a custom event. Silently a no-op on the server, when GA4 is not
+ * configured, or before gtag.js has loaded.
  */
+export function trackEvent(eventName: string, eventParams?: AnalyticsParams): void {
+  if (typeof window === 'undefined') return
+  const measurementId = getGa4MeasurementId()
+  if (!measurementId || !window.gtag) return
+  try {
+    window.gtag('event', eventName, eventParams)
+  } catch (error) {
+    console.error('Failed to track event:', error)
+  }
+}
+
+/** Tracks a page view manually (route transitions beyond GA4's automatic one). */
 export function trackPageView(pagePath: string, pageTitle?: string): void {
-  if (typeof globalThis.window === 'undefined') {
-    return
-  }
-
-  const ga4Config = getGA4Config()
-
-  if (!ga4Config?.measurementId || !globalThis.window.gtag) {
-    return
-  }
-
+  if (typeof window === 'undefined') return
+  const measurementId = getGa4MeasurementId()
+  if (!measurementId || !window.gtag) return
   try {
-    globalThis.window.gtag('config', ga4Config.measurementId, {
-      page_path: pagePath,
-      page_title: pageTitle,
-    })
+    window.gtag('config', measurementId, { page_path: pagePath, page_title: pageTitle })
   } catch (error) {
-    logger.error('Failed to track page view:', error)
+    console.error('Failed to track page view:', error)
   }
 }
 
-/**
- * Tracks a resume download event
- * @param source - Where the download was triggered from (e.g., 'hero', 'contact', 'navbar')
- */
-export function trackResumeDownload(source: string): void {
-  trackEvent('download_resume', {
-    source,
-    content_type: 'resume',
-  })
-}
+/* ----------------------------------------------------------------------------
+   SIGNAL event taxonomy (§7.3) — use these helpers, not ad-hoc names.
+   -------------------------------------------------------------------------- */
 
-/**
- * Tracks a project link click
- * @param projectName - Name of the project
- * @param projectUrl - URL of the project
- */
-export function trackProjectClick(projectName: string, projectUrl: string): void {
-  trackEvent('click_project', {
-    project_name: projectName,
-    project_url: projectUrl,
-  })
-}
+/** `boot_completed { ms }` — boot overlay finished (real elapsed ms). */
+export const trackBootCompleted = (ms: number) => trackEvent('boot_completed', { ms: Math.round(ms) })
 
-/**
- * Tracks a social link click
- * @param platform - Social media platform (e.g., 'github', 'linkedin')
- * @param url - URL of the social profile
- */
-export function trackSocialClick(platform: string, url: string): void {
-  trackEvent('click_social', {
-    platform,
-    social_url: url,
-  })
-}
+/** `palette_opened` */
+export const trackPaletteOpened = () => trackEvent('palette_opened')
 
-/**
- * Tracks a contact form submission
- * @param success - Whether the submission was successful
- */
-export function trackContactFormSubmission(success: boolean): void {
-  trackEvent('submit_contact_form', {
-    success: success.toString(),
-  })
-}
+/** `palette_action { id }` — a palette command was executed. */
+export const trackPaletteAction = (id: string) => trackEvent('palette_action', { id })
 
-/**
- * Tracks a section view (when user scrolls to a section)
- * @param sectionName - Name of the section (e.g., 'about', 'projects', 'experience')
- */
-export function trackSectionView(sectionName: string): void {
-  trackEvent('view_section', {
-    section_name: sectionName,
-  })
-}
+/** `terminal_opened` — terminal focused/first interacted. */
+export const trackTerminalOpened = () => trackEvent('terminal_opened')
 
-/**
- * Tracks a skill category expansion
- * @param category - Name of the skill category
- */
-export function trackSkillCategoryToggle(category: string, expanded: boolean): void {
-  trackEvent('toggle_skill_category', {
-    category,
-    expanded: expanded.toString(),
-  })
-}
+/** `terminal_command { cmd }` — a terminal command line was executed. */
+export const trackTerminalCommand = (cmd: string) => trackEvent('terminal_command', { cmd })
 
+/** `minimax_game_started` | `minimax_game_won` | `minimax_game_lost` */
+export const trackMinimaxGame = (outcome: 'started' | 'won' | 'lost') =>
+  trackEvent(`minimax_game_${outcome}`)
+
+/** `project_opened { slug }` — a project window was selected. */
+export const trackProjectOpened = (slug: string) => trackEvent('project_opened', { slug })
+
+/** `project_run { slug }` — ▶ run pressed on a project window. */
+export const trackProjectRun = (slug: string) => trackEvent('project_run', { slug })
+
+/** `cv_viewed` — fired from the main site's /cv link handlers (never from /cv itself). */
+export const trackCvViewed = () => trackEvent('cv_viewed')
+
+/** `resume_downloaded` */
+export const trackResumeDownloaded = (source?: string) =>
+  trackEvent('resume_downloaded', source ? { source } : undefined)
+
+/** `email_copied` */
+export const trackEmailCopied = () => trackEvent('email_copied')
+
+/** `theme_toggled { to }` */
+export const trackThemeToggled = (to: 'dark' | 'light') => trackEvent('theme_toggled', { to })
+
+/** `motion_disabled` — manual reduced-motion opt-in. */
+export const trackMotionDisabled = () => trackEvent('motion_disabled')
+
+/** `glyphfield_tier { tier }` — glyph-field tier chosen/settled (0–3). */
+export const trackGlyphFieldTier = (tier: number) => trackEvent('glyphfield_tier', { tier })
