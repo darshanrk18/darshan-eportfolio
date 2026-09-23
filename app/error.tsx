@@ -1,29 +1,30 @@
 'use client'
 
-import { useEffect } from 'react'
-import logger from '@/lib/utils/logger'
-import ErrorDisplay from '@/components/ui/ErrorDisplay'
+/** Minimal route error boundary — mono voice, no drama. */
 
-interface ErrorProps {
-  readonly error: Error & { digest?: string }
-  readonly reset: () => void
-}
-
-/**
- * Global error boundary component for Next.js App Router
- * Displays a user-friendly error page when errors occur
- */
-export default function Error({ error, reset }: ErrorProps) {
-  useEffect(() => {
-    logger.error('Application error:', error)
-  }, [error])
-
+export default function ErrorPage({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
   return (
-    <ErrorDisplay
-      error={error}
-      onReset={reset}
-      description="We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists."
-    />
+    <main className="container-site relative flex min-h-svh flex-col justify-center">
+      <p className="type-label-xs text-secondary mb-4">uncaught exception</p>
+      <h1 className="type-h2">something failed to compile</h1>
+      {error.digest ? (
+        <p className="type-code text-secondary mt-4">digest: {error.digest}</p>
+      ) : null}
+      <p className="type-label-sm mt-8">
+        <button
+          type="button"
+          onClick={reset}
+          className="hairline rounded-btn px-5 py-3 hover:border-hairline-strong"
+        >
+          [ retry ]
+        </button>
+      </p>
+    </main>
   )
 }
-
