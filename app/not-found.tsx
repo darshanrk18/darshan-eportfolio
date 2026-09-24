@@ -18,6 +18,12 @@ export default function NotFound() {
           /cv
         </Link>
       </p>
+      {/* v2 §10.5 — the 404 dead-end becomes the arcade's third door. */}
+      <p className="type-label-sm mt-3">
+        <Link href="/arcade" className="text-magenta hover:underline">
+          $ ls /arcade — found something else →
+        </Link>
+      </p>
     </main>
   )
 }
