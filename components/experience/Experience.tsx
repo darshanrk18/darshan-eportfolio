@@ -4,13 +4,22 @@
  * amber 300+ big number, and the quiet-zone EducationCard 96px below.
  * CareerDag (client island) draws the scroll-linked SVG rail + year rail over
  * the gutter; a static hairline is the no-JS fallback.
+ *
+ * v2 §9.1: bullet rows carry data-blame + data-skills (verified map in
+ * ./blame) and a CSS-revealed `jump to diagram ↑` chip; the lazy GitBlame
+ * island (reserved 24px row above the DAG) wires hover/focus →
+ * store.focusedSkills. v2 §9.2: the aws-future HEAD marker's dashed ring is
+ * an SVG circle so its outline can march while the section is in view
+ * (styles/v2/experience.css).
  */
 
 import SectionHeader from '@/components/chrome/SectionHeader'
 import { commits, type CommitEntry } from '@/lib/data/experience'
 import BigNumber from './BigNumber.client'
+import { commitBlame } from './blame'
 import CareerDag from './CareerDagIsland'
 import EducationCard from './EducationCard'
+import GitBlameIsland from './GitBlameIsland'
 
 /**
  * Gutter geometry (must stay in sync with CareerDag lane detection, which
@@ -23,11 +32,7 @@ function markerClass(c: CommitEntry): string {
     // 16px amber ring with the sanctioned amber glow (IEEE tag node).
     return 'absolute left-[-36px] top-[2px] h-4 w-4 rounded-full border border-amber bg-page glow-amber lg:left-[-56px]'
   }
-  if (c.kind === 'future') {
-    // Incoming/HEAD marker: dashed signal ring on the main lane — a commit
-    // that does not exist yet (hash 0000000).
-    return 'absolute left-[-36px] top-[2px] h-4 w-4 rounded-full border border-dashed border-signal bg-page lg:left-[-56px]'
-  }
+  // 'future' is rendered inline as an SVG dashed ring (§9.2 dash march).
   const lane =
     c.lane === 'main'
       ? 'left-[-32px] lg:left-[-52px] bg-signal'
@@ -73,18 +78,44 @@ function EntryHeader({ c }: { c: CommitEntry }) {
   )
 }
 
-function DiffPanel({ bullets, outcome }: { bullets: readonly string[]; outcome?: string }) {
+function DiffPanel({
+  bullets,
+  outcome,
+  blame,
+}: {
+  bullets: readonly string[]
+  outcome?: string
+  /** §9.1 — skill node ids per bullet (parallel array from ./blame). */
+  blame?: readonly (readonly string[])[]
+}) {
   return (
     <div className="hairline bg-panel mt-3 px-4 py-3">
       <ul className="space-y-1">
-        {bullets.map((b) => (
-          <li key={b} className="type-code grid grid-cols-[1.25rem_1fr]">
-            <span aria-hidden="true" className="text-signal select-none">
-              +
-            </span>
-            <span className="text-signal">{b}</span>
-          </li>
-        ))}
+        {bullets.map((b, i) => {
+          const skills = blame?.[i] ?? []
+          const blamable = skills.length > 0
+          return (
+            <li
+              key={b}
+              data-blame={blamable ? '1' : undefined}
+              data-skills={blamable ? skills.join(',') : undefined}
+              className="type-code relative grid grid-cols-[1.25rem_1fr]"
+            >
+              <span aria-hidden="true" className="text-signal select-none">
+                +
+              </span>
+              <span className="text-signal">{b}</span>
+              {blamable ? (
+                // §9.1 jump affordance — hidden until blame is on AND the row
+                // is hovered/focused (styles/v2/experience.css); the click is
+                // delegated in GitBlame.client → Lenis scrollToAnchor('#skills').
+                <button type="button" data-blame-jump className="blame-jump type-label-xs">
+                  jump to diagram ↑
+                </button>
+              ) : null}
+            </li>
+          )
+        })}
       </ul>
       {outcome ? (
         // Allowed closing line (AWS: the offer outcome) — set apart from the
@@ -107,6 +138,8 @@ export default function Experience() {
       aria-labelledby="experience-heading"
       className="section-pad"
       data-component="Experience"
+      data-island="RSC"
+      style={{ ['--vs-i' as string]: 4 }}
     >
       <div className="container-site">
         <SectionHeader
@@ -116,6 +149,12 @@ export default function Experience() {
           headingId="experience-heading"
           headline="The record, as a commit graph."
         />
+
+        {/* §9.1 — reserved 24px row for the git-blame toggle (zero CLS when
+            the lazy island mounts; empty under reduced motion / no-JS). */}
+        <div className="mb-4 max-w-2xl pl-10 lg:pl-28">
+          <GitBlameIsland />
+        </div>
 
         <div className="relative" data-dag-root>
           {/* No-JS / pre-hydration fallback: static main-lane hairline. */}
@@ -128,13 +167,47 @@ export default function Experience() {
           <ol className="relative max-w-2xl space-y-12 pl-10 lg:space-y-16 lg:pl-28">
             {commits.map((c) => (
               <li key={c.id} className="relative">
-                <span
-                  aria-hidden="true"
-                  data-dag-node
-                  data-dag-id={c.id}
-                  data-dag-lane={c.lane}
-                  className={markerClass(c)}
-                />
+                {c.kind === 'future' ? (
+                  // Incoming/HEAD marker (§9.2): dashed signal ring as an SVG
+                  // stroke so its outline can march (stroke-dashoffset, 3s
+                  // linear, [data-march]-gated in styles/v2/experience.css).
+                  // Same 16px box + data attrs as before — CareerDag measures
+                  // the wrapper, so DAG geometry is unchanged. No-JS/reduced:
+                  // a static dashed ring, exactly the v1 look.
+                  <span
+                    aria-hidden="true"
+                    data-dag-node
+                    data-dag-id={c.id}
+                    data-dag-lane={c.lane}
+                    className="bg-page absolute top-[2px] left-[-36px] h-4 w-4 rounded-full lg:left-[-56px]"
+                  >
+                    <svg
+                      className="head-marker-ring absolute inset-0 h-full w-full"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      focusable="false"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="7.5"
+                        stroke="var(--accent-signal)"
+                        strokeWidth="1"
+                        pathLength={48}
+                        strokeDasharray="3 3"
+                      />
+                    </svg>
+                  </span>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    data-dag-node
+                    data-dag-id={c.id}
+                    data-dag-lane={c.lane}
+                    className={markerClass(c)}
+                  />
+                )}
 
                 {c.bullets.length > 0 ? (
                   <details className="group">
@@ -147,7 +220,11 @@ export default function Experience() {
                       </span>
                       <EntryHeader c={c} />
                     </summary>
-                    <DiffPanel bullets={c.bullets} outcome={c.outcome} />
+                    <DiffPanel
+                      bullets={c.bullets}
+                      outcome={c.outcome}
+                      blame={commitBlame[c.id]?.bulletSkills}
+                    />
                   </details>
                 ) : (
                   <EntryHeader c={c} />
