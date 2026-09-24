@@ -1,0 +1,187 @@
+/* ============================================================================
+   SIGNAL v2 — projects.css
+   OWNER: projects agent — exclusively. No other agent edits this file.
+   SPEC: V2_SPEC §8.1 functional traffic lights (hover glyphs × − +, 60%
+   accent tints, ≥24px hit areas), §8.2 selection row-pulse keyframe +
+   title-bar dip, §8.3 maximize lightbox (backdrop, inset frame, touch
+   ⤢ maximize chip, reserved-placeholder rules for zero CLS).
+   Rules are unlayered on purpose so they win ties against v1 @layer rules.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   §8.1 Traffic lights — 8px visual discs inside 24×24 button hit areas.
+   -------------------------------------------------------------------------- */
+.pw-lights {
+  display: flex;
+  align-items: center;
+  margin-left: -8px; /* keep the first disc aligned where v1's trio started */
+}
+.pw-light {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.pw-light:disabled {
+  cursor: default;
+}
+.pw-light-disc {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-hairline);
+  transition:
+    border-color var(--dur-micro) var(--ease-swift),
+    background-color var(--dur-micro) var(--ease-swift);
+}
+.pw-light-glyph {
+  position: absolute;
+  inset: -4px; /* 16px box centered on the 8px disc */
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease-swift);
+  pointer-events: none;
+}
+.pw-light:disabled .pw-light-glyph {
+  color: var(--text-tertiary); /* decorative: the control is inert */
+}
+
+/* Fine pointers: window hover reveals the macOS-grammar glyphs + 60% tints
+   (§8.1 — control tint, not a message; hairline at rest). */
+@media (hover: hover) and (pointer: fine) {
+  [data-component='ProjectWindow']:hover .pw-light-glyph,
+  .pw-light:focus-visible .pw-light-glyph {
+    opacity: 1;
+  }
+  [data-component='ProjectWindow']:hover .pw-light[data-light='red']:not(:disabled) .pw-light-disc,
+  .pw-light[data-light='red']:focus-visible:not(:disabled) .pw-light-disc {
+    border-color: color-mix(in srgb, var(--accent-error) 60%, transparent);
+    background-color: color-mix(in srgb, var(--accent-error) 60%, transparent);
+  }
+  [data-component='ProjectWindow']:hover .pw-light[data-light='yellow'] .pw-light-disc,
+  .pw-light[data-light='yellow']:focus-visible .pw-light-disc {
+    border-color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+    background-color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+  }
+  [data-component='ProjectWindow']:hover .pw-light[data-light='green'] .pw-light-disc,
+  .pw-light[data-light='green']:focus-visible .pw-light-disc {
+    border-color: color-mix(in srgb, var(--accent-signal) 60%, transparent);
+    background-color: color-mix(in srgb, var(--accent-signal) 60%, transparent);
+  }
+}
+
+/* Touch: the discs stay decorative (§8.1) — too small for touch targets;
+   every function has another affordance (■ stop, the ⤢ footer chip). */
+@media (pointer: coarse) {
+  .pw-light {
+    pointer-events: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   §8.1 Yellow — collapse the case file + footer strip. Animating
+   grid-template-rows 1fr → 0fr needs no measured heights (smooth, no CLS).
+   Reduced motion: the global html[data-motion='reduced'] rules collapse the
+   transition to an opacity-only 120ms, i.e. effectively instant.
+   -------------------------------------------------------------------------- */
+.pw-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 300ms var(--ease-structural);
+}
+.pw-collapse[data-collapsed] {
+  grid-template-rows: 0fr;
+}
+.pw-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* --------------------------------------------------------------------------
+   §8.2 Selection feedback — the newly-selected explorer row's signal left
+   border pulses once (600ms --ease-out-expo box-shadow, class removed on
+   animationend). No FLIP morph — killed (§0.1).
+   -------------------------------------------------------------------------- */
+@keyframes pw-row-pulse {
+  from {
+    box-shadow: var(--glow-signal);
+  }
+  to {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
+  }
+}
+.pw-row-pulse {
+  animation: pw-row-pulse 600ms var(--ease-out-expo) both;
+}
+
+/* --------------------------------------------------------------------------
+   §8.3 Green — maximize lightbox. The frame flips to a fixed full-viewport
+   window (inset 24px desktop / 0 mobile) one step under the palette; the
+   backdrop is --bg-overlay + 12px blur. The in-flow slot keeps a reserved
+   height (inline style set from the measured frame) so the page never
+   reflows behind the lightbox — zero CLS.
+   -------------------------------------------------------------------------- */
+.pw-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-palette) - 2);
+  background: var(--bg-overlay);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.pw-max {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-palette) - 1);
+  display: flex;
+  flex-direction: column;
+}
+/* Maximized content column: mobile scrolls (stage keeps its aspect at full
+   width); desktop gives the stage every spare pixel — demos fill their
+   container unaware (§8.3). */
+.pw-max .pw-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+@media (min-width: 1024px) {
+  .pw-max {
+    inset: 24px;
+  }
+  .pw-max .pw-body {
+    overflow-y: visible;
+  }
+  .pw-max .pw-stage {
+    flex: 1;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+}
+
+/* Touch affordance: green light is inactive on coarse pointers, so the
+   footer strip shows a 44px ⤢ maximize chip instead (§8.3). */
+.pw-max-chip {
+  display: none;
+}
+@media (pointer: coarse) {
+  .pw-max-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

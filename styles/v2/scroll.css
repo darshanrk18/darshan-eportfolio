@@ -1,0 +1,110 @@
+/* ============================================================================
+   SIGNAL v2 — scroll.css
+   OWNER: scroll/motion agent — exclusively. No other agent edits this file.
+   SPEC: V2_SPEC §5.1 Lenis root classes, §5.2 scroll choreography
+   (header-rule scaleX draw states, tick-mark delayed fade, index count-up
+   styles) and §6.6 per-section entrance signatures (ExplorerTree row-stagger
+   hooks, Contact serif 1.02→1 settle class). §4.1 kinetic-name keyframes
+   belong scoped in Hero.tsx per spec.
+   RULE (§5.2): server markup IS the finished state — classes here only ADD
+   the animated start state when armed by JS, so no-JS and reduced motion
+   render finals.
+   ========================================================================== */
+
+/* ----------------------------------------------------------------------------
+   §5.1 Lenis root classes (Lenis toggles these on <html>).
+   `scroll-behavior: auto` while Lenis is smooth-scrolling is REQUIRED:
+   globals.css sets `html { scroll-behavior: smooth }`, which would fight
+   Lenis's per-frame scrollTop writes during lenis.scrollTo().
+   `lenis-stopped` backs the §8.3 lightbox's getLenis()?.stop() scroll lock.
+   -------------------------------------------------------------------------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------------------------
+   §5.2.1 Header-rule draw — one-shot. SectionHeaderFx adds `.shdr-armed`
+   after hydration (start state) and `.shdr-in` on first viewport entry.
+   Rule draws scaleX 0→1 over 600ms --ease-out-expo (transform-origin left);
+   the coordinate ticks fade in after a 150ms delay.
+   -------------------------------------------------------------------------- */
+.shdr-armed .header-rule {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.shdr-armed .header-rule::before,
+.shdr-armed .header-rule::after {
+  opacity: 0;
+}
+.shdr-in .header-rule {
+  transform: scaleX(1);
+  transition: transform 600ms var(--ease-out-expo);
+}
+.shdr-in .header-rule::before,
+.shdr-in .header-rule::after {
+  opacity: 1;
+  transition: opacity 150ms linear 150ms;
+}
+
+/* §5.2.2 Index count-up — tabular numerals so 00→NN never shifts width. */
+[data-shdr-index] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------------------------
+   §6.6.3 Contact serif settle — the site's single per-line choreography
+   outside the hero: the serif headline rises with a 1.02 → 1 scale settle
+   over 700ms --ease-out-expo on first entry. Rides the same armed/in pair
+   via `.shdr-serif` (set by SectionHeaderFx for the serif variant).
+   -------------------------------------------------------------------------- */
+.shdr-armed.shdr-serif .type-display-quote {
+  opacity: 0;
+  transform: translateY(10px) scale(1.02);
+  transform-origin: 0 100%;
+}
+.shdr-in.shdr-serif .type-display-quote {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform 700ms var(--ease-out-expo),
+    opacity 700ms var(--ease-out-expo);
+}
+
+/* ----------------------------------------------------------------------------
+   §6.6.2 ExplorerTree entrance hooks (consumed by the projects agent's
+   component — the tree root gets `.tree-reveal-armed` after hydration and
+   `.tree-reveal-in` on first section entry via useInViewOnce; each row
+   carries class `tree-reveal-row` + inline `--tree-i`). Rows enter with the
+   established 50ms stagger; `fade-up` keyframe lives in globals.css.
+   -------------------------------------------------------------------------- */
+.tree-reveal-armed .tree-reveal-row {
+  opacity: 0;
+}
+.tree-reveal-in .tree-reveal-row {
+  animation: fade-up var(--dur-enter) var(--ease-out-expo) both;
+  animation-delay: calc(var(--tree-i, 0) * 50ms);
+}
+
+/* ----------------------------------------------------------------------------
+   §3.4 Reduced-motion safety net — arming is already JS-gated off under
+   reduced motion, but if the preference flips mid-arm the finals render.
+   -------------------------------------------------------------------------- */
+html[data-motion='reduced'] .shdr-armed .header-rule,
+html[data-motion='reduced'] .shdr-armed.shdr-serif .type-display-quote {
+  opacity: 1;
+  transform: none;
+}
+html[data-motion='reduced'] .tree-reveal-armed .tree-reveal-row {
+  opacity: 1;
+  animation: none;
+}
