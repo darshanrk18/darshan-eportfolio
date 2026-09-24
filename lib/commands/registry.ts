@@ -4,11 +4,19 @@
  * navbar, and hash-anchor handling all consume this registry.
  */
 
-import type { CommandCtx } from './context'
+import { SIGNAL_EVENTS, toggleSourceMode, type CommandCtx } from './context'
+import { sectionTabs } from './sections'
 import { profile } from '@/lib/data/profile'
 import { projects, type ProjectSlug } from '@/lib/data/projects'
 import { allSkillNodes } from '@/lib/data/skills'
+import { useSignalStore } from '@/lib/state/store'
 import { trackCvViewed, trackEvent } from '@/lib/utils/analytics'
+
+/* Section constants live in ./sections (imported by the always-mounted
+   chrome WITHOUT this module's command/data graph, §12.1); re-exported here
+   so every lazy surface and test keeps its single import site. */
+export { SECTION_ANCHORS, sectionTabs } from './sections'
+export type { SectionAnchor } from './sections'
 
 export type CommandGroup = 'navigate' | 'action' | 'project' | 'skill' | 'fun'
 export type CommandSurface = 'palette' | 'terminal' | 'nav'
@@ -24,34 +32,6 @@ export interface Command {
   run(ctx: CommandCtx): void | Promise<void>
   surfaces: Array<'palette' | 'terminal' | 'nav'>
 }
-
-/** The five section anchors, in page order. Every scrollTo target must be one. */
-export const SECTION_ANCHORS = [
-  '#about',
-  '#skills',
-  '#projects',
-  '#experience',
-  '#contact',
-] as const
-
-export type SectionAnchor = (typeof SECTION_ANCHORS)[number]
-
-/** Nav-tab metadata (§4.2): filename-styled tabs ↔ anchors ↔ header rows. */
-export const sectionTabs: readonly {
-  anchor: SectionAnchor
-  /** Nav tab label, e.g. 'about.md'. */
-  tab: string
-  /** Section header index, e.g. '01'. */
-  index: string
-  /** Section header name, e.g. 'ABOUT'. */
-  name: string
-}[] = [
-  { anchor: '#about', tab: 'about.md', index: '01', name: 'ABOUT' },
-  { anchor: '#skills', tab: 'skills.json', index: '02', name: 'SKILLS' },
-  { anchor: '#projects', tab: 'projects/', index: '03', name: 'PROJECTS' },
-  { anchor: '#experience', tab: 'experience.log', index: '04', name: 'EXPERIENCE' },
-  { anchor: '#contact', tab: 'contact.sh', index: '05', name: 'CONTACT' },
-]
 
 const navigateCommands: Command[] = sectionTabs.map(({ anchor, tab, name }) => ({
   id: `go-${anchor.slice(1)}`,
@@ -161,16 +141,34 @@ export const commands: readonly Command[] = [
     },
   },
   {
+    /* v2 §0.3/§7.2 — retitled from 'View source' so it never collides with
+       the `source-mode` annotation toggle below. Id/aliases/behavior kept. */
     id: 'view-source',
-    title: 'View source',
+    title: 'Open repository ↗',
     aliases: ['source', 'repo', 'github'],
-    keywords: ['source', 'repo', 'github', 'code'],
+    keywords: ['source', 'repo', 'github', 'code', 'repository'],
     group: 'action',
     surfaces: ['palette'],
     run() {
       if (typeof window !== 'undefined') {
         window.open(profile.siteRepoUrl, '_blank', 'noopener,noreferrer')
       }
+    },
+  },
+  {
+    /* v2 §7.2 — sitewide view-source annotation mode. The toggle + 6s
+       auto-revert live in context.setSourceMode (pure CSS layer keys off
+       html[data-source-mode='1']); terminal `view source` (builtin) runs
+       this same command, printing its own line. */
+    id: 'source-mode',
+    title: 'View source mode — annotate this page',
+    aliases: ['source mode', 'annotate'],
+    keywords: ['source', 'mode', 'annotate', 'components', 'islands', 'inspect', 'dev'],
+    group: 'action',
+    surfaces: ['palette'],
+    run(ctx) {
+      const on = toggleSourceMode()
+      if (on) ctx.track('source_mode')
     },
   },
   ...projectCommands,
@@ -186,7 +184,9 @@ export const commands: readonly Command[] = [
       ctx.openProject('triplay-ai')
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent('signal:run-project', { detail: { slug: 'triplay-ai' as ProjectSlug } }),
+          new CustomEvent(SIGNAL_EVENTS.runProject, {
+            detail: { slug: 'triplay-ai' as ProjectSlug },
+          })
         )
       }
     },
@@ -206,6 +206,71 @@ export const commands: readonly Command[] = [
           window.location.href = mailto
         }, 800)
       }
+    },
+  },
+  {
+    /* v2 §7.1 — `$ deploy --all`. Scrolls to Skills and fires the deployAll
+       event; SystemDiagram.client (listener attached on mount) runs the
+       cluster-wave sequence and fires GA `deploy_all` at sequence start so
+       its own on-diagram button is counted too. */
+    id: 'deploy-all',
+    title: 'Deploy the system',
+    aliases: ['deploy', 'deploy --all', 'deploy all'],
+    keywords: ['deploy', 'build', 'system', 'skills', 'modules', 'healthy'],
+    group: 'fun',
+    surfaces: ['palette', 'terminal'],
+    run(ctx) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(SIGNAL_EVENTS.deployAll))
+      }
+      ctx.scrollTo('#skills')
+    },
+  },
+  {
+    /* v2 §10.4 — the registry-driven tour, EXPLICIT invocation only (no
+       auto-arm exists anywhere, §0.2.1). Dispatches SIGNAL_EVENTS.demo; the
+       always-mounted listener handles the reduced-motion refusal and lazily
+       imports lib/commands/demoRunner. */
+    id: 'run-demo',
+    title: 'Run the demo',
+    aliases: ['demo', 'tour'],
+    keywords: ['demo', 'tour', 'show', 'registry', 'autoplay'],
+    group: 'fun',
+    surfaces: ['palette', 'terminal'],
+    run() {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(SIGNAL_EVENTS.demo))
+      }
+    },
+  },
+  {
+    /* v2 §10.5 — /arcade is discoverable ONLY via terminal `arcade`, this
+       command, and the 404 egg. If the arcade route is cut (§13 cut #1),
+       remove this entry and its registry-test line with it. */
+    id: 'go-arcade',
+    title: 'Open the arcade',
+    aliases: ['arcade', '/arcade'],
+    keywords: ['arcade', 'games', 'snake', 'autopilot', 'connect', 'four', 'play'],
+    group: 'fun',
+    surfaces: ['palette', 'terminal'],
+    run(ctx) {
+      ctx.router.push('/arcade')
+    },
+  },
+  {
+    /* v2 §10.1 — CRT phosphor opt-in. State flows through the store flag
+       ONLY: the always-mounted CommandPalette island subscribes, applies
+       html[data-crt='1'], persists CRT_STORAGE_KEY, and plays the unlock
+       toast + degauss on false→true. Terminal `crt on|off` and the konami
+       ring buffer call the same setCrtEnabled. */
+    id: 'crt-mode',
+    title: 'Enable CRT mode',
+    aliases: ['crt', 'phosphor'],
+    keywords: ['crt', 'phosphor', 'scanlines', 'retro', 'tube', 'mode'],
+    group: 'fun',
+    surfaces: ['palette'],
+    run() {
+      useSignalStore.getState().setCrtEnabled(true)
     },
   },
 ]
@@ -228,7 +293,7 @@ export function findByAlias(nameOrAlias: string): Command | undefined {
     (c) =>
       c.id.toLowerCase() === q ||
       c.title.toLowerCase() === q ||
-      (c.aliases ?? []).some((a) => a.toLowerCase() === q),
+      (c.aliases ?? []).some((a) => a.toLowerCase() === q)
   )
 }
 

@@ -1,0 +1,201 @@
+/* ============================================================================
+   SIGNAL v2 — portrait.css
+   OWNER: about/portrait agent — exclusively. No other agent edits this file.
+   SPEC: V2_SPEC §2.1 (Decompiled Portrait: sweep keyframes, ASCII/duotone/
+   color layers, scanline overlay, caption states), §2.4 hookup, and the
+   §10.1 CRT crossover rules that target the portrait
+   (html[data-crt='1'] portrait color-lock + scanline drift).
+   Imported by app/globals.css AFTER all v1 rules — unlayered rules here win
+   ties against v1 @layer rules and earlier v2 files.
+
+   Contract (the "no-JS = finished" pattern, §2.1): the DEFAULT state below is
+   the FINISHED state — duotone fully visible, ASCII hidden, caption shown.
+   JS only ADDS `.is-armed` (mask parks the photo hidden, ASCII lit) and then
+   `.is-sweeping` (900ms --ease-out-expo mask sweep + scanline ride); class
+   removal is the finish. Reduced motion / no-JS never leave the default.
+   ========================================================================== */
+
+/* ---- Frame (bg-panel/hairline/elev-window/reg-marks utilities come from
+        globals; radius 0 by default) ------------------------------------- */
+.portrait-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.portrait-titlebar {
+  border-bottom: 1px solid var(--border-hairline);
+  padding: 8px 16px;
+}
+
+/* Square stage (879/880): explicit aspect ⇒ zero CLS. Container so the ASCII
+   font-size can be computed from the rendered width (64 columns fill it). */
+.portrait-body {
+  position: relative;
+  aspect-ratio: 879 / 880;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-panel);
+  container-type: inline-size;
+}
+
+/* ---- Layer 1 (bottom): the 32-row ASCII portrait ----------------------- */
+.portrait-ascii {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* finished state: hidden (150ms drop after the sweep settles) */
+  transition: opacity 150ms var(--ease-swift);
+}
+.portrait-ascii pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  /* 64 columns fill the frame width: char-width ≈ 0.6em ⇒ size = w/64 × 1.66.
+     Fallback first for browsers without container-query units. */
+  font-size: 11px;
+  font-size: 2.594cqw;
+  line-height: 1;
+  white-space: pre;
+  color: var(--accent-signal);
+  opacity: 0.6;
+}
+.portrait-frame.is-armed .portrait-ascii,
+.portrait-frame.is-sweeping .portrait-ascii {
+  opacity: 1;
+}
+
+/* ---- Layer 2: duotone photo (next/image fill) --------------------------- */
+.portrait-duotone {
+  z-index: 2;
+  object-fit: cover;
+}
+/* Armed: a top-aligned mask (200% tall, hard-black top half with a 2px soft
+   edge) parked fully off — photo hidden, ASCII beneath shows through. */
+.portrait-frame.is-armed .portrait-duotone,
+.portrait-frame.is-sweeping .portrait-duotone {
+  -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
+  mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
+  -webkit-mask-size: 100% 200%;
+  mask-size: 100% 200%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 102%;
+  mask-position: 0 102%;
+}
+/* Sweep: mask-position 102% → 0% ⇒ the reveal boundary travels top → bottom
+   over 900ms --ease-out-expo (102% overshoot clears the 2px soft edge). */
+.portrait-frame.is-sweeping .portrait-duotone {
+  animation: portrait-sweep 900ms var(--ease-out-expo) forwards;
+}
+@keyframes portrait-sweep {
+  from {
+    -webkit-mask-position: 0 102%;
+    mask-position: 0 102%;
+  }
+  to {
+    -webkit-mask-position: 0 0%;
+    mask-position: 0 0%;
+  }
+}
+
+/* ---- Layer 3: true-color photo (mounted on first hover/focus/tap) ------- */
+.portrait-color {
+  z-index: 3;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-swift);
+}
+.portrait-frame[data-color='1'] .portrait-color {
+  opacity: 1;
+}
+
+/* ---- Sweep scanline: 2px signal bar riding the mask edge (transform-only;
+        the element is frame-height with the bar as its bottom 2px) -------- */
+.portrait-scanline {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-102%);
+  background: linear-gradient(
+    to bottom,
+    transparent calc(100% - 2px),
+    var(--accent-signal) calc(100% - 2px)
+  );
+}
+.portrait-frame.is-sweeping .portrait-scanline {
+  opacity: 1;
+  animation: portrait-scan-ride 900ms var(--ease-out-expo) forwards;
+}
+@keyframes portrait-scan-ride {
+  from {
+    transform: translateY(-102%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ---- Scanline texture overlay (top): rendered output, not a paste-in ---- */
+.portrait-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.06) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* ---- Caption ------------------------------------------------------------ */
+.portrait-caption {
+  margin-top: 8px;
+  opacity: 1; /* finished state: visible */
+  transition: opacity 150ms var(--ease-swift);
+}
+.portrait-frame.is-armed + .portrait-caption,
+.portrait-frame.is-sweeping + .portrait-caption {
+  opacity: 0;
+}
+
+/* ---- Reduced motion (§2.1): mask/sweep gated off — image always fully
+        visible, ASCII never shown, caption rendered. Belt-and-suspenders on
+        top of the JS never arming under reduced motion. ------------------- */
+html[data-motion='reduced'] .portrait-duotone {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  animation: none !important;
+}
+html[data-motion='reduced'] .portrait-ascii {
+  opacity: 0 !important;
+}
+html[data-motion='reduced'] .portrait-scanline {
+  display: none !important;
+}
+html[data-motion='reduced'] .portrait-caption {
+  opacity: 1 !important;
+}
+
+/* ---- §10.1 CRT crossover (owned here per the v2 prep contract): color
+        "doesn't exist" on a phosphor tube; the texture overlay drifts. ---- */
+html[data-crt='1'] .portrait-color {
+  opacity: 0 !important;
+}
+html[data-crt='1']:not([data-motion='reduced']) .portrait-body::after {
+  animation: portrait-crt-drift 8s linear infinite;
+}
+@keyframes portrait-crt-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 48px;
+  }
+}
