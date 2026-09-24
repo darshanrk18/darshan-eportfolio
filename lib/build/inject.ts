@@ -11,6 +11,12 @@ export interface RouteBundle {
   route: string
   /** First-load JS for the route, gzipped, in KB (1 decimal). */
   firstLoadGzKb: number
+  /**
+   * v2 §6.3 — the route's OWN chunks only (first-load minus shared), gz KB.
+   * Feeds the Boot v2 BIOS POST `check /cv <n> KB route js` line; absent in
+   * manifests written before the v2 measure script ran.
+   */
+  routeGzKb?: number
 }
 
 export interface BundleManifest {
