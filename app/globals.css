@@ -106,36 +106,42 @@
 }
 
 /* ----------------------------------------------------------------------------
-   §2.2 Color — light theme
+   §2.2 Color — light theme (v2 §6.2 "paper terminal" — chrome agent).
+   Warm paper page, print-like window stack (inner highlight + soft drop +
+   hairline ring), signal deepened to #14855c for AA on white chips.
+   Electron/amber/magenta/error keep their v1 values (already AA on white).
    -------------------------------------------------------------------------- */
 html[data-theme='light'] {
-  --bg-page: #fafbfc;
+  --bg-page: #fafaf7; /* warm paper */
   --bg-panel: #ffffff;
-  --bg-raised: #f6f8fa;
-  --bg-overlay: rgba(250, 251, 252, 0.85);
-  --border-hairline: #d0d7de;
+  --bg-raised: #f3f4f0;
+  --bg-overlay: rgba(250, 250, 247, 0.85); /* derived from --bg-page */
+  --border-hairline: #d8dee4;
   --border-strong: #afb8c1;
   --text-primary: #1f2328;
   --text-secondary: #59636e;
   --text-tertiary: #818b98; /* decorative only */
-  --accent-signal: #1a9e6e;
+  --accent-signal: #14855c; /* deepened for AA on white chips */
   --accent-electron: #0969da;
   --accent-amber: #9a6700;
   --accent-magenta: #bf3989;
   --accent-error: #cf222e;
-  --accent-signal-dim: rgba(26, 158, 110, 0.12);
+  --accent-signal-dim: rgba(20, 133, 92, 0.1);
   --accent-electron-dim: rgba(9, 105, 218, 0.12);
   --accent-amber-dim: rgba(154, 103, 0, 0.12);
   --accent-magenta-dim: rgba(191, 57, 137, 0.12);
-  --grid-dot: rgba(0, 0, 0, 0.04);
-  --grid-dot-awake: rgba(0, 0, 0, 0.09);
-  --selection-bg: rgba(26, 158, 110, 0.25);
+  --grid-dot: rgba(0, 0, 0, 0.05);
+  --grid-dot-awake: rgba(0, 0, 0, 0.1);
+  --selection-bg: rgba(20, 133, 92, 0.22);
 
-  /* Light mode: glows drop the 24px blur layer (border ring only) */
-  --glow-signal: 0 0 0 1px rgba(26, 158, 110, 0.35);
+  /* Light mode: glows drop the 24px blur layer (border ring only);
+     the signal ring follows the deepened accent. */
+  --glow-signal: 0 0 0 1px rgba(20, 133, 92, 0.35);
   --glow-electron: 0 0 0 1px rgba(9, 105, 218, 0.35);
   --glow-amber: 0 0 0 1px rgba(154, 103, 0, 0.35);
-  --elev-window: 0 16px 48px rgba(31, 35, 40, 0.12), 0 0 0 1px var(--border-hairline);
+  /* Structure replaces glow: crisp print-like stack (§6.2). */
+  --elev-window:
+    inset 0 1px 0 #fff, 0 8px 24px rgba(31, 35, 40, 0.08), 0 0 0 1px var(--border-hairline);
 }
 
 /* ----------------------------------------------------------------------------
@@ -563,3 +569,23 @@ html[data-motion='reduced'] body::after {
     display: none;
   }
 }
+
+/* ============================================================================
+   SIGNAL v2 feature styles (V2_SPEC §3 index) — one file per feature area.
+
+   OWNERSHIP CONTRACT (v2 prep): app/globals.css itself belongs to the prep
+   agent. The chrome agent may additionally edit ONLY the
+   html[data-theme='light'] token block above (§6.2 paper terminal). Every
+   other v2 rule goes in that feature's own file below — each file has
+   exactly one owner agent, named in its header.
+
+   Import order is load-bearing and fixed: Tailwind's PostCSS pipeline
+   inlines these here, AFTER every v1 rule, so v2 rules win specificity ties
+   against v1 and later files win ties against earlier ones. Do not reorder.
+   ========================================================================== */
+@import '../styles/v2/portrait.css';
+@import '../styles/v2/chrome.css';
+@import '../styles/v2/crt.css';
+@import '../styles/v2/scroll.css';
+@import '../styles/v2/projects.css';
+@import '../styles/v2/experience.css';

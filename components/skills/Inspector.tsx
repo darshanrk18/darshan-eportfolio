@@ -93,6 +93,8 @@ export default function Inspector({ node, onClose }: InspectorProps) {
             role="dialog"
             id="skills-inspector"
             aria-label={`${node.label} — usage details`}
+            data-component="Inspector"
+            data-island="client"
             tabIndex={-1}
             className="bg-panel elev-window fixed flex flex-col outline-none max-md:inset-x-0 max-md:bottom-0 max-md:max-h-[70vh] md:inset-y-0 md:right-0 md:w-[360px]"
             style={{ zIndex: 'var(--z-inspector)' }}

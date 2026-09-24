@@ -1,8 +1,8 @@
 [
   {
-    "name": "TODO: size-limit not installed yet — install size-limit + @size-limit/file, then enforce §6.5 budgets in CI",
+    "name": "/ first-load JS ≤ 178 KB gz — V2_SPEC §0.3/§5.3, moved ONCE from the measured 166.1: +9.0 Lenis, +0.6 glue, +1.0 magnetic hook, +0.5 theme wipe, +0.5 SectionHeader client, +0.4 SectionsSeen, +0.2 narrator store write, +0.2 CRT hydrate-apply ≈ +12.4. TODO: size-limit not installed yet — install size-limit + @size-limit/file to enforce in CI; until then scripts/measure-bundle.mjs enforces this ceiling under GitHub Actions",
     "path": ".next/static/chunks/**/*.js",
-    "limit": "140 KB",
+    "limit": "178 KB",
     "gzip": true
   }
 ]

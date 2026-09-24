@@ -7,25 +7,33 @@
  * everything else here is a terminal-only builtin.
  */
 
-import type { CommandCtx } from '@/lib/commands/context'
+import { getCurrentTheme, isSourceModeOn, type CommandCtx } from '@/lib/commands/context'
 import { findByAlias, getCommand, type Command } from '@/lib/commands/registry'
 import { profile } from '@/lib/data/profile'
+import { PHOTO_ASCII } from '@/lib/data/photoAscii'
 import { projectSlugs, isProjectSlug } from '@/lib/data/projects'
 import { skillGroups } from '@/lib/data/skills'
 import { commits } from '@/lib/data/experience'
+import { useSignalStore } from '@/lib/state/store'
 
 export type TermTone = 'default' | 'secondary' | 'error' | 'magenta' | 'signal'
 
 export interface TermLine {
   text: string
   tone?: TermTone
+  /** Rendered aria-hidden inside the role="log" region (ASCII art rows, §2.2). */
+  ariaHidden?: boolean
+  /** Visually-hidden sentence the log announces instead of the art (§2.2). */
+  srOnly?: boolean
+  /** `label` inside `text` renders as a real link running ctx.scrollTo(anchor). */
+  link?: { label: string; anchor: string }
 }
 
 /** Side-effect sink implemented by the Terminal UI. */
 export interface TerminalIO {
   print(lines: readonly TermLine[]): void
   clear(): void
-  startSnake(): void
+  startSnake(opts?: { autopilot?: boolean }): void
   exit(): void
 }
 
@@ -33,6 +41,11 @@ export interface TerminalIO {
 export const BANNER = "SIGNAL v1.0 — type 'help'"
 
 const line = (text: string, tone?: TermTone): TermLine => (tone ? { text, tone } : { text })
+
+/** v2 §11.1 — reduced-motion check for the `demo` refusal (DOM-guarded). */
+function motionReducedNow(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduced'
+}
 
 /* ------------------------------------------------------------------------- */
 /* Output builders (all copy derives from lib/data/*)                         */
@@ -51,13 +64,45 @@ export function helpLines(): TermLine[] {
     line('actions', 'secondary'),
     line(`  email              copy ${profile.email}`),
     line('  open resume        download the resume PDF'),
-    line('  theme dark|light   switch theme'),
+    line('  theme dark|light   switch theme (no arg reports)'),
     line('  motion off|on      disable or enable animation'),
+    line('  view source        annotate this page for 6s'),
     line('fun', 'secondary'),
     line('  sudo hire darshan  draft the offer email'),
     line('  snake              play snake — arrows/wasd move, q quits'),
+    line('  snake --autopilot  watch A* drive the snake'),
+    line('  whoami --face      render the ASCII portrait'),
+    line('  deploy             build the system — see skills.json'),
+    line('  demo               run the demo — any key takes over'),
+    line('  arcade             open the hidden /arcade'),
+    line('  crt on|off         phosphor mode'),
     line('session', 'secondary'),
     line('  clear · history · exit'),
+  ]
+}
+
+/** One-sentence announcement standing in for the 32 aria-hidden art rows (§2.2). */
+export const FACE_ALT = 'ASCII portrait of Darshan Konnur'
+
+/**
+ * v2 §2.2/§11.1 `whoami --face` (alias `cat darshan.jpg`): the 32 ASCII rows
+ * (secondary, final 3 in signal, all aria-hidden), one sr-only alt sentence,
+ * then the render-complete line whose `./about.md` is a real link.
+ */
+export function faceLines(): TermLine[] {
+  const last = PHOTO_ASCII.length - 3
+  const rows: TermLine[] = PHOTO_ASCII.map((text, i) => ({
+    text,
+    tone: i >= last ? 'signal' : 'secondary',
+    ariaHidden: true,
+  }))
+  return [
+    ...rows,
+    { text: FACE_ALT, srOnly: true },
+    {
+      text: 'render complete — the 880px build lives in ./about.md',
+      link: { label: './about.md', anchor: '#about' },
+    },
   ]
 }
 
@@ -157,7 +202,13 @@ export async function execute(
       io.print(helpLines())
       return
     case 'whoami':
-      io.print(whoamiLines())
+      if (arg === '--face') {
+        io.print(faceLines())
+      } else if (arg === '') {
+        io.print(whoamiLines())
+      } else {
+        io.print([line(`whoami: unrecognized option '${rest.join(' ')}' — try 'whoami --face'`, 'error')])
+      }
       return
     case 'ls':
       if (arg === '' || arg === 'projects') {
@@ -169,6 +220,8 @@ export async function execute(
     case 'cat':
       if (arg === 'resume.txt') {
         io.print(resumeLines())
+      } else if (arg === 'darshan.jpg') {
+        io.print(faceLines())
       } else {
         io.print([line(`cat: ${rest.join(' ') || '(no file)'}: no such file`, 'error')])
       }
@@ -191,6 +244,10 @@ export async function execute(
       if (arg === 'dark' || arg === 'light') {
         ctx.setTheme(arg)
         io.print([line(`theme set to ${arg}`)])
+      } else if (arg === '') {
+        io.print([
+          line(`theme is currently ${getCurrentTheme()} — 'theme dark|light' to switch`, 'secondary'),
+        ])
       } else {
         io.print([line('usage: theme dark|light', 'secondary')])
       }
@@ -207,7 +264,61 @@ export async function execute(
       }
       return
     case 'snake':
-      io.startSnake()
+      io.startSnake({ autopilot: arg === '--autopilot' })
+      return
+    case 'deploy': {
+      /* §11.1 — `deploy` / `deploy --all`: print, then the ONE action layer. */
+      io.print([line('deploying — see skills.json ↑')])
+      const deploy = getCommand('deploy-all')
+      if (deploy) await deploy.run(ctx)
+      return
+    }
+    case 'demo':
+      /* §10.4 — reduced-motion refusal is printed by the invoking surface. */
+      if (motionReducedNow()) {
+        io.print([line('demo needs animation — motion is set to reduced', 'secondary')])
+      } else {
+        io.print([line('starting the demo — any key hands control back')])
+        const demoCmd = getCommand('run-demo')
+        if (demoCmd) await demoCmd.run(ctx)
+      }
+      return
+    case 'arcade': {
+      io.print([line('navigating to /arcade…')])
+      const arcadeCmd = getCommand('go-arcade')
+      if (arcadeCmd) await arcadeCmd.run(ctx)
+      return
+    }
+    case 'view': {
+      if (arg === 'source') {
+        /* §7.2 — the source-mode command owns the toggle; we only narrate. */
+        const wasOn = isSourceModeOn()
+        io.print([
+          line(
+            wasOn
+              ? 'source mode: off'
+              : 'source mode: on — annotating this page for 6s',
+          ),
+        ])
+        const sourceCmd = getCommand('source-mode')
+        if (sourceCmd) await sourceCmd.run(ctx)
+      } else {
+        io.print([line("view: try 'view source'", 'error')])
+      }
+      return
+    }
+    case 'crt':
+      /* §10.1 — the store flag is THE one CRT channel; the always-mounted
+         palette island applies html[data-crt], persists, toasts, degausses. */
+      if (arg === 'on') {
+        useSignalStore.getState().setCrtEnabled(true)
+        io.print([line('CRT MODE UNLOCKED — phosphor burn-in not covered by warranty', 'signal')])
+      } else if (arg === 'off') {
+        useSignalStore.getState().setCrtEnabled(false)
+        io.print([line('crt off — flat glass restored', 'secondary')])
+      } else {
+        io.print([line('usage: crt on|off', 'secondary')])
+      }
       return
     case 'clear':
       io.clear()
@@ -248,6 +359,11 @@ const TOP_LEVEL = [
   'motion',
   'sudo',
   'snake',
+  'deploy',
+  'demo',
+  'arcade',
+  'crt',
+  'view',
   'clear',
   'history',
   'exit',
@@ -256,7 +372,11 @@ const TOP_LEVEL = [
 
 const ARG_CANDIDATES: Record<string, readonly string[]> = {
   open: ['resume', ...projectSlugs],
-  cat: ['resume.txt'],
+  cat: ['resume.txt', 'darshan.jpg'],
+  whoami: ['--face'],
+  snake: ['--autopilot'],
+  crt: ['on', 'off'],
+  view: ['source'],
   theme: ['dark', 'light'],
   motion: ['off', 'on'],
   ls: ['projects'],

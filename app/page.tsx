@@ -6,6 +6,9 @@
  */
 
 import BootOverlay from '@/components/chrome/BootOverlay'
+import { buildPostLines } from '@/components/chrome/bootLines'
+import { bundleManifest } from '@/lib/build/inject'
+import LenisProvider from '@/components/chrome/LenisProvider'
 import Navbar from '@/components/chrome/Navbar'
 import ReducedMotionBanner from '@/components/chrome/ReducedMotionBanner'
 import CursorHalo from '@/components/chrome/CursorHalo'
@@ -21,7 +24,11 @@ import CommandPalette from '@/components/palette/CommandPalette'
 export default function HomePage() {
   return (
     <>
-      <BootOverlay />
+      {/* v2 §6.3 — BIOS POST lines built at BUILD time from the measured
+          bundle manifest and passed down as plain strings. */}
+      <BootOverlay postLines={buildPostLines(bundleManifest)} />
+      {/* v2 §5.1 — Lenis mounts on '/' ONLY (never layout: /cv stays zero-JS). */}
+      <LenisProvider />
       <Navbar />
       <ReducedMotionBanner />
       <main id="main" className="relative" style={{ zIndex: 'var(--z-content)' }}>

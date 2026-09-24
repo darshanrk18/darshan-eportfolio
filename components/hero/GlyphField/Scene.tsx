@@ -19,10 +19,11 @@ import * as THREE from 'three'
 import { Canvas, useThree } from '@react-three/fiber'
 import { subscribeTicker } from '@/lib/motion/ticker'
 import { TIER_PARTICLES, TierGovernor, type GlyphTier } from '@/lib/perf/tiers'
+import { useSignalStore } from '@/lib/state/store'
 import { createSeededRandom } from '@/lib/utils/seeded'
-import { ATLAS_GLYPHS, createGlyphAtlasTexture } from './atlas'
+import { ATLAS_GRID, FIELD_GLYPH_COUNT, createGlyphAtlasTexture, glyphIndexOf } from './atlas'
 import { glyphFragmentShader, glyphVertexShader } from './shaders'
-import { DPR_CAP, FAR_LAYER_RATIO, particleCount, type ActiveTier } from './tiers'
+import { DPR_CAP, LAYER_SPLIT, SPAWN_RING_SIZE, particleCount, type ActiveTier } from './tiers'
 
 export interface GlyphSceneProps {
   /** Tier at mount; internal downgrades never exceed it (§8.3: no re-upgrade). */
@@ -45,7 +46,16 @@ interface FieldUniforms {
   uAtlas: THREE.IUniform<THREE.CanvasTexture>
   uColorA: THREE.IUniform<THREE.Color>
   uColorB: THREE.IUniform<THREE.Color>
+  uGrid: THREE.IUniform<number>
+  uRipples: THREE.IUniform<THREE.Vector4[]>
   [name: string]: THREE.IUniform
+}
+
+interface FieldAttrs {
+  cell: THREE.InstancedBufferAttribute
+  rand: THREE.InstancedBufferAttribute
+  depth: THREE.InstancedBufferAttribute
+  birth: THREE.InstancedBufferAttribute
 }
 
 interface FieldBuild {
@@ -53,26 +63,46 @@ interface FieldBuild {
   material: THREE.ShaderMaterial
   texture: THREE.CanvasTexture
   uniforms: FieldUniforms
+  attrs: FieldAttrs
+  /** First index of the §4.2d spawn ring (mutates on governor downgrade). */
+  fieldCount: number
 }
+
+/** aBirth sentinel: dormant spawn slot (renders at alpha 0 until first use). */
+const BIRTH_DORMANT = -1e3
+/** aBirth sentinel: ordinary field glyph (normal alpha path). */
+const BIRTH_FIELD = -1
 
 function buildField(tier: ActiveTier): FieldBuild | null {
   const texture = createGlyphAtlasTexture()
   if (!texture) return null
 
-  const count = particleCount(tier)
+  // §4.2d: the buffer carries the field glyphs plus a 32-instance spawn ring
+  // reserved as the LAST instances.
+  const fieldCount = particleCount(tier)
+  const count = fieldCount + SPAWN_RING_SIZE
   const rand = createSeededRandom('signal-field')
   const cells = new Float32Array(count * 2)
   const rands = new Float32Array(count * 4)
   const depths = new Float32Array(count)
+  const births = new Float32Array(count)
+
+  // §4.2b ternary depth split: first 15% far, next 35% mid, rest near.
+  const farEnd = fieldCount * LAYER_SPLIT[0]
+  const midEnd = fieldCount * (LAYER_SPLIT[0] + LAYER_SPLIT[1])
 
   for (let i = 0; i < count; i++) {
-    cells[i * 2] = rand() - 0.5
-    cells[i * 2 + 1] = rand() - 0.5
+    const spawnSlot = i >= fieldCount
+    // Spawn slots park far off-field until a keypress claims them.
+    cells[i * 2] = spawnSlot ? 5 : rand() - 0.5
+    cells[i * 2 + 1] = spawnSlot ? 5 : rand() - 0.5
     rands[i * 4] = rand()
     rands[i * 4 + 1] = rand()
-    rands[i * 4 + 2] = Math.floor(rand() * ATLAS_GLYPHS.length)
+    // Ambient field samples only the code-glyph prefix (v1 aesthetic).
+    rands[i * 4 + 2] = Math.floor(rand() * FIELD_GLYPH_COUNT)
     rands[i * 4 + 3] = rand()
-    depths[i] = i < count * FAR_LAYER_RATIO ? 0 : 1
+    depths[i] = spawnSlot ? 1 : i < farEnd ? 0 : i < midEnd ? 0.5 : 1
+    births[i] = spawnSlot ? BIRTH_DORMANT : BIRTH_FIELD
   }
 
   const plane = new THREE.PlaneGeometry(1, 1)
@@ -80,9 +110,16 @@ function buildField(tier: ActiveTier): FieldBuild | null {
   geometry.index = plane.index
   geometry.setAttribute('position', plane.getAttribute('position'))
   geometry.setAttribute('uv', plane.getAttribute('uv'))
-  geometry.setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 2))
-  geometry.setAttribute('aRand', new THREE.InstancedBufferAttribute(rands, 4))
-  geometry.setAttribute('aDepth', new THREE.InstancedBufferAttribute(depths, 1))
+  const attrs: FieldAttrs = {
+    cell: new THREE.InstancedBufferAttribute(cells, 2),
+    rand: new THREE.InstancedBufferAttribute(rands, 4),
+    depth: new THREE.InstancedBufferAttribute(depths, 1),
+    birth: new THREE.InstancedBufferAttribute(births, 1),
+  }
+  geometry.setAttribute('aCell', attrs.cell)
+  geometry.setAttribute('aRand', attrs.rand)
+  geometry.setAttribute('aDepth', attrs.depth)
+  geometry.setAttribute('aBirth', attrs.birth)
   geometry.instanceCount = count
 
   const uniforms: FieldUniforms = {
@@ -96,6 +133,16 @@ function buildField(tier: ActiveTier): FieldBuild | null {
     // Real values are read from the CSS tokens after mount (theme-aware).
     uColorA: { value: new THREE.Color(1, 1, 1) },
     uColorB: { value: new THREE.Color(1, 1, 1) },
+    uGrid: { value: ATLAS_GRID },
+    // §4.2c ring buffer of 4 click ripples; t0 = -1e3 marks an idle slot.
+    uRipples: {
+      value: [
+        new THREE.Vector4(0, 0, BIRTH_DORMANT, 0),
+        new THREE.Vector4(0, 0, BIRTH_DORMANT, 0),
+        new THREE.Vector4(0, 0, BIRTH_DORMANT, 0),
+        new THREE.Vector4(0, 0, BIRTH_DORMANT, 0),
+      ],
+    },
   }
 
   const material = new THREE.ShaderMaterial({
@@ -107,7 +154,18 @@ function buildField(tier: ActiveTier): FieldBuild | null {
     depthWrite: false,
   })
 
-  return { geometry, material, texture, uniforms }
+  return { geometry, material, texture, uniforms, attrs, fieldCount }
+}
+
+/** Mark a one-instance slice of an instanced attribute for partial upload. */
+function touchInstance(attr: THREE.InstancedBufferAttribute, index: number): void {
+  attr.addUpdateRange(index * attr.itemSize, attr.itemSize)
+  attr.needsUpdate = true
+}
+
+/** The hero canvas intersects the viewport (spawn/ripple gate §4.2). */
+function canvasOnScreen(rect: DOMRect): boolean {
+  return rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0
 }
 
 function Field({ initialTier, onReady, onTierChange, onTeardown }: GlyphSceneProps) {
@@ -181,6 +239,91 @@ function Field({ initialTier, onReady, onTierChange, onTeardown }: GlyphScenePro
     return () => observer.disconnect()
   }, [built])
 
+  // §4.2c click ripples: pointerdown while the hero is on screen writes the
+  // click into the 4-slot uniform ring — uniform writes only, zero geometry.
+  const rippleNextRef = useRef(0)
+  useEffect(() => {
+    if (!built) return
+    const onPointerDown = (e: PointerEvent) => {
+      const rect = gl.domElement.getBoundingClientRect()
+      if (!canvasOnScreen(rect)) return
+      const slot = built.uniforms.uRipples.value[rippleNextRef.current % 4] as THREE.Vector4
+      rippleNextRef.current += 1
+      slot.set(
+        e.clientX - rect.left - rect.width / 2,
+        -(e.clientY - rect.top - rect.height / 2),
+        built.uniforms.uTime.value,
+        0,
+      )
+    }
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [built, gl])
+
+  // §4.2d THE SPAWN: printable keypresses materialize as their glyph in the
+  // field. Observes only — never preventDefault; the ⌘K/konami handlers on
+  // the same document keep working. Ignores modified keys, focused inputs /
+  // textareas / contenteditables, the open palette, and demo-driven input.
+  const spawnNextRef = useRef(0)
+  const caretElRef = useRef<Element | null>(null)
+  useEffect(() => {
+    if (!built) return
+    const { uniforms, attrs } = built
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key.length !== 1) return // non-printable
+      const glyph = glyphIndexOf(e.key)
+      if (glyph < 0) return // whitespace has no drawable glyph
+      const store = useSignalStore.getState()
+      if (store.paletteOpen || store.demoRunning) return
+      const ae = document.activeElement as HTMLElement | null
+      if (ae) {
+        const tag = ae.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || ae.isContentEditable)
+          return
+      }
+      const rect = gl.domElement.getBoundingClientRect()
+      if (!canvasOnScreen(rect)) return
+
+      // Position: last pointer position (CursorHalo's --mx/--my vars); else
+      // just below the h1 caret; else canvas center-right.
+      const rootStyle = document.documentElement.style
+      let cx = parseFloat(rootStyle.getPropertyValue('--mx'))
+      let cy = parseFloat(rootStyle.getPropertyValue('--my'))
+      if (Number.isNaN(cx) || Number.isNaN(cy) || cx < -500 || cy < -500) {
+        if (caretElRef.current === null || !caretElRef.current.isConnected) {
+          caretElRef.current = document.querySelector('#hero h1 .caret')
+        }
+        if (caretElRef.current) {
+          const cr = caretElRef.current.getBoundingClientRect()
+          cx = cr.left + cr.width / 2
+          cy = cr.bottom + 24
+        } else {
+          cx = rect.left + rect.width * 0.75
+          cy = rect.top + rect.height / 2
+        }
+      }
+
+      const slot = built.fieldCount + (spawnNextRef.current % SPAWN_RING_SIZE)
+      spawnNextRef.current += 1
+      const size = uniforms.uSize.value
+      // aCell is normalized [-0.5, 0.5] (base = aCell × uSize) — seeding it
+      // from the spawn point lets the curl flow carry the glyph off.
+      attrs.cell.setXY(
+        slot,
+        (cx - rect.left - rect.width / 2) / Math.max(size.x, 1),
+        -(cy - rect.top - rect.height / 2) / Math.max(size.y, 1),
+      )
+      attrs.rand.setZ(slot, glyph)
+      attrs.birth.setX(slot, uniforms.uTime.value)
+      touchInstance(attrs.cell, slot)
+      touchInstance(attrs.rand, slot)
+      touchInstance(attrs.birth, slot)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [built, gl])
+
   // The one frame driver: shared ticker → uniforms → governor → advance().
   useEffect(() => {
     if (!built) return
@@ -190,7 +333,24 @@ function Field({ initialTier, onReady, onTierChange, onTeardown }: GlyphScenePro
         cbRef.current.onTeardown()
         return
       }
-      geometry.instanceCount = Math.min(TIER_PARTICLES[tier], particleCount(initialTierRef.current))
+      // §4.2d: keep the spawn ring alive as the LAST 32 live instances —
+      // copy its attribute block to the new tail before shrinking the range.
+      const nextField = Math.min(TIER_PARTICLES[tier], particleCount(initialTierRef.current))
+      if (nextField < built.fieldCount) {
+        const { attrs } = built
+        for (const attr of [attrs.cell, attrs.rand, attrs.depth, attrs.birth]) {
+          const item = attr.itemSize
+          ;(attr.array as Float32Array).copyWithin(
+            nextField * item,
+            built.fieldCount * item,
+            (built.fieldCount + SPAWN_RING_SIZE) * item,
+          )
+          attr.addUpdateRange(nextField * item, SPAWN_RING_SIZE * item)
+          attr.needsUpdate = true
+        }
+        built.fieldCount = nextField
+      }
+      geometry.instanceCount = nextField + SPAWN_RING_SIZE
       cbRef.current.onTierChange(tier)
     })
 

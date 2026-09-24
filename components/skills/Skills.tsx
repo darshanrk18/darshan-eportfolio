@@ -155,6 +155,8 @@ export default function Skills() {
       aria-labelledby="skills-heading"
       className="section-pad"
       data-component="Skills"
+      data-island="RSC"
+      style={{ ['--vs-i' as string]: 2 }}
     >
       <div className="container-site">
         <SectionHeader
