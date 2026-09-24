@@ -100,6 +100,7 @@ export default function FpsMeter() {
       onMouseEnter={show}
       onMouseLeave={hide}
       data-component="FpsMeter"
+      data-island="client"
     >
       <button
         type="button"
@@ -135,7 +136,9 @@ export default function FpsMeter() {
               </p>
             </>
           ) : (
-            <p className="type-label-xs text-secondary">{isStatic ? 'animation off' : 'sampling…'}</p>
+            <p className="type-label-xs text-secondary">
+              {isStatic ? 'animation off' : 'sampling…'}
+            </p>
           )}
           <p className="type-label-xs mt-1 text-secondary">
             tier {tierLabel(glyphTier)}

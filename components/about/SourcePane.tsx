@@ -61,12 +61,17 @@ const MD_BLOCKS: MdBlock[] = [
     id: 'stats',
     text: '`next: AWS · Jan 2027` · `users_served: 10k+` · `students_taught: 300+`',
   },
+  { id: null, text: '' },
+  // §2.1 wormhole line for the Decompiled Portrait (asset pane below this
+  // pane on desktop; the frame carries data-line="photo").
+  { id: 'photo', text: '![darshan](./darshan.webp)' },
 ]
 
-/** Split a markdown line into styled segments: **bold** signal, `code` electron. */
+/** Split a markdown line into styled segments: **bold** signal, `code` and
+ *  `![image](url)` electron. */
 function tokenizeInline(text: string): Seg[] {
   const segs: Seg[] = []
-  const re = /(\*\*[^*]+\*\*|`[^`]+`)/g
+  const re = /(\*\*[^*]+\*\*|`[^`]+`|!\[[^\]]*\]\([^)]*\))/g
   let last = 0
   for (const m of text.matchAll(re)) {
     const index = m.index ?? 0

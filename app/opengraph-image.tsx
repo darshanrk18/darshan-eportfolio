@@ -30,13 +30,18 @@ export default async function OpengraphImage() {
   const name = profile.displayName
   const tagline = profile.heroTagline
   const statusLine = `${profile.status} · ${profile.location}`
-  // No '✓' here: the subset font lacks the glyph and Satori's dynamic-font
-  // fetch 400s (build noise). Pure ASCII + em dash keeps the card clean.
   const eyebrow = '~/darshan-konnur — main'
+
+  // v2 §10.6 — the build-run motif travels with the card. VERIFIED: Google's
+  // css2 endpoint silently DROPS U+2713 from JetBrains Mono subsets (the
+  // fetch succeeds but the served font has no ✓ cmap entry), after which
+  // Satori's own dynamic-font fetch 400s — so the glyph "still fails" and the
+  // spec's sanctioned ASCII fallback row ships deterministically.
+  const buildRow = 'ok · compiled · 0 errors'
 
   const [serif, mono] = await Promise.all([
     loadGoogleFont('Instrument Serif', name),
-    loadGoogleFont('JetBrains Mono', `${tagline}${statusLine}${eyebrow}`),
+    loadGoogleFont('JetBrains Mono', `${tagline}${statusLine}${eyebrow}${buildRow}`),
   ])
 
   const fonts: { name: string; data: ArrayBuffer; style: 'normal'; weight: 400 }[] = []
@@ -109,6 +114,20 @@ export default async function OpengraphImage() {
             }}
           >
             {tagline}
+          </div>
+          {/* v2 §10.6 — build-run row in the signal hex. The AWS/date line
+              already lives in the tagline (kept to one occurrence). */}
+          <div
+            style={{
+              display: 'flex',
+              marginTop: 20,
+              fontFamily: monoFamily,
+              fontSize: 24,
+              color: '#3FE0A0',
+              letterSpacing: '0.04em',
+            }}
+          >
+            {buildRow}
           </div>
         </div>
 

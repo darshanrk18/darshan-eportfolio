@@ -8,6 +8,7 @@
 import { profile } from '@/lib/data/profile'
 import { buildInfo, bundleManifest } from '@/lib/build/inject'
 import FpsMeter from '@/components/footer/FpsMeter.client'
+import BuildCompleteIsland from '@/components/footer/BuildCompleteIsland'
 
 const SPARK_BAR_W = 5
 const SPARK_GAP = 2
@@ -77,8 +78,9 @@ export default function Footer() {
   return (
     <footer
       className="relative border-t border-hairline"
-      style={{ zIndex: 'var(--z-content)' }}
+      style={{ zIndex: 'var(--z-content)', ['--vs-i' as string]: 6 }}
       data-component="Footer"
+      data-island="RSC"
     >
       <div className="container-site py-8">
         {/* Row 1 — copyright / source / back to top */}
@@ -89,20 +91,28 @@ export default function Footer() {
               href={profile.siteRepoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-primary"
+              className="link-draw transition-colors hover:text-primary"
             >
               view source ↗
             </a>
             {/* '#top' scrolls to document top; html{scroll-behavior:smooth} makes
                 it smooth, and the reduced-motion CSS forces it instant. */}
-            <a href="#top" className="transition-colors hover:text-primary">
+            <a href="#top" className="link-draw transition-colors hover:text-primary">
               back to top ↑
             </a>
           </p>
         </div>
 
-        {/* Row 2 — the self-verifying readout (§5.9) */}
-        <div className="type-label-sm mt-4 flex flex-col items-start gap-2 text-secondary md:flex-row md:flex-wrap md:items-center md:gap-3">
+        {/* v2 §10.3 — build-complete payoff (IO-lazy island; absent no-JS).
+            It types the summary, draws the rule, then releases Row 2 below
+            (data-footer-artifacts) with the shared fade-up entrance. */}
+        <BuildCompleteIsland />
+
+        {/* Row 2 — the self-verifying readout (§5.9); v2 §10.3 "the artifacts" */}
+        <div
+          data-footer-artifacts
+          className="type-label-sm mt-4 flex flex-col items-start gap-2 text-secondary md:flex-row md:flex-wrap md:items-center md:gap-3"
+        >
           <span>built with next 15 · react 19 · three.js · vercel</span>
           <Dot />
           <RouteBundleSparkline />

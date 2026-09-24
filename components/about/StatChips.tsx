@@ -98,7 +98,7 @@ export default function StatChips() {
             return next
           })
         },
-      }),
+      })
     )
     return () => controls.forEach((c) => c.stop())
   }, [inView, reduced])
@@ -111,13 +111,14 @@ export default function StatChips() {
       aria-describedby="about-wormhole-hint"
       className="flex flex-wrap gap-3"
       data-component="StatChips"
+      data-island="client"
     >
       {CHIPS.map((chip, i) => (
-        <code
-          key={chip.key}
-          aria-label={`${chip.label}: ${chip.final}`}
-          className="type-code hairline rounded-chip bg-raised px-3 py-1.5"
-        >
+        <code key={chip.key} className="type-code hairline rounded-chip bg-raised px-3 py-1.5">
+          {/* aria-label is PROHIBITED on role-less <code> (axe
+              aria-prohibited-attr) — the real value ships as sr-only text
+              instead, and the count-up remains aria-hidden. */}
+          <span className="sr-only">{`${chip.label}: ${chip.final}`}</span>
           <span aria-hidden="true">
             <span className="text-secondary">{chip.label}:</span>{' '}
             <span className="text-primary">{values[i]}</span>

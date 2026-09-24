@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   BANNER,
+  FACE_ALT,
   complete,
   execute,
+  faceLines,
   helpLines,
   resumeLines,
   whoamiLines,
@@ -10,8 +12,10 @@ import {
   type TerminalIO,
 } from '@/components/contact/Terminal/interpreter'
 import type { CommandCtx } from '@/lib/commands/context'
+import { PHOTO_ASCII } from '@/lib/data/photoAscii'
 import { profile } from '@/lib/data/profile'
 import { projectSlugs } from '@/lib/data/projects'
+import { useSignalStore } from '@/lib/state/store'
 
 function makeCtx(): CommandCtx {
   return {
@@ -27,11 +31,18 @@ function makeCtx(): CommandCtx {
   }
 }
 
-function makeIO(): TerminalIO & { lines: TermLine[]; cleared: boolean; snake: boolean; exited: boolean } {
+function makeIO(): TerminalIO & {
+  lines: TermLine[]
+  cleared: boolean
+  snake: boolean
+  snakeOpts: { autopilot?: boolean } | undefined
+  exited: boolean
+} {
   const io = {
     lines: [] as TermLine[],
     cleared: false,
     snake: false,
+    snakeOpts: undefined as { autopilot?: boolean } | undefined,
     exited: false,
     print(newLines: readonly TermLine[]) {
       io.lines.push(...newLines)
@@ -39,8 +50,9 @@ function makeIO(): TerminalIO & { lines: TermLine[]; cleared: boolean; snake: bo
     clear() {
       io.cleared = true
     },
-    startSnake() {
+    startSnake(opts?: { autopilot?: boolean }) {
       io.snake = true
+      io.snakeOpts = opts
     },
     exit() {
       io.exited = true
@@ -164,6 +176,163 @@ describe('terminal interpreter', () => {
     await execute('history', makeCtx(), io, ['help', 'whoami'])
     expect(io.lines).toHaveLength(2)
     expect(io.lines[0].text).toContain('help')
+  })
+
+  /* ---------------------------------------------------------- v2 §11 pack */
+
+  it('whoami --face streams 32 aria-hidden art rows, last 3 in signal', async () => {
+    const io = makeIO()
+    await execute('whoami --face', makeCtx(), io)
+    expect(io.lines).toHaveLength(PHOTO_ASCII.length + 2) // 32 art + alt + link line
+    const art = io.lines.slice(0, PHOTO_ASCII.length)
+    expect(art.map((l) => l.text)).toEqual([...PHOTO_ASCII])
+    expect(art.every((l) => l.ariaHidden === true)).toBe(true)
+    expect(art.slice(0, -3).every((l) => l.tone === 'secondary')).toBe(true)
+    expect(art.slice(-3).every((l) => l.tone === 'signal')).toBe(true)
+  })
+
+  it('whoami --face announces one sr-only sentence and a working ./about.md link', async () => {
+    const io = makeIO()
+    await execute('whoami --face', makeCtx(), io)
+    const alt = io.lines[PHOTO_ASCII.length]
+    expect(alt).toEqual({ text: FACE_ALT, srOnly: true })
+    const done = io.lines[PHOTO_ASCII.length + 1]
+    expect(done.text).toBe('render complete — the 880px build lives in ./about.md')
+    expect(done.link).toEqual({ label: './about.md', anchor: '#about' })
+    expect(faceLines()).toHaveLength(PHOTO_ASCII.length + 2)
+  })
+
+  it('cat darshan.jpg is an exact alias for whoami --face', async () => {
+    const a = makeIO()
+    const b = makeIO()
+    await execute('cat darshan.jpg', makeCtx(), a)
+    await execute('whoami --face', makeCtx(), b)
+    expect(a.lines).toEqual(b.lines)
+  })
+
+  it('whoami with an unknown option errors', async () => {
+    const io = makeIO()
+    await execute('whoami --hands', makeCtx(), io)
+    expect(io.lines[0].tone).toBe('error')
+    expect(io.lines[0].text).toContain('--face')
+  })
+
+  it('theme with no arg reports the current theme', async () => {
+    const ctx = makeCtx()
+    const io = makeIO()
+    await execute('theme', ctx, io)
+    expect(io.lines[0].text).toBe("theme is currently dark — 'theme dark|light' to switch")
+    expect(io.lines[0].tone).toBe('secondary')
+    expect(ctx.setTheme).not.toHaveBeenCalled()
+  })
+
+  it('snake parses --autopilot into the startSnake options', async () => {
+    const plain = makeIO()
+    await execute('snake', makeCtx(), plain)
+    expect(plain.snakeOpts).toEqual({ autopilot: false })
+    const auto = makeIO()
+    await execute('snake --autopilot', makeCtx(), auto)
+    expect(auto.snakeOpts).toEqual({ autopilot: true })
+  })
+
+  it('deploy prints the bridge line and runs the deploy-all command', async () => {
+    const ctx = makeCtx()
+    const io = makeIO()
+    await execute('deploy', ctx, io)
+    expect(io.lines[0].text).toBe('deploying — see skills.json ↑')
+    expect(ctx.scrollTo).toHaveBeenCalledWith('#skills')
+    const io2 = makeIO()
+    await execute('deploy --all', makeCtx(), io2)
+    expect(io2.lines[0].text).toBe('deploying — see skills.json ↑')
+  })
+
+  it('demo prints the start line (motion not reduced)', async () => {
+    const io = makeIO()
+    await execute('demo', makeCtx(), io)
+    expect(io.lines).toHaveLength(1)
+    expect(io.lines[0].text).toBe('starting the demo — any key hands control back')
+  })
+
+  it('demo refuses under reduced motion', async () => {
+    const g = globalThis as { document?: unknown }
+    g.document = { documentElement: { dataset: { motion: 'reduced' } } }
+    try {
+      const io = makeIO()
+      await execute('demo', makeCtx(), io)
+      expect(io.lines[0].text).toBe('demo needs animation — motion is set to reduced')
+      expect(io.lines[0].tone).toBe('secondary')
+    } finally {
+      delete g.document
+    }
+  })
+
+  it('arcade prints and navigates to /arcade', async () => {
+    const ctx = makeCtx()
+    const io = makeIO()
+    await execute('arcade', ctx, io)
+    expect(io.lines[0].text).toBe('navigating to /arcade…')
+    expect(ctx.router.push).toHaveBeenCalledWith('/arcade')
+  })
+
+  it('view source prints the annotation line and runs source-mode', async () => {
+    const ctx = makeCtx()
+    const io = makeIO()
+    await execute('view source', ctx, io)
+    expect(io.lines[0].text).toBe('source mode: on — annotating this page for 6s')
+    expect(ctx.track).toHaveBeenCalledWith('source_mode')
+    const bad = makeIO()
+    await execute('view sauce', makeCtx(), bad)
+    expect(bad.lines[0].tone).toBe('error')
+  })
+
+  it('crt on|off drives the store flag and prints the exact lines', async () => {
+    const io = makeIO()
+    try {
+      await execute('crt on', makeCtx(), io)
+      expect(useSignalStore.getState().crtEnabled).toBe(true)
+      expect(io.lines[0]).toEqual({
+        text: 'CRT MODE UNLOCKED — phosphor burn-in not covered by warranty',
+        tone: 'signal',
+      })
+      await execute('crt off', makeCtx(), io)
+      expect(useSignalStore.getState().crtEnabled).toBe(false)
+      expect(io.lines[1]).toEqual({ text: 'crt off — flat glass restored', tone: 'secondary' })
+      await execute('crt', makeCtx(), io)
+      expect(io.lines[2].text).toBe('usage: crt on|off')
+    } finally {
+      useSignalStore.getState().setCrtEnabled(false)
+    }
+  })
+
+  it('help lists every v2 command', () => {
+    const text = helpLines()
+      .map((l) => l.text)
+      .join('\n')
+    for (const cmd of [
+      'snake --autopilot',
+      'whoami --face',
+      'deploy',
+      'demo',
+      'arcade',
+      'crt on|off',
+      'view source',
+    ]) {
+      expect(text).toContain(cmd)
+    }
+  })
+
+  it('tab completion covers the v2 additions', () => {
+    expect(complete('whoami -')).toEqual({ value: 'whoami --face' })
+    expect(complete('cat d')).toEqual({ value: 'cat darshan.jpg' })
+    expect(complete('snake -')).toEqual({ value: 'snake --autopilot' })
+    expect(complete('view s')).toEqual({ value: 'view source' })
+    expect(complete('crt on')).toEqual({ value: 'crt on' })
+    const crt = complete('crt o')
+    expect(crt.options).toEqual(['on', 'off'])
+    const de = complete('de')
+    expect(de.options).toContain('deploy')
+    expect(de.options).toContain('demo')
+    expect(complete('arc')).toEqual({ value: 'arcade' })
   })
 
   it('help lists every §4.8 command', () => {
