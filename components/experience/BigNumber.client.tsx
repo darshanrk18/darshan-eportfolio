@@ -50,7 +50,11 @@ export default function BigNumber({ value, accent, label }: BigNumberProps) {
   }, [inView, reduced, value])
 
   return (
-    <p ref={ref} className={`type-display-num ${ACCENT_CLASS[accent]}`} aria-label={label}>
+    <p ref={ref} className={`type-display-num ${ACCENT_CLASS[accent]}`}>
+      {/* aria-label is PROHIBITED on a role-less <p> (axe
+          aria-prohibited-attr) — the real value is sr-only text; the
+          counting span stays hidden from the tree. */}
+      <span className="sr-only">{label}</span>
       <span aria-hidden="true">{display}</span>
     </p>
   )

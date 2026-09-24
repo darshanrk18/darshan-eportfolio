@@ -4,50 +4,60 @@
  * Recruiter quick row (spec §4.3): copy email · resume.pdf ↓ · github ↗ ·
  * linkedin ↗. One click each, no cleverness. The resume link keeps its native
  * download behavior (works without JS after SSR) and only adds analytics.
+ * v2 §6.5: the three links are magnetic (named in the ~10-element scope) and
+ * use `.link-draw` for the underline draw-in (chrome.css); both degrade to
+ * plain links on coarse pointers / reduced motion.
  */
 
+import { useRef, type AnchorHTMLAttributes, type ReactNode } from 'react'
+import { useMagnetic } from '@/lib/motion/useMagnetic'
 import { profile } from '@/lib/data/profile'
 import { trackResumeDownloaded } from '@/lib/utils/analytics'
 import CopyEmailInline from './CopyEmailInline'
 
-const LINK_CLASS =
-  'text-secondary transition-colors hover:text-primary underline-offset-4 hover:underline'
+const LINK_CLASS = 'link-draw text-secondary transition-colors hover:text-primary'
+
+function MagneticLink({
+  children,
+  ...rest
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { children: ReactNode }) {
+  const ref = useRef<HTMLAnchorElement>(null)
+  useMagnetic(ref, { strength: 0.25, radius: 80 })
+  return (
+    <a ref={ref} className={LINK_CLASS} {...rest}>
+      <span data-mag-label>{children}</span>
+    </a>
+  )
+}
 
 export default function QuickRow() {
   return (
-    <ul className="type-label-sm flex flex-wrap gap-x-6 gap-y-2">
+    <ul
+      className="type-label-sm flex flex-wrap gap-x-6 gap-y-2"
+      data-component="QuickRow"
+      data-island="client"
+    >
       <li>
         <CopyEmailInline />
       </li>
       <li>
-        <a
+        <MagneticLink
           href={profile.resumePdf}
           download="darshan-konnur.pdf"
-          className={LINK_CLASS}
           onClick={() => trackResumeDownloaded('hero')}
         >
           resume.pdf ↓
-        </a>
+        </MagneticLink>
       </li>
       <li>
-        <a
-          href={profile.githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={LINK_CLASS}
-        >
+        <MagneticLink href={profile.githubUrl} target="_blank" rel="noopener noreferrer">
           github ↗
-        </a>
+        </MagneticLink>
       </li>
       <li>
-        <a
-          href={profile.linkedinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={LINK_CLASS}
-        >
+        <MagneticLink href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer">
           linkedin ↗
-        </a>
+        </MagneticLink>
       </li>
     </ul>
   )

@@ -16,8 +16,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { LazyMotion, domAnimation, m } from 'motion/react'
 import { profile } from '@/lib/data/profile'
-import { SECTION_ANCHORS, sectionTabs } from '@/lib/commands/registry'
+import { SECTION_ANCHORS, sectionTabs, type SectionAnchor } from '@/lib/commands/sections'
 import { scrollToAnchor } from '@/lib/commands/context'
+import { useMagnetic } from '@/lib/motion/useMagnetic'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { SPRING_UI } from '@/lib/motion/tokens'
 import { useSignalStore } from '@/lib/state/store'
@@ -40,6 +41,12 @@ export default function Navbar() {
   const [kbdLabel, setKbdLabel] = useState('⌘K')
 
   const visibleSections = useRef(new Map<string, boolean>())
+
+  // §6.5 magnetic tactility — exactly the two navbar chips the spec names.
+  const cvChipRef = useRef<HTMLAnchorElement>(null)
+  const kbdChipRef = useRef<HTMLButtonElement>(null)
+  useMagnetic(cvChipRef, { strength: 0.25, radius: 80 })
+  useMagnetic(kbdChipRef, { strength: 0.25, radius: 80 })
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -64,12 +71,19 @@ export default function Navbar() {
       (entries) => {
         for (const entry of entries) {
           visibleSections.current.set(entry.target.id, entry.isIntersecting)
+          // v2 §10.3 — honest seen-count for the footer payoff (idempotent write).
+          if (entry.isIntersecting) useSignalStore.getState().markSectionSeen(entry.target.id)
         }
-        let current: string | null = null
+        let current: SectionAnchor | null = null
         for (const anchor of SECTION_ANCHORS) {
           if (visibleSections.current.get(anchor.slice(1))) current = anchor
         }
         setActive(current)
+        // v2 §10.2 — the palette narrator reads the active section from the
+        // store; before the first section the visitor is in the hero.
+        useSignalStore.getState().setActiveSection(current ?? 'hero')
+        // v2 §10.3 — the band sits above #about only at the top of the page.
+        if (current === null) useSignalStore.getState().markSectionSeen('hero')
       },
       { rootMargin: '-40% 0px -55% 0px', threshold: 0 }
     )
@@ -79,12 +93,16 @@ export default function Navbar() {
 
   const paletteChip = (
     <button
+      ref={kbdChipRef}
       type="button"
       onClick={() => setPaletteOpen(true)}
-      aria-label="Open command palette"
+      /* Name contains the visible keycap (WCAG 2.5.3); data-palette-trigger
+         keeps the CommandPalette hover-prefetch selector matching. */
+      aria-label={`${kbdLabel} — open command palette`}
+      data-palette-trigger
       className={`${chipClass} bg-raised`}
     >
-      {kbdLabel}
+      <span data-mag-label>{kbdLabel}</span>
     </button>
   )
 
@@ -92,6 +110,7 @@ export default function Navbar() {
     <LazyMotion features={domAnimation} strict>
       <header
         data-component="Navbar"
+        data-island="client"
         className={`fixed inset-x-0 top-0 h-12 transition-colors duration-200 ${
           scrolled
             ? 'border-b border-hairline bg-overlay backdrop-blur-md'
@@ -111,7 +130,7 @@ export default function Navbar() {
               href={profile.siteRepoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="View this site's repository on GitHub"
+              aria-label="main ✓ — view this site's repository on GitHub"
               className="type-label-sm rounded-chip border border-hairline px-1.5 py-0.5 text-signal transition-colors hover:border-hairline-strong"
             >
               main ✓
@@ -154,8 +173,8 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 md:flex">
               <CompiledReadout />
-              <a href="/cv" onClick={() => trackCvViewed()} className={chipClass}>
-                cv ↗
+              <a ref={cvChipRef} href="/cv" onClick={() => trackCvViewed()} className={chipClass}>
+                <span data-mag-label>cv ↗</span>
               </a>
               <ThemeToggle />
             </div>

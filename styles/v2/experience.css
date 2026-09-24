@@ -1,0 +1,284 @@
+/* ============================================================================
+   SIGNAL v2 — experience.css
+   OWNER: experience/skills agent — exclusively. No other agent edits this
+   file.
+   SPEC: V2_SPEC §9.1 git-blame cross-highlight (bullet hover states,
+   `jump to diagram ↑` chip, .skills-node[data-blamed] 2px electron ring +
+   arrival pulse), §9.2 aws-future HEAD-marker 3s dashed-stroke march
+   (in-view-gated class, absent under reduced motion), and §7.1
+   `$ deploy --all` state classes (node `deployed` flash/✓, SVG-layer
+   `deploying` packet speed-up) — the skills-diagram CSS lives here because
+   §9.1 already spans Experience + SystemDiagram.
+   Empty by design until the owner fills it.
+   ========================================================================== */
+
+/* ============================================================================
+   §7.1 — `$ deploy --all` (skills agent)
+   State classes/attributes set by SystemDiagram.client.tsx:
+   - .skills-cluster[data-deployed='true']  → nodes flip to full accent border,
+     gain a signal ✓ suffix, and flash once on arrival (pure CSS).
+   - .skills-diagram[data-deploying='true'] → packet dots run at 2× speed
+     (halved animation-duration; higher specificity than the v1 6s shorthand).
+   - .skills-diagram[data-finale='true']    → Prometheus + Grafana pulse once
+     (reuses the v1 pulse-soft keyframe, single iteration).
+   ========================================================================== */
+
+/* Deploy bar: prompt-line button + typed status line. Height for both lines
+   is reserved up front — the button mounts JS-only with zero layout shift. */
+.skills-deploy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 56px;
+  margin-bottom: 12px;
+}
+.skills-deploy-btn {
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--dur-micro) var(--ease-swift);
+}
+.skills-deploy-btn:hover,
+.skills-deploy-btn:focus-visible {
+  color: var(--text-primary);
+}
+.skills-deploy-status {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Wave landing: full accent border + ✓ suffix + one border flash. */
+.skills-cluster[data-deployed='true'] .skills-node {
+  border-color: var(--cluster-accent);
+  animation: skills-node-flash 360ms var(--ease-swift) 1;
+}
+.skills-cluster[data-deployed='true'] .skills-node::after {
+  content: '✓';
+  margin-left: auto;
+  padding-left: 6px;
+  color: var(--accent-signal);
+}
+@keyframes skills-node-flash {
+  0% {
+    box-shadow: 0 0 0 1px var(--cluster-accent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* While deploying, packet dots accelerate to 2× (6s → 3s). */
+.skills-diagram[data-deploying='true'] .skills-packet {
+  animation-duration: 3s;
+}
+
+/* Finale: the observability pair pulses once. Wins over the flash rule by
+   specificity, which has already played by the time the finale lands. */
+.skills-diagram[data-finale='true'] .skills-node[data-skill-id='prometheus'],
+.skills-diagram[data-finale='true'] .skills-node[data-skill-id='grafana'] {
+  animation: pulse-soft 1.2s var(--ease-swift) 1;
+}
+
+/* Reduced motion: instant final state — no flash, no pulse (the JS side also
+   renders the settled state directly; packets are already display:none). */
+html[data-motion='reduced'] .skills-cluster[data-deployed='true'] .skills-node,
+html[data-motion='reduced'] .skills-diagram[data-finale='true'] .skills-node[data-skill-id='prometheus'],
+html[data-motion='reduced'] .skills-diagram[data-finale='true'] .skills-node[data-skill-id='grafana'] {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .skills-cluster[data-deployed='true'] .skills-node,
+  html:not([data-motion='full']) .skills-diagram[data-finale='true'] .skills-node {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   §7.2 — sitewide view-source mode (skills agent)
+   NOTE (ownership): the prep-contract file map lists the §7.2 annotation
+   layer under styles/v2/chrome.css; the skills brief owns the §7.2 feature,
+   so the rules ship here (this file loads last — identical duplicates in
+   chrome.css would be harmless ties this file wins). Reconcile on merge.
+   Pure CSS, keyed off html[data-source-mode='1'] (attribute + 6s auto-revert
+   owned by lib/commands/context.setSourceMode — §7.2). Zero cost when off.
+   ========================================================================== */
+
+html[data-source-mode='1'] [data-component] {
+  outline: 1px dashed var(--accent-electron);
+  outline-offset: -1px;
+}
+/* position:relative anchors each tag — at :where() zero specificity so
+   already-positioned components (fixed nav/progress, absolute DAG overlay)
+   keep their own positioning while the mode is on. */
+:where(html[data-source-mode='1'] [data-component]) {
+  position: relative;
+}
+html[data-source-mode='1'] [data-component]::before {
+  content: '<' attr(data-component) ' />';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  font: 500 11px/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  background: var(--bg-overlay);
+  padding: 1px 6px;
+  pointer-events: none;
+  opacity: 0;
+  animation: vs-tag-in 180ms var(--ease-swift) forwards;
+  /* Enter cascade: top-level sections set --vs-i 0…6 inline → 60ms steps. */
+  animation-delay: calc(var(--vs-i, 0) * 60ms);
+}
+/* Island type (RSC vs client) in amber, top-right of the outline. */
+html[data-source-mode='1'] [data-component][data-island]::after {
+  content: attr(data-island);
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: var(--z-toast);
+  font: 500 11px/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--accent-amber);
+  background: var(--bg-overlay);
+  padding: 1px 6px;
+  pointer-events: none;
+  opacity: 0;
+  animation: vs-tag-in 180ms var(--ease-swift) forwards;
+  animation-delay: calc(var(--vs-i, 0) * 60ms);
+}
+@keyframes vs-tag-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Reduced motion: the cascade collapses to instant — the mode itself stays
+   available (informational, §7.2). */
+html[data-motion='reduced'][data-source-mode='1'] [data-component]::before,
+html[data-motion='reduced'][data-source-mode='1'] [data-component]::after {
+  animation: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full'])[data-source-mode='1'] [data-component]::before,
+  html:not([data-motion='full'])[data-source-mode='1'] [data-component]::after {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   §9.1 — git-blame cross-highlighting (experience agent)
+   GitBlame.client sets [data-blame-on='1'] on [data-dag-root] while the
+   toggle is on; bullet rows carry [data-blame] + [data-skills] (RSC markup
+   fed by components/experience/blame.ts). Server markup is the finished
+   state — every rule below only ADDS states behind JS-set attributes; the
+   toggle island never renders under reduced motion (spec rule), so none of
+   this arms there.
+   ========================================================================== */
+
+/* Blamed rows become interactive while the mode is on. */
+[data-blame-on='1'] [data-blame] {
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-swift);
+}
+[data-blame-on='1'] [data-blame]:hover,
+[data-blame-on='1'] [data-blame]:focus-within {
+  background: var(--bg-raised);
+}
+
+/* `jump to diagram ↑` chip — row top-right, revealed only while blame is on
+   AND the row is hovered/focused. Touch: the row-tap focuses the bullet
+   (tabindex set by GitBlame.client), which reveals the chip for a second
+   tap — the chip is the jump affordance (§9.1). */
+.blame-jump {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: none;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-micro) var(--ease-swift),
+    border-color var(--dur-micro) var(--ease-swift);
+}
+[data-blame-on='1'] [data-blame]:hover .blame-jump,
+[data-blame-on='1'] [data-blame]:focus-within .blame-jump {
+  display: inline-flex;
+}
+.blame-jump:hover,
+.blame-jump:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* --- Skills-diagram side (store-only contract): SystemDiagram marks nodes
+   [data-blamed='true'] when store.focusedSkills holds them WITHOUT the
+   inspector being open on them (blame ≠ inspector-open, §9.1). */
+
+/* 2px electron ring. */
+.skills-node[data-blamed='true'] {
+  box-shadow: 0 0 0 2px var(--accent-electron);
+}
+/* Blamed nodes stay bright: the dim rule
+   (.skills-diagram[data-focused='true'] .skills-node:not([data-selected='true']))
+   lives in Skills.tsx's inline <style>, which FOLLOWS this sheet in document
+   order — the doubled attribute wins on specificity, not order. */
+.skills-diagram[data-focused='true'] .skills-node[data-blamed='true'][data-blamed='true'] {
+  opacity: 1;
+}
+
+/* Arrival pulse: GitBlame.client holds [data-blame-pulse='1'] on #skills for
+   ~700ms once the Lenis glide lands. One-shot, ≤6 nodes, 600ms. */
+[data-blame-pulse='1'] .skills-node[data-blamed='true'] {
+  animation: blame-ring-pulse 600ms var(--ease-out-expo) 1;
+}
+@keyframes blame-ring-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--accent-electron);
+  }
+  35% {
+    box-shadow: 0 0 0 5px var(--accent-electron);
+  }
+}
+
+/* ============================================================================
+   §9.2 — aws-future HEAD-marker dash march (experience agent)
+   The marker's dashed ring is an SVG circle (Experience.tsx; pathLength 48,
+   dasharray 3 3 → dash period 6, seamless around the circle). GitBlame.client
+   sets [data-march='1'] on [data-dag-root] ONLY while the Experience section
+   is in view (IO); one dash period every 3s, linear, on the outline only.
+   No-JS: a static dashed ring — exactly the v1 look.
+   ========================================================================== */
+
+[data-dag-root][data-march='1'] .head-marker-ring circle {
+  animation: head-dash-march 3s linear infinite;
+}
+@keyframes head-dash-march {
+  to {
+    stroke-dashoffset: -6;
+  }
+}
+/* Absent (not merely paused) under reduced motion — same double gate as the
+   packet dots; the gating island also never renders when reduced. */
+html[data-motion='reduced'] .head-marker-ring circle {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .head-marker-ring circle {
+    animation: none;
+  }
+}

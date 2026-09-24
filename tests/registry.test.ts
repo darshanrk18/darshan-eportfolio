@@ -62,3 +62,42 @@ describe('command registry (spec §5.1)', () => {
     expect(commandsForSurface('terminal').some((c) => c.group === 'skill')).toBe(false)
   })
 })
+
+describe('v2 command pack (V2_SPEC §7, §10, §11.2)', () => {
+  it('every new v2 command id resolves', () => {
+    for (const id of ['deploy-all', 'source-mode', 'run-demo', 'go-arcade', 'crt-mode']) {
+      expect(getCommand(id), id).toBeDefined()
+    }
+  })
+
+  it('carries the spec surface flags (§7.1, §7.2, §10.1, §10.4, §10.5)', () => {
+    expect(getCommand('deploy-all')?.surfaces).toEqual(['palette', 'terminal'])
+    expect(getCommand('run-demo')?.surfaces).toEqual(['palette', 'terminal'])
+    expect(getCommand('go-arcade')?.surfaces).toEqual(['palette', 'terminal'])
+    expect(getCommand('source-mode')?.surfaces).toEqual(['palette'])
+    expect(getCommand('crt-mode')?.surfaces).toEqual(['palette'])
+  })
+
+  it('retitled view-source so the repo link and source-mode never collide (§0.3)', () => {
+    expect(getCommand('view-source')?.title).toBe('Open repository ↗')
+    expect(getCommand('source-mode')?.title).toBe('View source mode — annotate this page')
+  })
+
+  it('resolves the v2 terminal/palette-facing aliases (§11.2 bridges)', () => {
+    expect(findByAlias('deploy')?.id).toBe('deploy-all')
+    expect(findByAlias('deploy --all')?.id).toBe('deploy-all')
+    expect(findByAlias('demo')?.id).toBe('run-demo')
+    expect(findByAlias('arcade')?.id).toBe('go-arcade')
+    expect(findByAlias('crt')?.id).toBe('crt-mode')
+    expect(findByAlias('source mode')?.id).toBe('source-mode')
+    // the old repo-opening aliases stay on view-source, uncollided
+    expect(findByAlias('repo')?.id).toBe('view-source')
+    expect(findByAlias('github')?.id).toBe('view-source')
+  })
+
+  it('every command id the §10.4 demo script drives resolves in the registry', () => {
+    for (const id of ['open-ticket-forge', 'play-connect-four', 'skill-docker', 'go-contact']) {
+      expect(getCommand(id), id).toBeDefined()
+    }
+  })
+})

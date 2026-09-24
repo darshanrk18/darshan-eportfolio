@@ -8,15 +8,9 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import {
-  AnimatePresence,
-  LazyMotion,
-  domAnimation,
-  m,
-  type Variants,
-} from 'motion/react'
+import { AnimatePresence, LazyMotion, domAnimation, m, type Variants } from 'motion/react'
 import { profile } from '@/lib/data/profile'
-import { sectionTabs } from '@/lib/commands/registry'
+import { sectionTabs } from '@/lib/commands/sections'
 import { copyEmailAction, scrollToAnchor } from '@/lib/commands/context'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { EASE_OUT_EXPO, EASE_STRUCTURAL, STAGGER_ITEMS } from '@/lib/motion/tokens'
@@ -123,6 +117,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             aria-modal="true"
             aria-label="Site menu"
             data-component="MobileMenu"
+            data-island="client"
             onKeyDown={handleKeyDown}
             className="fixed inset-0 flex flex-col bg-panel"
             style={{ zIndex: 'var(--z-nav)' }}

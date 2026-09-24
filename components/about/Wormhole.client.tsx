@@ -15,14 +15,7 @@
  *   instant under reduced motion via useInViewOnce + CSS).
  */
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { useInViewOnce } from '@/lib/motion/useInViewOnce'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
@@ -32,9 +25,15 @@ interface WormholeProps {
   source: ReactNode
   /** The rendered pane: pull-quote + paragraphs + stat chips (RSC). */
   rendered: ReactNode
+  /**
+   * §2.1 asset pane (the Decompiled Portrait): rendered below the source pane
+   * inside the same sticky column, desktop only. NOT inside the aria-hidden
+   * source wrapper — the portrait is focusable and must stay in the a11y tree.
+   */
+  asset?: ReactNode
 }
 
-export default function Wormhole({ source, rendered }: WormholeProps) {
+export default function Wormhole({ source, rendered, asset }: WormholeProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [viewSource, setViewSource] = useState(false)
   const reduced = usePrefersReducedMotion()
@@ -48,7 +47,7 @@ export default function Wormhole({ source, rendered }: WormholeProps) {
       rootRef.current = node
       inViewRef(node)
     },
-    [inViewRef],
+    [inViewRef]
   )
 
   useEffect(() => {
@@ -134,6 +133,7 @@ export default function Wormhole({ source, rendered }: WormholeProps) {
       ref={setRefs}
       className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-8"
       data-component="Wormhole"
+      data-island="client"
     >
       {/* Mobile/tablet: swap rendered ↔ raw in place */}
       <div className="mb-6 lg:hidden">
@@ -151,18 +151,22 @@ export default function Wormhole({ source, rendered }: WormholeProps) {
         </button>
       </div>
 
+      {/* Sticky left column: aria-hidden source pane + (desktop) the focusable
+          asset pane below it. The source pane keeps its own scroll; min-h-0
+          lets it shrink so the portrait always fits the viewport. */}
       <div
-        data-pane="source"
-        aria-hidden="true"
         className={clsx(
-          'lg:sticky lg:top-24 lg:col-span-5 lg:block lg:max-h-[calc(100vh-160px)] lg:overflow-y-auto',
+          'lg:sticky lg:top-24 lg:col-span-5 lg:flex lg:max-h-[calc(100vh-160px)] lg:flex-col',
           phase === 'hidden' && 'opacity-0',
           phase === 'reveal' && 'fade-up',
-          viewSource ? 'block' : 'hidden',
+          viewSource ? 'block' : 'hidden'
         )}
         style={{ '--reveal-delay': '80ms' } as CSSProperties}
       >
-        {source}
+        <div data-pane="source" aria-hidden="true" className="lg:min-h-0 lg:overflow-y-auto">
+          {source}
+        </div>
+        {asset !== undefined ? <div className="mt-4 hidden shrink-0 lg:block">{asset}</div> : null}
       </div>
 
       <div
@@ -172,7 +176,7 @@ export default function Wormhole({ source, rendered }: WormholeProps) {
           phase === 'hidden' && 'opacity-0',
           phase === 'reveal' && 'fade-up',
           // Keep the real copy readable by screen readers while raw is shown.
-          viewSource ? 'sr-only' : 'block',
+          viewSource ? 'sr-only' : 'block'
         )}
       >
         {rendered}
