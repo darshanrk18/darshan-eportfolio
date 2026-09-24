@@ -6,7 +6,7 @@
 
 export type SnakeDir = 'up' | 'down' | 'left' | 'right'
 
-interface Cell {
+export interface Cell {
   x: number
   y: number
 }
@@ -46,6 +46,16 @@ export class SnakeGame {
       { x: 2, y: midY },
     ]
     this.food = this.spawnFood()
+  }
+
+  /** Live snake cells, head first — read-only view (v2 §11.1 autopilot + tinting). */
+  get cells(): readonly Cell[] {
+    return this.snake
+  }
+
+  /** Current food cell — the autopilot's A* goal (v2 §11.1). */
+  get foodCell(): Cell {
+    return this.food
   }
 
   /** Queue a direction change; reversing into yourself is ignored. */
