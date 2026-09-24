@@ -19,6 +19,8 @@ export default function Projects() {
       aria-labelledby="projects-heading"
       className="section-pad"
       data-component="Projects"
+      data-island="RSC"
+      style={{ ['--vs-i' as string]: 3 }}
     >
       <div className="container-site">
         <SectionHeader
