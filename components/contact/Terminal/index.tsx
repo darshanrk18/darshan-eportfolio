@@ -20,6 +20,7 @@ import { subscribeTicker } from '@/lib/motion/ticker'
 import { trackTerminalCommand, trackTerminalOpened } from '@/lib/utils/analytics'
 import type { TermLine, TermTone } from './interpreter'
 import type { SnakeGame } from './Snake'
+import type { AutopilotFrame, SegTone } from './autopilot'
 
 type InterpreterModule = typeof import('./interpreter')
 
@@ -37,6 +38,13 @@ const TONE_CLASS: Record<TermTone, string> = {
   error: 'text-error',
   magenta: 'text-magenta',
   signal: 'text-signal',
+}
+
+/** §11.1 autopilot board tints — open/closed/path as background spans. */
+const SEG_CLASS: Record<SegTone, string> = {
+  open: 'bg-electron-dim',
+  closed: 'bg-tertiary/15',
+  path: 'bg-signal-dim text-signal',
 }
 
 const KONAMI = [
@@ -81,6 +89,7 @@ export default function Terminal() {
   const [lines, setLines] = useState<OutputLine[]>([])
   const [value, setValue] = useState('')
   const [snakeFrame, setSnakeFrame] = useState<string | null>(null)
+  const [autoFrame, setAutoFrame] = useState<AutopilotFrame | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -139,6 +148,7 @@ export default function Terminal() {
       active.unsubscribe()
       snakeRef.current = null
       setSnakeFrame(null)
+      setAutoFrame(null)
       print([
         {
           text:
@@ -152,28 +162,53 @@ export default function Terminal() {
     [print],
   )
 
-  const startSnake = useCallback(() => {
-    if (snakeRef.current) return
-    void import('./Snake').then(({ SnakeGame }) => {
+  const startSnake = useCallback(
+    (opts?: { autopilot?: boolean }) => {
       if (snakeRef.current) return
-      const game = new SnakeGame(20, 12)
-      setSnakeFrame(game.render())
-      let acc = 0
-      const unsubscribe = subscribeTicker((dtMs) => {
-        acc += dtMs
-        if (acc < SNAKE_TICK_MS) return
-        acc = 0
-        game.step()
-        if (!game.alive) {
-          stopSnake('died')
-          return
+      const autopilot = opts?.autopilot === true
+      void Promise.all([
+        import('./Snake'),
+        autopilot ? import('./autopilot') : Promise.resolve(null),
+      ]).then(([{ SnakeGame }, auto]) => {
+        if (snakeRef.current) return
+        const pilot = auto ? new auto.SnakeAutopilot() : null
+        let game = new SnakeGame(20, 12)
+        const renderNow = () => {
+          if (auto && pilot) setAutoFrame(auto.renderFrame(game, pilot))
+          else setSnakeFrame(game.render())
         }
-        setSnakeFrame(game.render())
+        renderNow()
+        let acc = 0
+        const unsubscribe = subscribeTicker((dtMs) => {
+          acc += dtMs
+          /* §11.1 — autopilot steps at 4fps under reduced motion. */
+          const tickMs = pilot && reducedRef.current ? 250 : SNAKE_TICK_MS
+          if (acc < tickMs) return
+          acc = 0
+          if (pilot) {
+            const dir = pilot.next(game)
+            if (dir) game.setDirection(dir)
+          }
+          game.step()
+          if (!game.alive) {
+            if (!pilot) {
+              stopSnake('died')
+              return
+            }
+            /* Autopilot loops — respawn until q (§11.1). */
+            game = new SnakeGame(20, 12)
+            pilot.reset()
+            const active = snakeRef.current
+            if (active) active.game = game
+          }
+          renderNow()
+        })
+        snakeRef.current = { game, unsubscribe }
+        inputRef.current?.focus()
       })
-      snakeRef.current = { game, unsubscribe }
-      inputRef.current?.focus()
-    })
-  }, [stopSnake])
+    },
+    [stopSnake],
+  )
 
   useEffect(
     () => () => {
@@ -307,7 +342,35 @@ export default function Terminal() {
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [lines, snakeFrame])
+  }, [lines, snakeFrame, autoFrame])
+
+  /* §2.2 — a TermLine whose `link.label` renders as a real in-text link. */
+  const renderLineText = useCallback(
+    (l: OutputLine) => {
+      if (!l.link) return l.text
+      const idx = l.text.indexOf(l.link.label)
+      if (idx === -1) return l.text
+      const { label, anchor } = l.link
+      return (
+        <>
+          {l.text.slice(0, idx)}
+          <a
+            href={anchor}
+            className="text-signal underline decoration-dotted underline-offset-2"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              ctx.scrollTo(anchor)
+            }}
+          >
+            {label}
+          </a>
+          {l.text.slice(idx + label.length)}
+        </>
+      )
+    },
+    [ctx],
+  )
 
   /* --------------------------------------------------------------- render */
 
@@ -318,17 +381,49 @@ export default function Terminal() {
         role="log"
         aria-live="polite"
         aria-label="Terminal output"
-        className="max-h-96 overflow-y-auto"
+        className="max-h-96 overflow-y-auto overflow-x-auto"
       >
         <p className="text-secondary">{BANNER_TEXT}</p>
-        {lines.map((l) => (
-          <p key={l.id} className={`whitespace-pre-wrap ${TONE_CLASS[l.tone ?? 'default']}`}>
-            {l.text}
-          </p>
-        ))}
+        {lines.map((l) => {
+          if (l.srOnly) {
+            return (
+              <p key={l.id} className="sr-only">
+                {l.text}
+              </p>
+            )
+          }
+          return (
+            <p
+              key={l.id}
+              aria-hidden={l.ariaHidden || undefined}
+              className={`${l.ariaHidden ? 'whitespace-pre' : 'whitespace-pre-wrap'} ${TONE_CLASS[l.tone ?? 'default']}`}
+            >
+              {l.ariaHidden && l.text === '' ? ' ' : renderLineText(l)}
+            </p>
+          )
+        })}
         {snakeFrame !== null ? (
           <pre className="whitespace-pre text-primary" aria-label="Snake game board">
             {snakeFrame}
+          </pre>
+        ) : null}
+        {autoFrame !== null ? (
+          <pre className="whitespace-pre text-primary" aria-label="Snake autopilot board">
+            {autoFrame.rows.map((row, i) => (
+              <span key={i}>
+                {row.map((seg, j) =>
+                  seg.tone ? (
+                    <span key={j} className={SEG_CLASS[seg.tone]}>
+                      {seg.text}
+                    </span>
+                  ) : (
+                    seg.text
+                  ),
+                )}
+                {'\n'}
+              </span>
+            ))}
+            <span className="text-secondary">{autoFrame.hud}</span>
           </pre>
         ) : null}
       </div>

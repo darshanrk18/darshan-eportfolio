@@ -8,8 +8,16 @@
  * GitHub / LinkedIn / resume are plain links with large hit areas.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from 'react'
 import { copyEmailAction } from '@/lib/commands/context'
+import { useMagnetic } from '@/lib/motion/useMagnetic'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { EASE_OUT_EXPO } from '@/lib/motion/tokens'
 import { trackResumeDownloaded } from '@/lib/utils/analytics'
@@ -19,6 +27,36 @@ const BTN =
   'hairline rounded-btn inline-flex min-h-12 items-center px-5 type-label-sm ' +
   'hover:border-hairline-strong hover:[box-shadow:var(--glow-signal)] ' +
   'transition-[border-color,box-shadow] duration-(--dur-micro)'
+
+/* v2 §6.5 — the section's THREE primary buttons (email · github · linkedin)
+   are magnetic; the resume link stays plain so the named ~10-element scope
+   holds exactly. The hook is inert on coarse pointers / reduced motion. */
+
+function MagneticButton({
+  children,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  useMagnetic(ref, { strength: 0.25, radius: 80 })
+  return (
+    <button ref={ref} type="button" className={BTN} {...rest}>
+      <span data-mag-label>{children}</span>
+    </button>
+  )
+}
+
+function MagneticA({
+  children,
+  ...rest
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { children: ReactNode }) {
+  const ref = useRef<HTMLAnchorElement>(null)
+  useMagnetic(ref, { strength: 0.25, radius: 80 })
+  return (
+    <a ref={ref} className={BTN} {...rest}>
+      <span data-mag-label>{children}</span>
+    </a>
+  )
+}
 
 /** Page-session latch: the micro-burst fires once per session (§4.8). */
 let burstFired = false
@@ -49,7 +87,7 @@ function fireBurst(x: number, y: number): void {
         { transform: 'translate(-50%, -50%)', opacity: 1 },
         { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`, opacity: 0 },
       ],
-      { duration: 600, easing, fill: 'forwards' },
+      { duration: 600, easing, fill: 'forwards' }
     )
   }
   window.setTimeout(() => host.remove(), 650)
@@ -69,7 +107,7 @@ export default function ContactActions() {
     () => () => {
       if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     },
-    [],
+    []
   )
 
   async function onCopyEmail(e: React.MouseEvent<HTMLButtonElement>) {
@@ -85,27 +123,31 @@ export default function ContactActions() {
   }
 
   return (
-    <ul className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+    <ul
+      className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+      data-component="ContactActions"
+      data-island="client"
+    >
       <li>
         {copied ? (
+          /* Transient 3s confirm state — unmagnetized on purpose (the swap
+             replaces the element; the magnet re-attaches on swap-back). */
           <a ref={mailRef} href={`mailto:${profile.email}`} className={BTN}>
             [ copied&nbsp;<span className="text-signal">✓</span>&nbsp;— open mail ↗ ]
           </a>
         ) : (
-          <button type="button" onClick={onCopyEmail} className={BTN}>
-            [ email — {profile.email} ]
-          </button>
+          <MagneticButton onClick={onCopyEmail}>[ email — {profile.email} ]</MagneticButton>
         )}
       </li>
       <li>
-        <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer" className={BTN}>
+        <MagneticA href={profile.githubUrl} target="_blank" rel="noopener noreferrer">
           [ github ↗ ]
-        </a>
+        </MagneticA>
       </li>
       <li>
-        <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className={BTN}>
+        <MagneticA href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer">
           [ linkedin ↗ ]
-        </a>
+        </MagneticA>
       </li>
       <li>
         <a
