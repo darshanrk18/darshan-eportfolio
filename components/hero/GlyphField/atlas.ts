@@ -1,12 +1,19 @@
 /**
- * Glyph atlas (spec §5.5): the 16-glyph set rendered once at runtime into a
- * single 256px canvas texture (JetBrains Mono via the --font-mono token), so
- * the whole field is ONE draw call with zero image assets.
+ * Glyph atlas (spec §5.5, v2 §4.2a): the 64-glyph set rendered once at runtime
+ * into a single 512px canvas texture (JetBrains Mono via the --font-mono
+ * token) — 8×8 grid, 64px cells (crisp at the 44px font), so the whole field
+ * is still ONE draw call with zero image assets.
+ *
+ * v2 layout: the first FIELD_GLYPH_COUNT entries are the v1 code glyphs the
+ * ambient field keeps sampling (the brand set); the letters exist for the
+ * §4.2d keypress spawn, which maps any printable key to its glyph and falls
+ * back to '*' when absent.
  */
 
 import * as THREE from 'three'
 
 export const ATLAS_GLYPHS = [
+  // 12 code glyphs — the ambient field's sampling set (indices 0–11).
   '{',
   '}',
   '(',
@@ -17,17 +24,26 @@ export const ATLAS_GLYPHS = [
   '=',
   'λ',
   ':',
-  ';',
-  '#',
   '$',
-  '0',
-  '1',
   '*',
+  // a–z + A–Z — spawn-only (indices 12–63).
+  ...'abcdefghijklmnopqrstuvwxyz',
+  ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
 ] as const
 
-export const ATLAS_GRID = 4
-const ATLAS_SIZE = 256
+/** The ambient field only samples the code-glyph prefix (v1 aesthetic). */
+export const FIELD_GLYPH_COUNT = 12
+
+export const ATLAS_GRID = 8
+const ATLAS_SIZE = 512
 const CELL = ATLAS_SIZE / ATLAS_GRID
+
+/** §4.2d: printable char → atlas index; '*' when absent; -1 for whitespace. */
+export function glyphIndexOf(char: string): number {
+  if (char.trim() === '') return -1 // a space has no drawable glyph — skip
+  const idx = (ATLAS_GLYPHS as readonly string[]).indexOf(char)
+  return idx >= 0 ? idx : (ATLAS_GLYPHS as readonly string[]).indexOf('*')
+}
 
 function monoFamily(): string {
   try {

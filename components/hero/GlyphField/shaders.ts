@@ -81,14 +81,20 @@ uniform vec2 uCursor;
 uniform float uCursorActive;
 uniform float uTurb;
 uniform vec2 uParallax;
+uniform float uGrid;      // atlas grid (v2: 8)
+uniform vec4 uRipples[4]; // §4.2c click rings: x, y, t0, unused (t0 < -500 = idle)
 
 attribute vec2 aCell;   // base position in [-0.5, 0.5]^2 (scaled by uSize)
 attribute vec4 aRand;   // x: size pick, y: phase, z: glyph index, w: alpha/color pick
-attribute float aDepth; // 0 = far layer, 1 = near layer
+attribute float aDepth; // §4.2b ternary: 0 = far, 0.5 = mid (v1 far), 1 = near
+attribute float aBirth; // §4.2d: -1 = field glyph, < -500 = dormant spawn slot,
+                        // >= 0 = spawn time (uTime seconds)
 
 varying vec2 vUv;
 varying float vAlpha;
 varying float vPick;
+varying float vDepth;
+varying float vFlash;
 
 ${SIMPLEX_NOISE_3D}
 
@@ -122,20 +128,55 @@ void main() {
   float rep = smoothstep(80.0, 0.0, dist) * uCursorActive;
   pos += (d / dist) * rep * 36.0;
 
+  // §4.2c click ripples: up to 4 live 600ms expo-decaying rings (uniform
+  // writes only; idle slots have t0 < -500 so age is far past the window).
+  for (int i = 0; i < 4; i++) {
+    vec4 rr = uRipples[i];
+    float age = uTime - rr.z;
+    if (age > 0.0 && age < 0.6) {
+      vec2 rd = pos - rr.xy;
+      float rdist = max(length(rd), 0.001);
+      float ring = sin((rdist - age * 260.0) * 0.08) * exp(-age * 5.0)
+        * smoothstep(140.0, 0.0, abs(rdist - age * 260.0)) * 18.0;
+      pos += (rd / rdist) * ring;
+    }
+  }
+
   // Whole-field parallax (±12px), stronger on the near layer.
   pos += uParallax * mix(0.5, 1.0, aDepth);
 
-  float size = mix(9.0, 20.0, aRand.x) * mix(0.6, 1.0, aDepth);
+  // §4.2b ternary depth. far: ×0.45 scale / ×0.25 alpha ("5%-class");
+  // mid keeps the v1 far look (0.6 / 0.55); near stays full.
+  float isFar = 1.0 - step(0.25, aDepth);
+  float dn = clamp((aDepth - 0.5) * 2.0, 0.0, 1.0); // 0 at mid → 1 at near
+  float sizeF = mix(mix(0.6, 1.0, dn), 0.45, isFar);
+  float alphaF = mix(mix(0.55, 1.0, dn), 0.25, isFar);
+
+  float size = mix(9.0, 20.0, aRand.x) * sizeF;
   vec4 world = vec4(pos + position.xy * size, mix(-1.0, 0.0, aDepth), 1.0);
   gl_Position = projectionMatrix * modelViewMatrix * world;
 
-  // Atlas cell UV (4×4 grid; texture flipY ⇒ invert the row).
+  // Atlas cell UV (uGrid × uGrid grid; texture flipY ⇒ invert the row).
   float idx = aRand.z;
-  vec2 cell = vec2(mod(idx, 4.0), 3.0 - floor(idx / 4.0));
-  vUv = (uv + cell) / 4.0;
+  vec2 cell = vec2(mod(idx, uGrid), (uGrid - 1.0) - floor(idx / uGrid));
+  vUv = (uv + cell) / uGrid;
 
-  // 8–20% opacity, far layer dimmer (§5.5).
-  vAlpha = mix(0.08, 0.20, fract(aRand.w * 7.31)) * mix(0.55, 1.0, aDepth);
+  // 8–20% opacity, depth-scaled (§5.5, §4.2b).
+  float alpha = mix(0.08, 0.20, fract(aRand.w * 7.31)) * alphaF;
+
+  // §4.2b focus lift: near-layer glyphs within 120px of the cursor.
+  alpha += smoothstep(120.0, 0.0, dist) * 0.08 * step(0.75, aDepth) * uCursorActive;
+
+  // §4.2d spawn ring: dormant slots render at alpha 0; a fresh spawn flashes
+  // full signal alpha for 400ms, then decays into the normal flow.
+  float dormant = 1.0 - step(-500.0, aBirth);
+  float spawned = step(0.0, aBirth);
+  float flash = spawned * (1.0 - smoothstep(0.0, 0.4, uTime - aBirth));
+  alpha = mix(alpha, 1.0, flash) * (1.0 - dormant);
+
+  vAlpha = alpha;
+  vFlash = flash;
+  vDepth = aDepth;
   vPick = step(0.5, aRand.w);
 }
 `
@@ -156,11 +197,18 @@ uniform float uTurb;
 varying vec2 vUv;
 varying float vAlpha;
 varying float vPick;
+varying float vDepth;
+varying float vFlash;
 
 void main() {
-  float a = texture2D(uAtlas, vUv).a;
+  // §4.2b: far layer samples with a +1 mip LOD bias — a cheap blur, no
+  // second texture.
+  float bias = 1.0 - step(0.25, vDepth);
+  float a = texture2D(uAtlas, vUv, bias).a;
   if (a < 0.01) discard;
   vec3 color = mix(uColorA, uColorB, vPick) * (1.0 + 0.05 * uTurb);
+  // §4.2d: spawned glyphs flash full --accent-signal over the flash window.
+  color = mix(color, uColorA, vFlash);
   gl_FragColor = vec4(color, a * vAlpha);
 }
 `
