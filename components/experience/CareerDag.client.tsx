@@ -178,7 +178,13 @@ export default function CareerDag() {
   }
 
   return (
-    <div ref={setHost} aria-hidden="true" className="pointer-events-none absolute inset-0">
+    <div
+      ref={setHost}
+      aria-hidden="true"
+      data-component="CareerDag"
+      data-island="client"
+      className="pointer-events-none absolute inset-0"
+    >
       {geom ? (
         <>
           <svg
