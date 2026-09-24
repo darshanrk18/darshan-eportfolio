@@ -12,6 +12,7 @@ import SectionHeader from '@/components/chrome/SectionHeader'
 import SourcePane from '@/components/about/SourcePane'
 import Wormhole from '@/components/about/Wormhole.client'
 import StatChips from '@/components/about/StatChips'
+import PortraitIsland from '@/components/about/PortraitIsland'
 
 function RenderedPane() {
   return (
@@ -25,6 +26,13 @@ function RenderedPane() {
         &ldquo;I build software the way good code reads: clear, intentional, and built to
         last.&rdquo;
       </blockquote>
+
+      {/* §2.1 responsive placement: <lg the portrait is a static block in the
+          rendered flow (no ASCII sweep, tap toggles color); ≥lg it lives in
+          the sticky source column as the asset pane below. */}
+      <div className="mb-8 lg:hidden">
+        <PortraitIsland variant="static" />
+      </div>
 
       <div className="space-y-6">
         <p
@@ -78,6 +86,8 @@ export default function About() {
       aria-labelledby="about-heading"
       className="section-pad"
       data-component="About"
+      data-island="RSC"
+      style={{ ['--vs-i' as string]: 1 }}
     >
       <div className="container-site">
         <SectionHeader
@@ -91,7 +101,11 @@ export default function About() {
           Interactive block — hovering or focusing it highlights the matching line in the
           decorative markdown source view beside the text.
         </p>
-        <Wormhole source={<SourcePane />} rendered={<RenderedPane />} />
+        <Wormhole
+          source={<SourcePane />}
+          asset={<PortraitIsland />}
+          rendered={<RenderedPane />}
+        />
       </div>
     </section>
   )

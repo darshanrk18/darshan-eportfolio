@@ -37,6 +37,8 @@ const printCss = `
     word-break: break-all;
   }
   .cv-noprint { display: none !important; }
+  /* §2.3: the photo prints — grayscale on the paper dossier. */
+  .cv-photo { filter: grayscale(1); }
   .cv-root section { break-inside: avoid; }
   .cv-root { font-size: 13px; }
 }
@@ -106,13 +108,27 @@ export default function CvPage() {
             </a>
           </p>
         </div>
-        <a
-          href={profile.resumePdf}
-          download
-          className="cv-noprint type-label-sm hairline rounded-btn px-4 py-3 text-secondary transition-colors hover:border-hairline-strong hover:text-primary"
-        >
-          Download resume (PDF)
-        </a>
+        <div className="flex items-start gap-6">
+          <a
+            href={profile.resumePdf}
+            download
+            className="cv-noprint type-label-sm hairline rounded-btn px-4 py-3 text-secondary transition-colors hover:border-hairline-strong hover:text-primary"
+          >
+            Download resume (PDF)
+          </a>
+          {/* §2.3 recruiter recognition: 96px plain <img> (NOT next/image — /cv
+              is contractually zero client JS), 0 radius, stays in print
+              (grayscaled via printCss). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/photo/darshan-440.webp"
+            alt="Darshan Konnur"
+            width={96}
+            height={96}
+            loading="lazy"
+            className="cv-photo hairline shrink-0"
+          />
+        </div>
       </header>
 
       <CvSection label="Experience">
