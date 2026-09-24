@@ -41,6 +41,7 @@ export default function ReducedMotionBanner() {
     <div
       role="status"
       data-component="ReducedMotionBanner"
+      data-island="client"
       className="fixed inset-x-0 top-12 border-b border-hairline bg-raised"
       style={{ zIndex: 'var(--z-nav)' }}
     >
