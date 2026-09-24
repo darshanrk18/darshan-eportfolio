@@ -19,6 +19,7 @@ export default function ScrollProgress() {
       <m.div
         aria-hidden="true"
         data-component="ScrollProgress"
+        data-island="client"
         className="fixed inset-x-0 top-0 h-[2px] origin-left bg-signal"
         style={{ scaleX: scrollYProgress, zIndex: 'var(--z-nav)' }}
       />
