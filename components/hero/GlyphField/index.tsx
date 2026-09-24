@@ -100,15 +100,14 @@ export default function GlyphField() {
           setSwapped(false)
         }
       },
-      { rootMargin: '100% 0px 100% 0px' },
+      { rootMargin: '100% 0px 100% 0px' }
     )
     observer.observe(node)
     return () => observer.disconnect()
   }, [])
 
   // Report the effective tier to the store (footer) + analytics, once per value.
-  const effectiveTier: GlyphTier | null =
-    tier === null ? null : reduced || floored ? 0 : tier
+  const effectiveTier: GlyphTier | null = tier === null ? null : reduced || floored ? 0 : tier
   useEffect(() => {
     if (effectiveTier === null) return
     setGlyphTier(effectiveTier)
@@ -155,6 +154,7 @@ export default function GlyphField() {
       className="pointer-events-none absolute inset-0 overflow-hidden"
       style={{ zIndex: 'var(--z-canvas)' }}
       data-component="GlyphField"
+      data-island="client"
     >
       {!swapped && <StaticConstellation />}
       {active && visible && (
