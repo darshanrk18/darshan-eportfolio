@@ -22,10 +22,13 @@ import {
   GROUP_LABELS,
   GROUP_ORDER,
   commandsForSurface,
+  getCommand,
   type Command as CommandEntry,
   type CommandGroup,
+  type SectionAnchor,
 } from '@/lib/commands/registry'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
+import { useSignalStore } from '@/lib/state/store'
 import { trackPaletteAction } from '@/lib/utils/analytics'
 
 interface PaletteDialogProps {
@@ -34,6 +37,43 @@ interface PaletteDialogProps {
 
 /** `skills > <query>` — the typed route into the nested skills page. */
 const SKILLS_PREFIX = /^skills\s*>\s*(.*)$/i
+
+/**
+ * v2 §10.2 — the narrator. The palette's first group ("Next") suggests the
+ * one or two most useful moves for the section currently in view (store
+ * `activeSection`, written by the Navbar scrollspy). Every row maps a
+ * suggestion label to an EXISTING registry command id — zero new behavior.
+ */
+type NarratorKey = SectionAnchor | 'hero'
+const NARRATOR_MAP: Record<NarratorKey, ReadonlyArray<{ label: string; id: string }>> = {
+  hero: [{ label: 'Read the README ↓', id: 'go-about' }],
+  '#about': [{ label: 'Inspect the toolchain ↓', id: 'go-skills' }],
+  '#skills': [{ label: 'Play his Minimax at Connect Four', id: 'play-connect-four' }],
+  '#projects': [{ label: 'Read the commit history ↓', id: 'go-experience' }],
+  '#experience': [
+    { label: 'Copy email', id: 'copy-email' },
+    { label: 'or download the resume', id: 'download-resume' },
+  ],
+  '#contact': [{ label: 'Open /cv — the recruiter cut', id: 'go-cv' }],
+}
+
+/** Resolve the active section (footer counts as #contact) to narrator rows. */
+function narratorRowsFor(
+  activeSection: SectionAnchor | 'hero' | 'footer' | null
+): Array<{ label: string; cmd: CommandEntry }> {
+  const key: NarratorKey =
+    activeSection === null || activeSection === 'hero'
+      ? 'hero'
+      : activeSection === 'footer'
+        ? '#contact'
+        : activeSection
+  const rows: Array<{ label: string; cmd: CommandEntry }> = []
+  for (const { label, id } of NARRATOR_MAP[key]) {
+    const cmd = getCommand(id)
+    if (cmd) rows.push({ label, cmd })
+  }
+  return rows
+}
 
 /**
  * cmdk filter: strip the `skills >` prefix so the remainder scores against
@@ -55,6 +95,10 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
 
   const skillsMode = page === 'skills' || SKILLS_PREFIX.test(search)
   const searching = (SKILLS_PREFIX.exec(search)?.[1] ?? search).trim() !== ''
+
+  // v2 §10.2 — narrator rows for the section currently in view.
+  const activeSection = useSignalStore((s) => s.activeSection)
+  const narratorRows = useMemo(() => narratorRowsFor(activeSection), [activeSection])
 
   // Palette-surface commands, grouped. Reduced-motion state decides which of
   // the two animation toggles is offered (§5.2 "Disable animation").
@@ -120,6 +164,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
         label="Command palette"
         overlayClassName="sig-palette-overlay"
         contentClassName="sig-palette-content"
+        {...{ 'data-component': 'CommandPalette', 'data-island': 'client' }}
         filter={paletteFilter}
         loop
         onKeyDown={onDialogKeyDown}
@@ -144,42 +189,63 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
               {skillCommands.map(renderItem)}
             </Command.Group>
           ) : (
-            GROUP_ORDER.map((group) => {
-              const cmds = grouped.get(group) ?? []
-              if (group === 'skill') {
+            <>
+              {/* v2 §10.2 — the narrator: first group, above Navigate. */}
+              {narratorRows.length > 0 ? (
+                <Command.Group
+                  heading={<span className="type-label-xs">Next</span>}
+                  className="sig-palette-group"
+                >
+                  {narratorRows.map(({ label, cmd }) => (
+                    <Command.Item
+                      key={`next-${cmd.id}`}
+                      value={`next-${cmd.id}`}
+                      keywords={[label, cmd.title, ...(cmd.aliases ?? [])]}
+                      onSelect={() => runCommand(cmd)}
+                      className="sig-palette-item type-code"
+                    >
+                      <span>{label}</span>
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              ) : null}
+              {GROUP_ORDER.map((group) => {
+                const cmds = grouped.get(group) ?? []
+                if (group === 'skill') {
+                  return (
+                    <Command.Group
+                      key={group}
+                      heading={groupHeading(group)}
+                      className="sig-palette-group"
+                    >
+                      <Command.Item
+                        value="skills-menu"
+                        keywords={['skills', 'skill', 'toolchain']}
+                        onSelect={() => {
+                          setPage('skills')
+                          setSearch('')
+                        }}
+                        className="sig-palette-item type-code"
+                      >
+                        <span>Skills…</span>
+                        <span className="sig-palette-kbd type-label-sm">&gt;</span>
+                      </Command.Item>
+                      {searching ? cmds.map(renderItem) : null}
+                    </Command.Group>
+                  )
+                }
+                if (cmds.length === 0) return null
                 return (
                   <Command.Group
                     key={group}
                     heading={groupHeading(group)}
                     className="sig-palette-group"
                   >
-                    <Command.Item
-                      value="skills-menu"
-                      keywords={['skills', 'skill', 'toolchain']}
-                      onSelect={() => {
-                        setPage('skills')
-                        setSearch('')
-                      }}
-                      className="sig-palette-item type-code"
-                    >
-                      <span>Skills…</span>
-                      <span className="sig-palette-kbd type-label-sm">&gt;</span>
-                    </Command.Item>
-                    {searching ? cmds.map(renderItem) : null}
+                    {cmds.map(renderItem)}
                   </Command.Group>
                 )
-              }
-              if (cmds.length === 0) return null
-              return (
-                <Command.Group
-                  key={group}
-                  heading={groupHeading(group)}
-                  className="sig-palette-group"
-                >
-                  {cmds.map(renderItem)}
-                </Command.Group>
-              )
-            })
+              })}
+            </>
           )}
         </Command.List>
       </CommandDialog>
