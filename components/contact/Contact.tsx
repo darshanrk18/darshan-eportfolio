@@ -18,6 +18,8 @@ export default function Contact() {
       aria-labelledby="contact-heading"
       className="section-pad"
       data-component="Contact"
+      data-island="RSC"
+      style={{ ['--vs-i' as string]: 5 }}
     >
       <div className="container-site">
         <div className="mx-auto max-w-[800px]">
