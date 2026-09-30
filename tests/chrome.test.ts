@@ -155,15 +155,28 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
 })
 
 describe('share card and web manifest take the SCREEN look (§2.8, §3)', () => {
-  it('the OG image loads Cinzel + IBM Plex Mono, never JetBrains Mono, and draws the seal inline', () => {
-    const og = read('app/opengraph-image.tsx')
-    expect(og).toMatch(/loadGoogleFont\('Cinzel'/)
-    expect(og).toMatch(/loadGoogleFont\('IBM Plex Mono'/)
-    expect(og).not.toMatch(/JetBrains/)
-    expect(og).toMatch(/DK_SEAL_MARK_PATH/)
-    expect(og).toMatch(/#050607/)
-    // Satori: no CSS custom properties.
-    expect(og).not.toMatch(/var\(--/)
+  it('the share card is the static split cover: a 1200×630 JPEG under 300 KB, with alt text', async () => {
+    const { readFileSync, statSync, existsSync } = await import('node:fs')
+    const file = 'app/opengraph-image.jpg'
+    expect(existsSync('app/opengraph-image.tsx')).toBe(false)
+    expect(statSync(file).size).toBeLessThan(300 * 1024)
+    const jpg = readFileSync(file)
+    expect([jpg[0], jpg[1]]).toEqual([0xff, 0xd8]) // JPEG SOI
+    // The SOF0/SOF2 frame header carries height then width (big-endian).
+    let i = 2
+    let size: [number, number] | null = null
+    while (i < jpg.length) {
+      const marker = jpg[i + 1]
+      const len = jpg.readUInt16BE(i + 2)
+      if (marker === 0xc0 || marker === 0xc2) {
+        size = [jpg.readUInt16BE(i + 7), jpg.readUInt16BE(i + 5)]
+        break
+      }
+      i += 2 + len
+    }
+    expect(size).toEqual([1200, 630])
+    expect(read('app/opengraph-image.alt.txt')).toMatch(/^Darshan Konnur — Software Engineer\./)
+    expect(read('lib/utils/share.ts')).toMatch(/url: '\/opengraph-image\.jpg'/)
   })
 
   it('the manifest is SCREEN-dark with the Studio Seal icons', async () => {

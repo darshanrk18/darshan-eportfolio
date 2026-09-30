@@ -7,9 +7,10 @@
  *
  * - `autopilot: on|off` mono toggle (44px target). ON by default — the
  *   autopilot IS the showcase, and touch visitors need no keyboard.
- * - Sim logic lives in ./arcadeSnakeSim (pure, unit-tested); the HUD's
- *   `a* replans: N` is a real count of A* invocations, not ticks. Open set
- *   tinted electron, closed set tertiary, chosen path signal.
+ * - Sim logic lives in ./arcadeSnakeSim (pure, unit-tested; it still counts
+ *   A* replans, but the HUD shows only the snake's length — an algorithm
+ *   counter at rest is an internal, per the clutter law). Open set tinted
+ *   electron, closed set tertiary, chosen path signal.
  * - Manual play: focus the board, arrows/wasd. Death (or a boxed-in
  *   autopilot) respawns — the game loops like the terminal version.
  * - Reduced motion: steps at 4fps (user-invoked page; §10.5), tints are
@@ -104,7 +105,7 @@ export default function ArcadeSnake() {
     })
   }, [])
 
-  const { snake, food, plan, open, closed, replans } = frame
+  const { snake, food, plan, open, closed } = frame
   const snakeKeys = new Set(snake.map(([x, y]) => cellKey(x, y)))
   const pathPoints: Point[] = autopilot && plan.length > 0 ? [snake[0], ...plan] : []
 
@@ -195,7 +196,7 @@ export default function ArcadeSnake() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="type-label-sm text-secondary" aria-live="off">
-          Replans {replans} · Length {snake.length}
+          Length {snake.length}
           {!autopilot && <span className="text-tertiary"> · Arrow keys or WASD</span>}
           {!autopilot && <span className="arcade-kbd-note text-amber"> · Keyboard needed</span>}
         </p>
