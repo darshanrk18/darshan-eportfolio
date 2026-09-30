@@ -1,6 +1,6 @@
 /**
  * Glyph atlas (spec §5.5, v2 §4.2a): the 64-glyph set rendered once at runtime
- * into a single 512px canvas texture (JetBrains Mono via the --font-mono
+ * into a single 512px canvas texture (the edition's mono face via the --font-mono
  * token) — 8×8 grid, 64px cells (crisp at the 44px font), so the whole field
  * is still ONE draw call with zero image assets.
  *

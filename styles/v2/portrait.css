@@ -1,96 +1,310 @@
 /* ============================================================================
-   SIGNAL v2 — portrait.css
-   OWNER: about/portrait agent — exclusively. No other agent edits this file.
-   SPEC: V2_SPEC §2.1 (Decompiled Portrait: sweep keyframes, ASCII/duotone/
-   color layers, scanline overlay, caption states), §2.4 hookup, and the
-   §10.1 CRT crossover rules that target the portrait
-   (html[data-crt='1'] portrait color-lock + scanline drift).
-   Imported by app/globals.css AFTER all v1 rules — unlayered rules here win
-   ties against v1 @layer rules and earlier v2 files.
+   SIGNAL v3 — portrait.css  (V3_SPEC §3 About; frames S2-About / P2-About)
+   OWNER: C2 hero + about — exclusively. Imported by app/globals.css (the
+   v2 slot is kept so the import order does not move); it skins the
+   Decompiled Portrait island (components/about/Portrait.client.tsx) in
+   BOTH editions and carries the CRT crossover rules that target it
+   (styles/v2/crt.css delegates those here).
 
-   Contract (the "no-JS = finished" pattern, §2.1): the DEFAULT state below is
-   the FINISHED state — duotone fully visible, ASCII hidden, caption shown.
-   JS only ADDS `.is-armed` (mask parks the photo hidden, ASCII lit) and then
-   `.is-sweeping` (900ms --ease-out-expo mask sweep + scanline ride); class
-   removal is the finish. Reduced motion / no-JS never leave the default.
+   Contract (the "no-JS = finished" pattern): the DEFAULT SCREEN state is
+   FINISHED — photograph visible, character rows hidden, grade overlays on,
+   the top rim warm. JS only ADDS `.is-armed` (the mask parks the photo
+   hidden, the characters show) and then `.is-sweeping` (the 1.2 s
+   top-to-bottom mask sweep with the champagne line riding its edge); class
+   removal finishes. The DEFAULT PRINT state is RESTING — the halftone dot
+   screen over the panel; `.is-revealed` dissolves it into the photograph
+   (600 ms) and reverses on removal. Reduced motion / no JS never leave the
+   defaults (the global rule collapses the dissolve to a 120 ms crossfade).
+   Layout (where the figure sits, its size per breakpoint) is about.css.
    ========================================================================== */
 
-/* ---- Frame (bg-panel/hairline/elev-window/reg-marks utilities come from
-        globals; radius 0 by default) ------------------------------------- */
-.portrait-frame {
+.pf {
   position: relative;
   display: block;
-  width: 100%;
-}
-
-.portrait-titlebar {
-  border-bottom: 1px solid var(--border-hairline);
-  padding: 8px 16px;
-}
-
-/* Square stage (879/880): explicit aspect ⇒ zero CLS. Container so the ASCII
-   font-size can be computed from the rendered width (64 columns fill it). */
-.portrait-body {
-  position: relative;
-  aspect-ratio: 879 / 880;
-  width: 100%;
-  overflow: hidden;
-  background: var(--bg-panel);
-  container-type: inline-size;
-}
-
-/* ---- Layer 1 (bottom): the 32-row ASCII portrait ----------------------- */
-.portrait-ascii {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0; /* finished state: hidden (150ms drop after the sweep settles) */
-  transition: opacity 150ms var(--ease-swift);
-}
-.portrait-ascii pre {
   margin: 0;
-  font-family: var(--font-mono);
-  /* 64 columns fill the frame width: char-width ≈ 0.6em ⇒ size = w/64 × 1.66.
-     Fallback first for browsers without container-query units. */
-  font-size: 11px;
-  font-size: 2.594cqw;
-  line-height: 1;
-  white-space: pre;
-  color: var(--accent-signal);
-  opacity: 0.6;
+  overflow: hidden;
 }
-.portrait-frame.is-armed .portrait-ascii,
-.portrait-frame.is-sweeping .portrait-ascii {
-  opacity: 1;
+.pf-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.pf-photo {
+  position: absolute;
+  display: block;
+  max-width: none;
+}
+.pf-g,
+.pf-scan,
+.pf-rim,
+.pf-ink {
+  pointer-events: none;
 }
 
-/* ---- Layer 2: duotone photo (next/image fill) --------------------------- */
-.portrait-duotone {
-  z-index: 2;
-  object-fit: cover;
+/* ============================================================ SCREEN ==== */
+html[data-edition='screen'] {
+  .pf {
+    background: #0a0c0f;
+    box-shadow:
+      0 44px 96px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(0, 0, 0, 0.35);
+  }
+  .pf::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(200, 212, 228, 0.08);
+  }
+  /* the top edge catching the key: warm once the photo has landed */
+  .pf-rim {
+    position: absolute;
+    left: 32px;
+    right: 64px;
+    top: -1px;
+    height: 2px;
+    z-index: 4;
+    background: rgba(216, 196, 154, 0.22);
+    filter: blur(0.4px);
+    transition: background 500ms var(--ease-swift);
+  }
+  .pf.is-armed .pf-rim,
+  .pf.is-sweeping .pf-rim {
+    background: rgba(200, 212, 228, 0.08);
+  }
+
+  /* ---- layer 1 (bottom): the character rows the face resolves from ---- */
+  .pf-chars {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; /* finished: hidden (150 ms drop after the sweep settles) */
+    transition: opacity 150ms var(--ease-swift);
+    container-type: inline-size;
+  }
+  .pf-chars pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    /* 64 columns fill the frame width: char-width ≈ 0.6em ⇒ size = w/64 × 1.66 */
+    font-size: 11px;
+    font-size: 2.594cqw;
+    line-height: 1;
+    white-space: pre;
+    color: var(--ed-steel2);
+    opacity: 0.55;
+  }
+  .pf.is-armed .pf-chars,
+  .pf.is-sweeping .pf-chars {
+    opacity: 1;
+  }
+
+  /* ---- layer 2: the -41 photograph, masked while armed / sweeping ------ */
+  .pf-photo-screen {
+    z-index: 2;
+    object-fit: cover;
+    filter: contrast(1.05) brightness(1.06);
+  }
+  .pf.is-armed .pf-photo-screen,
+  .pf.is-sweeping .pf-photo-screen {
+    -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
+    mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
+    -webkit-mask-size: 100% 200%;
+    mask-size: 100% 200%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 102%;
+    mask-position: 0 102%;
+  }
+  /* the sweep: mask 102% → 0% ⇒ the boundary travels top → bottom over 1.2 s */
+  .pf.is-sweeping .pf-photo-screen {
+    animation: pf-sweep 1200ms var(--ease-out-expo) forwards;
+  }
+
+  /* ---- the grade (S2 §5): room to steel, champagne key, steel rim ----- */
+  .pf-g {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    transition: opacity 500ms var(--ease-swift);
+  }
+  .pf.is-armed .pf-g,
+  .pf.is-sweeping .pf-g {
+    opacity: 0;
+  }
+  .pf-g-room {
+    mix-blend-mode: color;
+    background: #777d87;
+    opacity: 0.26;
+    -webkit-mask-image:
+      radial-gradient(ellipse 43% 39% at 45% 39%, transparent 58%, #000 94%),
+      radial-gradient(ellipse 24% 15% at 49% 69%, transparent 55%, #000 100%);
+    mask-image:
+      radial-gradient(ellipse 43% 39% at 45% 39%, transparent 58%, #000 94%),
+      radial-gradient(ellipse 24% 15% at 49% 69%, transparent 55%, #000 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .pf-g-key {
+    mix-blend-mode: soft-light;
+    background: radial-gradient(ellipse 57% 44% at 35% 31%, rgba(233, 223, 200, 0.4), rgba(233, 223, 200, 0) 100%);
+  }
+  .pf-g-rim {
+    mix-blend-mode: screen;
+    background: radial-gradient(ellipse 14% 28% at 78% 39%, rgba(200, 212, 228, 0.2), rgba(200, 212, 228, 0) 100%);
+  }
+  .pf-g-spill {
+    mix-blend-mode: screen;
+    background: linear-gradient(270deg, rgba(154, 165, 179, 0.06), rgba(154, 165, 179, 0) 32%);
+  }
+  .pf-g-edge {
+    inset: 32px 0 160px auto;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(200, 212, 228, 0.34), rgba(200, 212, 228, 0.14) 50%, rgba(200, 212, 228, 0));
+  }
+
+  /* ---- the champagne line riding the sweep's edge --------------------- */
+  .pf-scan {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    opacity: 0;
+    transform: translateY(-102%);
+    background: linear-gradient(to bottom, transparent calc(100% - 2px), rgba(216, 196, 154, 0.8) calc(100% - 2px));
+  }
+  .pf.is-sweeping .pf-scan {
+    opacity: 1;
+    animation: pf-scan-ride 1200ms var(--ease-out-expo) forwards;
+  }
+
+  /* ---- the live control ---------------------------------------------- */
+  .pf-replay {
+    position: absolute;
+    left: 24px;
+    bottom: 24px;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 18px 0 6px;
+    border: 1px solid rgba(216, 196, 154, 0.5);
+    border-radius: 999px;
+    background: var(--ed-glass-sheen), rgba(7, 8, 10, 0.86);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    font: 400 14px/1 var(--font-body);
+    color: var(--text-primary);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-micro) var(--ease-swift),
+      box-shadow var(--dur-micro) var(--ease-swift);
+  }
+  .pf-replay:hover {
+    border-color: rgba(216, 196, 154, 0.75);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+  }
+  .pf-rc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(216, 196, 154, 0.12);
+    border: 1px solid rgba(216, 196, 154, 0.45);
+    color: var(--ed-champ);
+  }
+  /* The replay control has nothing to replay under reduced motion. */
+  &[data-motion='reduced'] .pf-replay {
+    display: none;
+  }
 }
-/* Armed: a top-aligned mask (200% tall, hard-black top half with a 2px soft
-   edge) parked fully off — photo hidden, ASCII beneath shows through. */
-.portrait-frame.is-armed .portrait-duotone,
-.portrait-frame.is-sweeping .portrait-duotone {
-  -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
-  mask-image: linear-gradient(180deg, #000 50%, transparent calc(50% + 2px));
-  -webkit-mask-size: 100% 200%;
-  mask-size: 100% 200%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: 0 102%;
-  mask-position: 0 102%;
+
+/* ============================================================ PRINT ===== */
+html[data-edition='print'] {
+  .pf {
+    border: 4px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 6px 6px 0 var(--text-primary);
+    isolation: isolate;
+    cursor: pointer;
+  }
+  /* the dark room behind the revealed photograph (the halftone prints its
+     own black outside the face, so this only shows once the dots dissolve) */
+  .pf-ink {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #2c2c2c;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-swift);
+  }
+  .pf.is-revealed .pf-ink {
+    opacity: 1;
+  }
+  .pf-photo-print {
+    z-index: 2;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-swift);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 80px);
+    mask-image: linear-gradient(180deg, transparent 0, #000 80px);
+  }
+  .pf-ht {
+    z-index: 3;
+    transition: opacity 600ms var(--ease-swift);
+  }
+  .pf-ht-bg {
+    position: absolute;
+    inset: 0;
+    background: #2c2c2c;
+  }
+  .pf-ht .ed-ht-in img {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 80px);
+    mask-image: linear-gradient(180deg, transparent 0, #000 80px);
+  }
+  /* the reveal: dots dissolve into the continuous-tone photograph */
+  .pf.is-revealed .pf-ht {
+    opacity: 0;
+  }
+  .pf.is-revealed .pf-photo-print {
+    opacity: 1;
+  }
+  .pf-nar {
+    left: 14px;
+    top: 14px;
+    width: 312px;
+    max-width: calc(100% - 28px);
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 10px 13px 11px;
+  }
+  /* the try tag is the control */
+  .pf-try {
+    position: absolute;
+    right: 14px;
+    bottom: 16px;
+    z-index: 6;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .pf-trylbl {
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: var(--accent-signal);
+  }
+  .pf-try[aria-pressed='true'] {
+    background: var(--accent-amber);
+  }
 }
-/* Sweep: mask-position 102% → 0% ⇒ the reveal boundary travels top → bottom
-   over 900ms --ease-out-expo (102% overshoot clears the 2px soft edge). */
-.portrait-frame.is-sweeping .portrait-duotone {
-  animation: portrait-sweep 900ms var(--ease-out-expo) forwards;
-}
-@keyframes portrait-sweep {
+
+/* ============================================================ keyframes */
+@keyframes pf-sweep {
   from {
     -webkit-mask-position: 0 102%;
     mask-position: 0 102%;
@@ -100,38 +314,7 @@
     mask-position: 0 0%;
   }
 }
-
-/* ---- Layer 3: true-color photo (mounted on first hover/focus/tap) ------- */
-.portrait-color {
-  z-index: 3;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 300ms var(--ease-swift);
-}
-.portrait-frame[data-color='1'] .portrait-color {
-  opacity: 1;
-}
-
-/* ---- Sweep scanline: 2px signal bar riding the mask edge (transform-only;
-        the element is frame-height with the bar as its bottom 2px) -------- */
-.portrait-scanline {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-102%);
-  background: linear-gradient(
-    to bottom,
-    transparent calc(100% - 2px),
-    var(--accent-signal) calc(100% - 2px)
-  );
-}
-.portrait-frame.is-sweeping .portrait-scanline {
-  opacity: 1;
-  animation: portrait-scan-ride 900ms var(--ease-out-expo) forwards;
-}
-@keyframes portrait-scan-ride {
+@keyframes pf-scan-ride {
   from {
     transform: translateY(-102%);
   }
@@ -140,58 +323,49 @@
   }
 }
 
-/* ---- Scanline texture overlay (top): rendered output, not a paste-in ---- */
-.portrait-body::after {
+/* ---- reduced motion: the photograph, at once; no character pass ------- */
+html[data-motion='reduced'] .pf-photo-screen {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  animation: none !important;
+}
+html[data-motion='reduced'] .pf-chars {
+  opacity: 0 !important;
+}
+html[data-motion='reduced'] .pf-scan {
+  display: none !important;
+}
+html[data-motion='reduced'] .pf-g {
+  opacity: 1 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .pf-photo-screen {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    animation: none !important;
+  }
+  html:not([data-motion='full']) .pf-chars {
+    opacity: 0 !important;
+  }
+  html:not([data-motion='full']) .pf-scan {
+    display: none !important;
+  }
+}
+
+/* ---- v2 §10.1 CRT crossover (owned here per the prep contract): the tube
+        draws its scanlines over the portrait and they drift. --------------- */
+html[data-crt='1'] .pf-body::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 3px);
 }
-
-/* ---- Caption ------------------------------------------------------------ */
-.portrait-caption {
-  margin-top: 8px;
-  opacity: 1; /* finished state: visible */
-  transition: opacity 150ms var(--ease-swift);
+html[data-crt='1']:not([data-motion='reduced']) .pf-body::after {
+  animation: pf-crt-drift 8s linear infinite;
 }
-.portrait-frame.is-armed + .portrait-caption,
-.portrait-frame.is-sweeping + .portrait-caption {
-  opacity: 0;
-}
-
-/* ---- Reduced motion (§2.1): mask/sweep gated off — image always fully
-        visible, ASCII never shown, caption rendered. Belt-and-suspenders on
-        top of the JS never arming under reduced motion. ------------------- */
-html[data-motion='reduced'] .portrait-duotone {
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  animation: none !important;
-}
-html[data-motion='reduced'] .portrait-ascii {
-  opacity: 0 !important;
-}
-html[data-motion='reduced'] .portrait-scanline {
-  display: none !important;
-}
-html[data-motion='reduced'] .portrait-caption {
-  opacity: 1 !important;
-}
-
-/* ---- §10.1 CRT crossover (owned here per the v2 prep contract): color
-        "doesn't exist" on a phosphor tube; the texture overlay drifts. ---- */
-html[data-crt='1'] .portrait-color {
-  opacity: 0 !important;
-}
-html[data-crt='1']:not([data-motion='reduced']) .portrait-body::after {
-  animation: portrait-crt-drift 8s linear infinite;
-}
-@keyframes portrait-crt-drift {
+@keyframes pf-crt-drift {
   from {
     background-position: 0 0;
   }
