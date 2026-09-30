@@ -10,6 +10,12 @@
  * the inspector via ctx.focusSkill. Every action runs through the shared
  * command registry — this file adds zero behavior of its own.
  *
+ * While a query is typed the rows are ONE ranked list ("Results"): cmdk
+ * sorts items inside a group by score but cannot reorder the groups
+ * themselves (its group lookup misses), so with groups the first row — and
+ * Enter — would be the best match of the FIRST group, not of the list
+ * (typing `choose` selected "Go to Contact" over "Choose your edition").
+ *
  * Motion: scale 0.98→1, 150ms swift (globals.css collapses it under
  * html[data-motion='reduced']). ARIA + focus trap come from cmdk's dialog.
  */
@@ -17,7 +23,15 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Command, CommandDialog, defaultFilter } from 'cmdk'
-import { createCommandCtx } from '@/lib/commands/context'
+import { createCommandCtx, getCurrentEdition } from '@/lib/commands/context'
+import { runGuideAction } from '@/lib/guide/actions'
+import {
+  GUIDE_PALETTE_PREFIX,
+  guideLabel,
+  guideWhere,
+  markTried,
+  nextUntried,
+} from '@/lib/guide/guide'
 import {
   GROUP_LABELS,
   GROUP_ORDER,
@@ -43,18 +57,19 @@ const SKILLS_PREFIX = /^skills\s*>\s*(.*)$/i
  * one or two most useful moves for the section currently in view (store
  * `activeSection`, written by the Navbar scrollspy). Every row maps a
  * suggestion label to an EXISTING registry command id — zero new behavior.
+ * v3: labels in visitor language (clutter law — no file names or routes).
  */
 type NarratorKey = SectionAnchor | 'hero'
 const NARRATOR_MAP: Record<NarratorKey, ReadonlyArray<{ label: string; id: string }>> = {
-  hero: [{ label: 'Read the README ↓', id: 'go-about' }],
-  '#about': [{ label: 'Inspect the toolchain ↓', id: 'go-skills' }],
-  '#skills': [{ label: 'Play his Minimax at Connect Four', id: 'play-connect-four' }],
-  '#projects': [{ label: 'Read the commit history ↓', id: 'go-experience' }],
+  hero: [{ label: 'Read the story ↓', id: 'go-about' }],
+  '#about': [{ label: 'See the toolkit ↓', id: 'go-skills' }],
+  '#skills': [{ label: 'Play Connect Four against the engine', id: 'play-connect-four' }],
+  '#projects': [{ label: 'On to the experience ↓', id: 'go-experience' }],
   '#experience': [
     { label: 'Copy email', id: 'copy-email' },
-    { label: 'or download the resume', id: 'download-resume' },
+    { label: 'or download the résumé', id: 'download-resume' },
   ],
-  '#contact': [{ label: 'Open /cv — the recruiter cut', id: 'go-cv' }],
+  '#contact': [{ label: 'Open the résumé page', id: 'go-cv' }],
 }
 
 /** Resolve the active section (footer counts as #contact) to narrator rows. */
@@ -78,11 +93,26 @@ function narratorRowsFor(
 /**
  * cmdk filter: strip the `skills >` prefix so the remainder scores against
  * skill nodes; empty queries show everything (cmdk group logic hides the rest).
+ *
+ * Ranking: a literal hit always outranks a fuzzy one, so the row whose title
+ * or keyword actually contains what was typed is the one Enter runs (typing
+ * `choose` selects "Choose your edition", not a row that merely has those
+ * letters scattered through its keywords). Ties fall back to cmdk's score.
  */
-function paletteFilter(value: string, search: string, keywords?: string[]): number {
+export function paletteFilter(value: string, search: string, keywords?: string[]): number {
   const q = (SKILLS_PREFIX.exec(search)?.[1] ?? search).trim()
   if (q === '') return 1
-  return defaultFilter(value, q, keywords)
+  const fuzzy = defaultFilter(value, q, keywords)
+  const needle = q.toLowerCase()
+  const hay = [value, ...(keywords ?? [])].map((s) => s.toLowerCase())
+  const bonus = hay.some((s) => s === needle)
+    ? 3
+    : hay.some((s) => s.split(/\s+/).some((w) => w.startsWith(needle)))
+      ? 2
+      : hay.some((s) => s.includes(needle))
+        ? 1
+        : 0
+  return bonus > 0 ? bonus + fuzzy : fuzzy
 }
 
 export default function PaletteDialog({ onClose }: PaletteDialogProps) {
@@ -99,6 +129,15 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
   // v2 §10.2 — narrator rows for the section currently in view.
   const activeSection = useSignalStore((s) => s.activeSection)
   const narratorRows = useMemo(() => narratorRowsFor(activeSection), [activeSection])
+
+  // v3 §2.6 — the guide's next untried item heads the Next group ("Try:
+  // Light up the toolkit") and runs the same action as the guide's "Try it".
+  // The palette itself is item 1, being tried right now, so the row always
+  // suggests the one after it.
+  const guideTried = useSignalStore((s) => s.guideTried)
+  const storeEdition = useSignalStore((s) => s.edition)
+  const edition = storeEdition ?? getCurrentEdition()
+  const guideNext = useMemo(() => nextUntried(markTried(guideTried, 'go-anywhere')), [guideTried])
 
   // Palette-surface commands, grouped. Reduced-motion state decides which of
   // the two animation toggles is offered (§5.2 "Disable animation").
@@ -153,6 +192,61 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
     <span className="type-label-xs">{GROUP_LABELS[group]}</span>
   )
 
+  /* v3 §2.6 — the guide's next untried item ("Try: Light up the toolkit"). */
+  const renderGuideNext = () =>
+    guideNext === null ? null : (
+      <Command.Item
+        key={`next-guide-${guideNext}`}
+        value={`next-guide-${guideNext}`}
+        keywords={['try', 'next', 'guide', guideLabel(guideNext, edition)]}
+        onSelect={() => {
+          onClose()
+          trackPaletteAction(`guide-${guideNext}`)
+          void runGuideAction(guideNext, ctx)
+        }}
+        className="sig-palette-item type-code"
+      >
+        <span>
+          {GUIDE_PALETTE_PREFIX}
+          {guideLabel(guideNext, edition)}
+        </span>
+        <span className="sig-palette-where type-label-sm">
+          {guideWhere(guideNext, edition)}
+          <kbd className="sig-palette-kbd">↵</kbd>
+        </span>
+      </Command.Item>
+    )
+
+  /* The nested skills page's entry row. */
+  const renderSkillsMenu = () => (
+    <Command.Item
+      key="skills-menu"
+      value="skills-menu"
+      keywords={['skills', 'skill', 'toolchain']}
+      onSelect={() => {
+        setPage('skills')
+        setSearch('')
+      }}
+      className="sig-palette-item type-code"
+    >
+      <span>Skills…</span>
+      <span className="sig-palette-kbd type-label-sm">&gt;</span>
+    </Command.Item>
+  )
+
+  /* v2 §10.2 — a narrator row for the section in view. */
+  const renderNarrator = ({ label, cmd }: { label: string; cmd: CommandEntry }) => (
+    <Command.Item
+      key={`next-${cmd.id}`}
+      value={`next-${cmd.id}`}
+      keywords={[label, cmd.title, ...(cmd.aliases ?? [])]}
+      onSelect={() => runCommand(cmd)}
+      className="sig-palette-item type-code"
+    >
+      <span>{label}</span>
+    </Command.Item>
+  )
+
   return (
     <>
       <style>{paletteCss}</style>
@@ -178,7 +272,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
           value={search}
           onValueChange={setSearch}
           autoFocus
-          placeholder={page === 'skills' ? 'search skills…' : 'type a command or search…'}
+          placeholder={page === 'skills' ? 'Search the skills…' : 'Type a page, or a thing to try'}
           className="sig-palette-input type-code"
         />
         <Command.List className="sig-palette-list">
@@ -188,25 +282,27 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
             <Command.Group heading={groupHeading('skill')} className="sig-palette-group">
               {skillCommands.map(renderItem)}
             </Command.Group>
+          ) : searching ? (
+            <Command.Group
+              heading={<span className="type-label-xs">Results</span>}
+              className="sig-palette-group"
+            >
+              {guideNext !== null ? renderGuideNext() : null}
+              {narratorRows.map(renderNarrator)}
+              {GROUP_ORDER.flatMap((group) => grouped.get(group) ?? []).map(renderItem)}
+              {renderSkillsMenu()}
+            </Command.Group>
           ) : (
             <>
-              {/* v2 §10.2 — the narrator: first group, above Navigate. */}
-              {narratorRows.length > 0 ? (
+              {/* v2 §10.2 — the narrator: first group, above Navigate.
+                  v3 §2.6 — its first row is the guide's next untried item. */}
+              {guideNext !== null || narratorRows.length > 0 ? (
                 <Command.Group
                   heading={<span className="type-label-xs">Next</span>}
                   className="sig-palette-group"
                 >
-                  {narratorRows.map(({ label, cmd }) => (
-                    <Command.Item
-                      key={`next-${cmd.id}`}
-                      value={`next-${cmd.id}`}
-                      keywords={[label, cmd.title, ...(cmd.aliases ?? [])]}
-                      onSelect={() => runCommand(cmd)}
-                      className="sig-palette-item type-code"
-                    >
-                      <span>{label}</span>
-                    </Command.Item>
-                  ))}
+                  {guideNext !== null ? renderGuideNext() : null}
+                  {narratorRows.map(renderNarrator)}
                 </Command.Group>
               ) : null}
               {GROUP_ORDER.map((group) => {
@@ -218,19 +314,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
                       heading={groupHeading(group)}
                       className="sig-palette-group"
                     >
-                      <Command.Item
-                        value="skills-menu"
-                        keywords={['skills', 'skill', 'toolchain']}
-                        onSelect={() => {
-                          setPage('skills')
-                          setSearch('')
-                        }}
-                        className="sig-palette-item type-code"
-                      >
-                        <span>Skills…</span>
-                        <span className="sig-palette-kbd type-label-sm">&gt;</span>
-                      </Command.Item>
-                      {searching ? cmds.map(renderItem) : null}
+                      {renderSkillsMenu()}
                     </Command.Group>
                   )
                 }
@@ -346,6 +430,14 @@ const paletteCss = `
   border-radius: 6px;
   color: var(--text-secondary);
   background: var(--bg-raised);
+}
+/* v3 §2.6 — the guide's Next row: where the feature lives + the enter keycap. */
+.sig-palette-where {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 .sig-palette-empty {
   padding: 24px 16px;
