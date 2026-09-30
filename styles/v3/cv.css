@@ -1,0 +1,1947 @@
+/* ============================================================================
+   v3 — cv.css  (/cv — design A "The editorial spread", owner-approved)
+   OWNER: the /cv page. Imported by app/cv/page.tsx ONLY (App Router CSS from
+   a page loads on that route alone — never on '/').
+   ONE DOM, THREE SKINS:
+     · SCREEN on screen — html:not([data-edition='print']): the SCREEN
+       values are :root's, and /cv keeps its skin even with scripts off (the
+       page runs no JS of its own; the pre-paint script is the only writer
+       of data-edition);
+     · PRINT on screen — html[data-edition='print'];
+     · PAPER — @media print, ONE skin whatever the edition: black on white,
+       Archivo for text, IBM Plex Mono for dates and labels, page numbers in
+       the page margin, on the named page `cv` (so its page rules never
+       reach '/' after a client-side visit here).
+   Digits need nothing here: SCREEN's body stack (--font-screen-body) draws
+   0-9 in Tenor Sans in front of Marcellus.
+   Shared layout below is unscoped only where paper needs it too; everything
+   else sits in @media screen, and every width query is
+   `@media screen and (…)` — Chrome lays a Letter page out about 710 px
+   wide, so an unscoped (max-width: 719px) would fire on paper.
+   Class family: .cv-* (+ .n-big .n-mid .pl .deg .when .tag .is-list inside
+   them).
+   ========================================================================== */
+
+/* ============================================================================
+   ALL MEDIA
+   ========================================================================== */
+
+/* The photo: a background keyed to the edition, so only the grade in force
+   is ever fetched. Phones draw it at most 92 px wide and get the 440 px
+   encode; wider screens the 660. (Paper lists both sizes: see PAPER.) */
+.cv-photo {
+  background: url('/photo/portrait-41-660.webp') 50% 24% / cover no-repeat;
+}
+html[data-edition='print'] .cv-photo {
+  background-image: url('/photo/portrait-paper-660.webp');
+}
+@media screen and (max-width: 719px) {
+  .cv-photo {
+    background-image: url('/photo/portrait-41-440.webp');
+  }
+  html[data-edition='print'] .cv-photo {
+    background-image: url('/photo/portrait-paper-440.webp');
+  }
+}
+
+/* Inline lists. The separator is generated content with empty alt text; its
+   trailing escaped space is the line-break opportunity (JSX emits no
+   whitespace between <li>s). The first declaration is the fallback for a
+   browser without the alt-text syntax. */
+.cv-items li,
+.cv-stack li {
+  display: inline;
+}
+/* An item never breaks inside ('Apache Kafka', 'REST APIs'); the break is
+   the separator's trailing space. An item that is itself a list ('AWS
+   (Lambda, S3, …)') breaks only after its commas: each run is a span. */
+.cv-items li,
+.cv-stack li,
+.cv-items li.is-list > span {
+  white-space: nowrap;
+}
+.cv-items li::after,
+.cv-stack li::after,
+.cv-items li.is-list {
+  white-space: normal;
+}
+/* A date range never breaks inside ('Jan 2025 – Dec 2026 (Expected)'). */
+.cv-date {
+  white-space: nowrap;
+}
+.cv-items li:not(:last-child)::after {
+  content: '\00a0\00a0·\00a0\0020';
+  content: '\00a0\00a0·\00a0\0020' / '';
+}
+.cv-stack li:not(:last-child)::after {
+  content: '\00a0\00a0/\00a0\0020';
+  content: '\00a0\00a0/\00a0\0020' / '';
+}
+
+/* Read aloud, never seen (the comma between a date and a place). */
+.cv-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Paints nothing; its text makes the browser load every face and weight the
+   paper uses (in the SCREEN edition none of them is on screen), so a print
+   never waits on one. s = Archivo, m = Plex Mono; the digit is the weight. */
+.cv-warm {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+  font: 400 12px/1 var(--font-archivo), sans-serif;
+}
+.cv-warm .s5 {
+  font-weight: 500;
+}
+.cv-warm .s6 {
+  font-weight: 600;
+}
+.cv-warm .s7 {
+  font-weight: 700;
+}
+.cv-warm .m4,
+.cv-warm .m5,
+.cv-warm .m6 {
+  font-family: var(--font-plexmono), monospace;
+}
+.cv-warm .m5 {
+  font-weight: 500;
+}
+.cv-warm .m6 {
+  font-weight: 600;
+}
+
+/* ============================================================================
+   SCREEN MEDIA — shared layout (both editions)
+   ========================================================================== */
+@media screen {
+  .cv {
+    --pad: 20px;
+    --rail: clamp(292px, 25vw, 336px);
+    --gap: clamp(56px, 6.2vw, 104px);
+    --margin: clamp(150px, 11.6vw, 168px); /* the story's time margin */
+    --margin-gap: clamp(24px, 2.5vw, 36px);
+    position: relative;
+    z-index: var(--z-content);
+    width: min(1248px, 100% - 2 * var(--pad));
+    margin-inline: auto;
+    padding-block: 40px 96px;
+  }
+  .cv-paper-only {
+    display: none !important;
+  }
+
+  /* The key light over the name (SCREEN; PRINT hides it). */
+  .cv-light {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    inset: -160px 0 auto 0;
+    height: 1100px;
+  }
+
+  /* ---- rail: identity ---------------------------------------------------- */
+  .cv-back {
+    display: inline-block;
+    padding-block: 6px;
+    font: 400 11px/1.4 var(--font-mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .cv-name {
+    margin-top: 40px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 0.92;
+  }
+  .cv-name .n-big {
+    display: block;
+    font-size: clamp(46px, 4.4vw, 58px);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .cv-name .n-mid {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 9px;
+    font: 400 11px/1 var(--font-mono);
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+  }
+  .cv-name .n-mid::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+  }
+
+  .cv-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 26px;
+    font: 400 11.5px/1.4 var(--font-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .cv-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .cv-roleline {
+    margin-top: 8px;
+    font-size: 17px;
+  }
+
+  /* ID card: photo + contact + the one primary action. */
+  .cv-card {
+    position: relative;
+    margin-top: 30px;
+    overflow: hidden;
+  }
+  .cv-photo {
+    position: relative;
+    aspect-ratio: 3 / 2;
+  }
+  .cv-contact {
+    padding: 18px 22px 4px;
+  }
+  .cv-contact li {
+    display: grid;
+    gap: 2px;
+    padding-block: 10px;
+  }
+  .cv-contact li + li {
+    border-top: 1px solid var(--border-hairline);
+  }
+  .cv-k {
+    font: 400 10px/1.4 var(--font-mono);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  .cv-contact a {
+    justify-self: start;
+    font-size: 15px;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .cv-cta {
+    padding: 14px 22px 22px;
+  }
+  .cv-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 18px;
+    font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap; /* one line at every width (the label fits the narrowest card) */
+  }
+  .cv-btn svg {
+    flex: none;
+    width: 13px;
+    height: 13px;
+  }
+
+  /* ---- rail: reference (skills, education) ------------------------------ */
+  .cv-ref {
+    margin-top: 64px;
+  }
+  .cv-ref .cv-sec + .cv-sec {
+    margin-top: 56px;
+  }
+  .cv-h2s {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font: 400 11px/1.4 var(--font-mono);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  .cv-h2s::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+  }
+  .cv-skills {
+    margin-top: 22px;
+  }
+  .cv-skills > li + li {
+    margin-top: 18px;
+  }
+  .cv-skills h3 {
+    font: 400 10px/1.4 var(--font-mono);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  .cv-items {
+    margin-top: 5px;
+    font-size: 15.5px;
+    line-height: 1.55;
+  }
+  .cv-edu {
+    margin-top: 22px;
+  }
+  .cv-edu > li + li {
+    margin-top: 24px;
+    padding-top: 24px;
+  }
+  .cv-edu h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1.3;
+    letter-spacing: 0.03em;
+  }
+  .cv-edu .deg {
+    margin-top: 4px;
+    font-size: 15.5px;
+  }
+  .cv-edu .when {
+    margin-top: 6px;
+    font: 400 12px/1.5 var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- running head (1100 px and up; sticks once the reference has
+     scrolled by) and the jump row (below 1100 px, under the header) -------- */
+  .cv-jump {
+    display: none;
+  }
+  .cv-toc {
+    margin-top: 56px;
+    padding: 20px 22px 18px;
+  }
+  .cv-toc-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .cv-toc-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font: 400 10px/1.4 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .cv-toc-status .cv-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .cv-toc ul {
+    margin-top: 16px;
+    padding-top: 10px;
+  }
+  .cv-toc li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 15.5px;
+    text-decoration: none;
+  }
+  .cv-toc li a::before {
+    content: '';
+    flex: none;
+    width: 14px;
+    height: 1px;
+    transition:
+      width 180ms var(--ease-swift),
+      background-color 180ms;
+  }
+  .cv-toc li a:hover::before,
+  body:has(#experience:target) .cv-toc a[href='#experience']::before,
+  body:has(#projects:target) .cv-toc a[href='#projects']::before,
+  body:has(#publication:target) .cv-toc a[href='#publication']::before,
+  body:has(#skills:target) .cv-toc a[href='#skills']::before,
+  body:has(#education:target) .cv-toc a[href='#education']::before {
+    width: 22px;
+  }
+  .cv-toc-extra {
+    display: grid;
+    gap: 4px;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .cv-toc-extra a {
+    justify-self: start;
+    font: 400 10.5px/1.9 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  /* ---- story: experience, projects, publication -------------------------- */
+  .cv-sec {
+    scroll-margin-top: 28px;
+  }
+  .cv-story > .cv-sec:first-child {
+    margin-top: 64px;
+  }
+  .cv-sec + .cv-sec {
+    margin-top: 96px;
+  }
+  .cv-h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(26px, 2.3vw, 32px);
+    line-height: 1.1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .cv-h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    transform: translateY(-0.3em);
+  }
+
+  /* The entry grid: time in the margin, the story in the measure. */
+  .cv-list {
+    margin-top: 12px;
+  }
+  .cv-entry {
+    display: grid;
+    grid-template-columns: var(--margin) minmax(0, 1fr);
+    column-gap: var(--margin-gap);
+    align-items: baseline;
+    padding-block: 30px;
+  }
+  .cv-entry > * {
+    grid-column: 2;
+  }
+  .cv-entry > .cv-when {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .cv-when {
+    font: 400 12px/1.6 var(--font-mono);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cv-when .pl {
+    display: block;
+  }
+  .cv-org {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+  }
+  .cv-org .tag {
+    margin-left: 6px;
+    vertical-align: 0.2em;
+  }
+  .cv-role {
+    margin-top: 3px;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .cv-bullets {
+    margin-top: 14px;
+    max-width: 40em;
+  }
+  .cv-bullets li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 16.5px;
+    line-height: 1.62;
+    text-wrap: pretty;
+  }
+  .cv-bullets li + li {
+    margin-top: 8px;
+  }
+  .cv-bullets li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.82em;
+    width: 12px;
+    height: 1px;
+  }
+  .cv-outcome {
+    position: relative;
+    justify-self: start;
+    margin-top: 14px;
+    padding-left: 26px;
+    font-size: 16.5px;
+  }
+  .cv-outcome::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.35em;
+    bottom: 0.3em;
+    width: 2px;
+  }
+
+  /* Tags: award (steel) and live (the live state's colour). */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    padding: 4px 9px;
+    font: 400 10px/1.3 var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border: 1px solid;
+    border-radius: 2px;
+  }
+  .tag .cv-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  /* Projects */
+  .cv-proj {
+    padding-block: 28px;
+  }
+  .cv-proj .cv-org {
+    font-size: 20px;
+  }
+  .cv-stack {
+    margin-top: 8px;
+    font: 400 11.5px/1.7 var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+  .cv-proj .cv-bullets {
+    margin-top: 12px;
+  }
+  .cv-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin-top: 14px;
+  }
+  .cv-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 1px;
+    font: 400 10.5px/1.6 var(--font-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .cv-links a::after {
+    content: '↗';
+    content: '↗' / '';
+    letter-spacing: 0;
+    font-size: 11px;
+  }
+  .cv-links a[href^='/']::after {
+    content: '→';
+    content: '→' / '';
+  }
+
+  /* Publication */
+  .cv-pub .cv-org {
+    font-size: 21px;
+    line-height: 1.35;
+  }
+  .cv-cite {
+    margin-top: 12px;
+    max-width: 40em;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .cv-doi {
+    margin-top: 10px;
+    font: 400 12px/1.6 var(--font-mono);
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
+  }
+
+  .cv-foot {
+    display: none;
+  }
+}
+
+/* ---- desktop: the spread -------------------------------------------------- */
+@media screen and (min-width: 768px) {
+  .cv {
+    --pad: 40px;
+  }
+}
+@media screen and (min-width: 1100px) {
+  .cv {
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: var(--gap);
+    padding-block: 48px 120px;
+  }
+  .cv-id {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .cv-ref {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .cv-toc {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+    position: sticky;
+    top: 28px;
+  }
+  /* The rail is 292 px wide up to 1168 px: the label needs the room. */
+  .cv-btn {
+    padding-inline: 10px;
+  }
+  .cv-story {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+  /* The story's first title sits on the name's cap line. */
+  .cv-story > .cv-sec:first-child {
+    margin-top: 88px;
+  }
+}
+
+/* ---- tablet + phone: the rail becomes a compact header block -------------- */
+@media screen and (max-width: 1099px) {
+  .cv-id {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 28px;
+    align-items: start;
+  }
+  .cv-id > .cv-back {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .cv-id > .cv-name,
+  .cv-id > .cv-meta {
+    grid-column: 1;
+  }
+  .cv-id > .cv-card {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-areas: 'photo contact' 'photo cta';
+  }
+  .cv-card .cv-photo {
+    grid-area: photo;
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+  .cv-card .cv-contact {
+    grid-area: contact;
+  }
+  .cv-card .cv-cta {
+    grid-area: cta;
+    align-self: end;
+  }
+  .cv-btn {
+    display: inline-flex;
+    width: auto;
+  }
+  .cv-name {
+    margin-top: 28px;
+    max-width: 460px;
+  }
+  .cv-name .n-big {
+    font-size: clamp(44px, 8vw, 64px);
+  }
+  .cv-toc {
+    display: none;
+  }
+  .cv-jump {
+    display: block;
+    margin-top: 28px;
+  }
+  .cv-jump ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 22px;
+    padding-top: 12px;
+  }
+  .cv-jump a {
+    display: block;
+    padding: 6px 0;
+    font: 400 11px/1.6 var(--font-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .cv-story > .cv-sec:first-child {
+    margin-top: 56px;
+  }
+  .cv-ref {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 48px;
+    margin-top: 96px;
+  }
+  .cv-ref .cv-sec + .cv-sec {
+    margin-top: 0;
+  }
+  .cv-foot {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 72px;
+    padding-top: 22px;
+  }
+}
+
+@media screen and (max-width: 719px) {
+  .cv {
+    --margin: 0px;
+    --margin-gap: 0px;
+    padding-block: 22px 64px;
+  }
+
+  /* compact header block: name + portrait side by side, contact below */
+  .cv-id {
+    grid-template-columns: minmax(0, 1fr) clamp(68px, 22vw, 92px);
+    grid-template-areas: 'back back' 'name photo' 'meta meta' 'contact contact' 'cta cta';
+    column-gap: 16px;
+  }
+  .cv-id > .cv-back {
+    grid-area: back;
+  }
+  .cv-id > .cv-name {
+    grid-area: name;
+    margin-top: 22px;
+  }
+  .cv-id > .cv-meta {
+    grid-area: meta;
+  }
+  .cv-id > .cv-card {
+    display: contents;
+  }
+  .cv-name .n-big {
+    font-size: clamp(32px, 10.2vw, 48px);
+    letter-spacing: 0.04em;
+  }
+  .cv-name .n-mid {
+    margin: 8px 0 7px;
+    font-size: 10px;
+    letter-spacing: 0.36em;
+  }
+  .cv-status {
+    margin-top: 20px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+  .cv-roleline {
+    font-size: 16px;
+  }
+  .cv-card .cv-photo {
+    grid-area: photo;
+    align-self: start;
+    margin-top: 26px;
+    aspect-ratio: 4 / 5;
+    min-height: 0;
+    border-radius: 8px;
+    background-position: 50% 30%;
+  }
+  .cv-card .cv-contact {
+    grid-area: contact;
+    margin-top: 22px;
+    padding: 0;
+  }
+  .cv-contact li {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+    padding-block: 9px;
+  }
+  .cv-card .cv-cta {
+    grid-area: cta;
+    padding: 16px 0 0;
+  }
+  .cv-btn {
+    display: flex;
+    width: 100%;
+  }
+
+  .cv-jump ul {
+    gap: 2px 18px;
+  }
+  .cv-story > .cv-sec:first-child {
+    margin-top: 44px;
+  }
+  .cv-sec + .cv-sec {
+    margin-top: 72px;
+  }
+  .cv-h2 {
+    gap: 16px;
+    font-size: 24px;
+  }
+
+  /* entries: time becomes the kicker above the name */
+  .cv-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-block: 24px;
+  }
+  .cv-entry > .cv-when {
+    order: -1;
+    margin-bottom: 6px;
+  }
+  .cv-when .pl {
+    display: inline;
+  }
+  .cv-when .pl::before {
+    content: '·';
+    content: '·' / '';
+    margin-inline: 0.6em;
+  }
+  /* the course takes its own line; the comma stays at the end of the role's */
+  .cv-course {
+    display: block;
+  }
+  .cv-outcome {
+    align-self: flex-start;
+  }
+  .cv-org {
+    font-size: 20px;
+  }
+  .cv-org .tag {
+    display: flex;
+    width: fit-content;
+    margin: 8px 0 0;
+  }
+  .cv-stack li:not(:last-child)::after {
+    content: '\00a0/\0020';
+    content: '\00a0/\0020' / '';
+  }
+  .cv-bullets li,
+  .cv-outcome {
+    font-size: 16px;
+  }
+  .cv-bullets li {
+    padding-left: 22px;
+  }
+  .cv-ref {
+    display: block;
+    margin-top: 80px;
+  }
+  .cv-ref .cv-sec + .cv-sec {
+    margin-top: 56px;
+  }
+}
+@media screen and (max-width: 400px) {
+  .cv-contact li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1px;
+  }
+}
+
+/* ============================================================================
+   SCREEN edition — black field, metal name, glass, one champagne action
+   ========================================================================== */
+@media screen {
+  html:not([data-edition='print']) {
+    & body:has(.cv) {
+      background:
+        radial-gradient(ellipse 30% 36% at 0% 104%, rgba(90, 110, 140, 0.08) 0%, rgba(5, 6, 7, 0) 70%),
+        #050607;
+    }
+    .cv-light {
+      background:
+        radial-gradient(
+          ellipse 34% 52% at 20% 4%,
+          rgba(214, 196, 158, 0.15) 0%,
+          rgba(140, 155, 175, 0.06) 45%,
+          rgba(5, 6, 7, 0) 74%
+        ),
+        radial-gradient(ellipse 40% 40% at 70% 0%, rgba(140, 155, 175, 0.07) 0%, rgba(5, 6, 7, 0) 70%);
+    }
+
+    /* The résumé's bold runs (the metrics) read as bold here too: heavier
+       (Marcellus and the Tenor Sans digits have one weight, so the browser
+       emboldens them) and brighter, the number with its words. Neutral
+       white, not champagne: champagne is for the one action and live. */
+    .cv b {
+      font-weight: 700;
+      font-synthesis-weight: auto;
+      color: #f2f3f5;
+    }
+
+    /* No `position` here: this selector outranks the desktop
+       `.cv-toc { position: sticky }`, and the running head must stick. */
+    .cv-glass {
+      border: 1px solid var(--ed-glass-edge);
+      border-top-color: var(--ed-glass-edge-top);
+      border-radius: var(--ed-glass-radius);
+      background: var(--ed-glass-sheen), var(--ed-glass-fill);
+      -webkit-backdrop-filter: var(--ed-glass-blur);
+      backdrop-filter: var(--ed-glass-blur);
+      box-shadow:
+        inset 0 1px 0 var(--ed-glass-hi),
+        inset 0 0 0 1px var(--ed-glass-rim),
+        inset 0 -1px 0 var(--ed-glass-lo),
+        var(--ed-glass-shadow);
+    }
+
+    .cv-back {
+      color: var(--ed-steel2);
+    }
+    .cv-back:hover {
+      color: var(--text-primary);
+    }
+    .cv-name .n-big {
+      background-image: var(--ed-metal);
+      background-size: 260% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: ed-sheen 11s ease-in-out infinite;
+    }
+    .cv-name .n-big + .n-mid + .n-big {
+      animation-delay: -0.6s;
+    }
+    .cv-name .n-mid {
+      color: var(--ed-steel2);
+    }
+    .cv-name .n-mid::after {
+      background: linear-gradient(90deg, var(--border-strong), transparent);
+    }
+    .cv-status {
+      color: var(--ed-bright);
+    }
+    .cv-dot {
+      background: var(--ed-champ);
+      box-shadow:
+        0 0 0 3px rgba(216, 196, 154, 0.14),
+        0 0 12px rgba(216, 196, 154, 0.55);
+    }
+    .cv-toc-status .cv-dot,
+    .tag .cv-dot {
+      box-shadow: 0 0 8px rgba(216, 196, 154, 0.5);
+    }
+    .cv-roleline {
+      color: var(--ed-body);
+    }
+
+    .cv-photo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(5, 6, 7, 0) 55%, rgba(5, 6, 7, 0.55) 100%);
+    }
+    .cv-k {
+      color: var(--ed-steel2);
+    }
+    .cv-contact a {
+      color: var(--ed-link);
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .cv-contact a:hover {
+      color: var(--ed-link-hi);
+      border-bottom-color: var(--accent-signal);
+    }
+    .cv-btn {
+      border-radius: 2px;
+      background: var(--ed-btn);
+      color: var(--ed-btn-ink);
+      box-shadow: var(--ed-btn-shadow);
+    }
+
+    .cv-h2s {
+      color: var(--ed-steel2);
+    }
+    .cv-h2s::after {
+      background: var(--border-hairline);
+    }
+    .cv-skills h3 {
+      color: var(--ed-steel2);
+    }
+    .cv-items {
+      color: var(--ed-bright);
+    }
+    .cv-items li:not(:last-child)::after {
+      color: var(--ed-steel3);
+    }
+    .cv-edu > li + li {
+      border-top: 1px solid var(--border-hairline);
+    }
+    .cv-edu h3 {
+      color: var(--text-primary);
+    }
+    .cv-edu .deg {
+      color: var(--ed-bright);
+    }
+    .cv-edu .when {
+      color: var(--ed-steel2);
+    }
+
+    .cv-toc-name {
+      color: var(--text-primary);
+    }
+    .cv-toc-status {
+      color: var(--ed-steel2);
+    }
+    .cv-toc ul {
+      border-top: 1px solid var(--border-hairline);
+    }
+    .cv-toc li a {
+      color: var(--ed-body);
+    }
+    .cv-toc li a::before {
+      background: var(--border-strong);
+    }
+    .cv-toc li a:hover {
+      color: var(--text-primary);
+    }
+    .cv-toc li a:hover::before {
+      background: var(--ed-steel);
+    }
+    .cv-jump a {
+      color: var(--ed-body);
+    }
+    .cv-jump a:hover {
+      color: var(--text-primary);
+    }
+    & body:has(#experience:target) :is(.cv-toc, .cv-jump) a[href='#experience'],
+    & body:has(#projects:target) :is(.cv-toc, .cv-jump) a[href='#projects'],
+    & body:has(#publication:target) :is(.cv-toc, .cv-jump) a[href='#publication'],
+    & body:has(#skills:target) :is(.cv-toc, .cv-jump) a[href='#skills'],
+    & body:has(#education:target) :is(.cv-toc, .cv-jump) a[href='#education'] {
+      color: var(--text-primary);
+    }
+    & body:has(#experience:target) .cv-toc a[href='#experience']::before,
+    & body:has(#projects:target) .cv-toc a[href='#projects']::before,
+    & body:has(#publication:target) .cv-toc a[href='#publication']::before,
+    & body:has(#skills:target) .cv-toc a[href='#skills']::before,
+    & body:has(#education:target) .cv-toc a[href='#education']::before {
+      background: var(--accent-signal);
+    }
+    .cv-toc-extra {
+      border-top: 1px solid var(--border-hairline);
+    }
+    .cv-toc-extra a {
+      color: var(--ed-link);
+    }
+    .cv-toc-extra a:hover {
+      color: var(--ed-link-hi);
+    }
+
+    .cv-h2 {
+      color: var(--text-primary);
+    }
+    .cv-h2::after {
+      background: linear-gradient(
+        90deg,
+        var(--border-strong),
+        var(--border-hairline) 60%,
+        transparent
+      );
+    }
+    .cv-entry + .cv-entry {
+      border-top: 1px solid var(--border-hairline);
+    }
+    .cv-when {
+      color: var(--ed-bright);
+    }
+    .cv-when .pl,
+    .cv-when .pl::before {
+      color: var(--ed-steel2);
+    }
+    .cv-org {
+      color: var(--text-primary);
+    }
+    .cv-role {
+      color: var(--ed-link);
+    }
+    .cv-bullets li {
+      color: var(--ed-body);
+    }
+    .cv-bullets li::before {
+      background: var(--ed-steel3);
+    }
+    .cv-outcome {
+      color: var(--text-primary);
+    }
+    .cv-outcome::before {
+      background: var(--ed-btn);
+    }
+    .tag {
+      color: var(--ed-steel2);
+      border-color: var(--border-strong);
+    }
+    .tag.is-live {
+      color: var(--ed-champ);
+      border-color: rgba(216, 196, 154, 0.45);
+    }
+    .cv-stack {
+      color: var(--ed-steel2);
+    }
+    .cv-stack li:not(:last-child)::after {
+      color: var(--ed-steel3);
+    }
+    .cv-links a {
+      color: var(--ed-link);
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .cv-links a::after {
+      color: var(--ed-steel2);
+    }
+    .cv-links a:hover {
+      color: var(--ed-link-hi);
+      border-bottom-color: var(--accent-signal);
+    }
+    .cv-links a:hover::after {
+      color: var(--accent-signal);
+    }
+    .cv-cite {
+      color: var(--ed-body);
+    }
+    .cv-cite b {
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .cv-doi {
+      color: var(--ed-steel2);
+    }
+    .cv-foot {
+      border-top: 1px solid var(--border-hairline);
+    }
+  }
+
+  /* motion off: the metal holds still */
+  html[data-motion='reduced'] .cv-name .n-big {
+    animation: none;
+    background-position: 30% center;
+  }
+}
+@media screen and (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .cv-name .n-big {
+    animation: none;
+    background-position: 30% center;
+  }
+}
+@media screen and (min-width: 1100px) {
+  /* the column rule between rail and story */
+  html:not([data-edition='print']) .cv::after {
+    content: '';
+    position: absolute;
+    top: 150px;
+    bottom: 120px;
+    left: calc(var(--rail) + var(--gap) / 2);
+    width: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(146, 160, 180, 0) 0%,
+      rgba(146, 160, 180, 0.12) 8%,
+      rgba(146, 160, 180, 0.12) 92%,
+      rgba(146, 160, 180, 0) 100%
+    );
+  }
+}
+@media screen and (max-width: 719px) {
+  html:not([data-edition='print']) {
+    .cv-card .cv-photo {
+      border: 1px solid var(--border-strong);
+    }
+    .cv-card .cv-contact {
+      border-top: 1px solid var(--border-hairline);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+  }
+}
+
+/* ============================================================================
+   PRINT edition on screen — the comic, set like a graphic novel's back
+   matter: ink rules and one offset (the ID card), no stacked panels.
+   ========================================================================== */
+@media screen {
+  html[data-edition='print'] {
+    .cv-light {
+      display: none;
+    }
+
+    .cv-back {
+      padding-bottom: 2px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--text-primary);
+    }
+    .cv-back:hover {
+      color: var(--ed-red2);
+    }
+
+    .cv-name {
+      margin-top: 34px;
+      font-weight: 400;
+      line-height: 0.86;
+    }
+    /* The name is the site's comic title, exactly as the PRINT hero sets
+       the same name (.ed-disp in styles/v3/print.css): yellow, ink stroke,
+       red then ink offset. It is lettering, not a box: the ID card keeps
+       the page's one hard box offset. */
+    .cv-name .n-big {
+      font-size: clamp(58px, 5vw, 70px);
+      letter-spacing: 0.02em;
+      color: var(--accent-amber);
+      -webkit-text-stroke: 0.045em var(--text-primary);
+      paint-order: stroke fill;
+      text-shadow:
+        0.06em 0.06em 0 var(--accent-signal),
+        0.1em 0.1em 0 var(--text-primary);
+    }
+    .cv-name .n-mid {
+      margin: 12px 0 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cv-name .n-mid::after {
+      height: 2px;
+      background: var(--text-primary);
+    }
+
+    /* the live status: yellow (PRINT's live fill), ink rule, no shadow */
+    .cv-status {
+      display: inline-flex;
+      gap: 9px;
+      margin-top: 26px;
+      padding: 6px 12px 5px;
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      background: var(--accent-amber);
+      border: 2px solid var(--text-primary);
+    }
+    .cv-dot {
+      background: var(--accent-signal);
+      box-shadow: 0 0 0 1.5px var(--text-primary);
+    }
+    .cv-roleline {
+      margin-top: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* the ID card carries the page's one hard offset */
+    .cv-card {
+      background: var(--ed-white);
+      border: 2px solid var(--text-primary);
+      box-shadow: 4px 4px 0 var(--text-primary);
+    }
+    .cv-photo {
+      border-bottom: 2px solid var(--text-primary);
+    }
+    .cv-photo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, rgba(23, 20, 27, 0.28) 0.9px, transparent 1.4px);
+      background-size: 4px 4px;
+      mix-blend-mode: multiply;
+    }
+    .cv-k {
+      font-weight: 600;
+      color: var(--ed-ink2);
+    }
+    .cv-contact li + li {
+      border-top: 1.5px solid var(--text-primary);
+    }
+    .cv-contact a {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--accent-amber);
+    }
+    .cv-contact a:hover {
+      background: var(--accent-amber);
+    }
+    .cv-btn {
+      padding: 10px 16px 9px;
+      white-space: nowrap;
+      font-family: var(--font-display);
+      font-size: 19px;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      color: var(--ed-btn-ink);
+      background: var(--ed-btn);
+      border: 2px solid var(--text-primary);
+    }
+    .cv-btn:hover {
+      background: var(--ed-red2);
+    }
+
+    .cv-h2s {
+      gap: 0;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      color: var(--ed-white);
+    }
+    .cv-h2s span {
+      padding: 5px 10px 4px;
+      background: var(--text-primary);
+    }
+    .cv-h2s::after {
+      height: 2px;
+      background: var(--text-primary);
+    }
+    .cv-skills h3 {
+      font-weight: 600;
+      color: var(--ed-red2);
+    }
+    .cv-items {
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+    .cv-items li:not(:last-child)::after {
+      font-weight: 700;
+      color: var(--accent-signal);
+    }
+    .cv-edu > li + li {
+      border-top: 2px solid var(--text-primary);
+    }
+    .cv-edu h3 {
+      font-family: var(--font-slab);
+      font-weight: 400;
+      font-size: 17px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      color: var(--text-primary);
+    }
+    .cv-edu .deg {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .cv-edu .when {
+      font-weight: 500;
+      color: var(--ed-ink2);
+    }
+
+    .cv-toc {
+      background: var(--ed-white);
+      border: 2px solid var(--text-primary);
+    }
+    .cv-toc-name {
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+    }
+    .cv-toc-status {
+      font-weight: 600;
+      color: var(--ed-ink2);
+    }
+    .cv-toc ul {
+      border-top: 2px solid var(--text-primary);
+    }
+    .cv-toc li a {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cv-toc li a::before {
+      height: 2px;
+      background: var(--text-primary);
+    }
+    .cv-toc li a:hover::before,
+    & body:has(#experience:target) .cv-toc a[href='#experience']::before,
+    & body:has(#projects:target) .cv-toc a[href='#projects']::before,
+    & body:has(#publication:target) .cv-toc a[href='#publication']::before,
+    & body:has(#skills:target) .cv-toc a[href='#skills']::before,
+    & body:has(#education:target) .cv-toc a[href='#education']::before {
+      height: 4px;
+      background: var(--accent-signal);
+    }
+    .cv-toc-extra {
+      border-top: 2px solid var(--text-primary);
+    }
+    .cv-toc-extra a {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cv-toc-extra a:hover {
+      color: var(--ed-red2);
+    }
+    .cv-jump a {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cv-jump a:hover {
+      color: var(--ed-red2);
+    }
+
+    /* section titles: Bangers on a yellow marker stroke, then an ink rule */
+    .cv-h2 {
+      align-items: center;
+      gap: 18px;
+      font-size: clamp(30px, 2.8vw, 38px);
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+    }
+    .cv-h2 span {
+      padding: 0 6px;
+      background: linear-gradient(
+        transparent 52%,
+        var(--accent-amber) 52%,
+        var(--accent-amber) 88%,
+        transparent 88%
+      );
+    }
+    .cv-h2::after {
+      height: 3px;
+      transform: none;
+      background: var(--text-primary);
+    }
+
+    /* entries sit on the paper, ruled in ink — no panel per row */
+    .cv-list {
+      margin-top: 14px;
+    }
+    .cv-entry + .cv-entry {
+      border-top: 2px solid var(--text-primary);
+    }
+    .cv-when {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cv-when .pl {
+      font-weight: 500;
+      color: var(--ed-ink2);
+    }
+    .cv-org {
+      font-family: var(--font-slab);
+      font-weight: 400;
+      font-size: 21px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      color: var(--text-primary);
+    }
+    .cv-proj .cv-org,
+    .cv-pub .cv-org {
+      font-size: 20px;
+    }
+    .cv-role {
+      font-size: 15.5px;
+      font-weight: 600;
+      color: var(--ed-ink2);
+    }
+    .cv-bullets li {
+      padding-left: 22px;
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+    .cv-bullets li::before {
+      top: 0.52em;
+      left: 2px;
+      width: 7px;
+      height: 7px;
+      background: var(--accent-signal);
+    }
+    .cv b {
+      font-weight: 700;
+    }
+    .cv-outcome {
+      padding-left: 22px;
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .cv-outcome::before {
+      left: 2px;
+      width: 3px;
+      background: var(--text-primary);
+    }
+    .cv-outcome span {
+      background: linear-gradient(
+        transparent 55%,
+        var(--accent-amber) 55%,
+        var(--accent-amber) 92%,
+        transparent 92%
+      );
+    }
+    .tag {
+      padding: 3px 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--ed-white);
+      border: 2px solid var(--text-primary);
+      border-radius: 0;
+    }
+    .tag.is-award {
+      background: var(--accent-amber);
+    }
+    .tag.is-live {
+      color: var(--ed-white);
+      background: var(--ed-red2);
+    }
+    .tag.is-live .cv-dot {
+      background: var(--ed-white);
+      box-shadow: none;
+    }
+    .cv-stack {
+      font-weight: 500;
+      color: var(--ed-ink2);
+    }
+    .cv-stack li:not(:last-child)::after {
+      color: var(--ed-red2);
+    }
+    .cv-links a {
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--text-primary);
+    }
+    .cv-links a::after {
+      color: var(--ed-red2);
+    }
+    .cv-links a:hover {
+      background: var(--accent-amber);
+    }
+    .cv-cite {
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+    .cv-cite b {
+      background: linear-gradient(transparent 60%, var(--accent-amber) 60%);
+    }
+    .cv-doi {
+      font-weight: 500;
+      color: var(--ed-ink2);
+    }
+    .cv-foot {
+      border-top: 2px solid var(--text-primary);
+    }
+  }
+}
+@media screen and (max-width: 719px) {
+  html[data-edition='print'] {
+    .cv-name .n-big {
+      font-size: clamp(44px, 13vw, 64px);
+    }
+    .cv-status {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    /* the card dissolves into the header here, and its offset with it */
+    .cv-card {
+      border: 0;
+      box-shadow: none;
+      background: none;
+    }
+    .cv-card .cv-photo {
+      border-radius: 0;
+      border: 2px solid var(--text-primary);
+    }
+    .cv-card .cv-contact {
+      border-top: 2px solid var(--text-primary);
+      border-bottom: 2px solid var(--text-primary);
+    }
+    .cv-h2 {
+      font-size: 28px;
+    }
+    .cv-bullets li {
+      font-size: 15px;
+    }
+  }
+}
+
+/* ============================================================================
+   PAPER — the printed CV. ONE skin for both editions: black on white,
+   Archivo text, IBM Plex Mono for dates, labels and addresses, two Letter
+   pages. Page 1: masthead, then the rail (skills, education) beside
+   Experience; Projects follow full width with the year back in the margin,
+   then Publication. Entries never split and titles never end a page.
+   ========================================================================== */
+/* A named page: only a page that holds `.cv` takes these rules, so the
+   stylesheet can stay loaded after a client-side trip back to '/' and a
+   print of '/' is untouched. */
+@page cv {
+  size: Letter;
+  margin: 0.5in 0.55in 0.55in;
+
+  @bottom-right {
+    content: counter(page) ' / ' counter(pages);
+    font: 400 7pt 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    letter-spacing: 0.08em;
+    color: #555;
+  }
+  @bottom-left {
+    content: 'Darshan Ravindra Konnur';
+    font: 400 7pt 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    letter-spacing: 0.08em;
+    color: #555;
+  }
+}
+@page cv:first {
+  @bottom-left {
+    content: none;
+  }
+}
+
+@media print {
+  /* The page is paper whatever the edition: without this the SCREEN
+     edition's `color-scheme: dark` on :root prints black page margins. */
+  :root:has(.cv),
+  :root:has(.cv) body {
+    color-scheme: light !important;
+    background: #fff !important;
+  }
+  :root:has(.cv) .skip-link,
+  .cv-light,
+  .cv-back,
+  .cv-cta,
+  .cv-toc,
+  .cv-jump,
+  .cv-foot,
+  .cv-dot,
+  .cv-warm {
+    display: none !important;
+  }
+
+  .cv {
+    --cv-sans: var(--font-archivo), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --cv-mono: var(--font-plexmono), ui-monospace, Menlo, monospace;
+    page: cv;
+    display: grid;
+    grid-template-columns: 1.9in minmax(0, 1fr);
+    column-gap: 0.28in;
+    /* 9.6 pt: the largest size that still makes two pages with a fallback
+       face in place of Archivo (10 pt fits only with Archivo loaded). */
+    font: 400 9.6pt/1.36 var(--cv-sans);
+    color: #111;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cv b {
+    font-weight: 700;
+  }
+  .cv-story {
+    display: contents;
+  }
+
+  /* ---- masthead --------------------------------------------------------- */
+  .cv-id {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name photo' 'meta photo' 'contact photo';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 0.3in;
+    align-items: start;
+    padding-bottom: 9pt;
+    margin-bottom: 4pt;
+    border-bottom: 1.2pt solid #111;
+  }
+  .cv-name {
+    grid-area: name;
+    margin-top: 1pt;
+    font: 700 22pt/1 var(--cv-sans);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .cv-name .n-mid {
+    margin-inline: 0.45em;
+    font: 500 7.4pt/1 var(--cv-mono);
+    letter-spacing: 0.34em;
+    vertical-align: 0.55em;
+    color: #444;
+  }
+  .cv-meta {
+    grid-area: meta;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 6pt;
+    font: 500 8pt/1.4 var(--cv-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .cv-roleline {
+    order: -1;
+  }
+  .cv-roleline::after {
+    content: '·';
+    content: '·' / '';
+    margin-inline: 0.8em;
+  }
+  .cv-card {
+    display: contents;
+  }
+  .cv-photo {
+    grid-area: photo;
+    width: 0.92in;
+    height: 0.92in;
+    background-position: 50% 30%;
+    filter: grayscale(1) contrast(1.05);
+  }
+  /* Both sizes, larger on top: whichever one the screen already loaded (440
+     on a phone, 660 wider) prints even if the other has not arrived. */
+  .cv-photo {
+    background-image: url('/photo/portrait-41-660.webp'), url('/photo/portrait-41-440.webp');
+  }
+  html[data-edition='print'] .cv-photo {
+    background-image: url('/photo/portrait-paper-660.webp'), url('/photo/portrait-paper-440.webp');
+  }
+  .cv-contact {
+    grid-area: contact;
+    align-self: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 11pt;
+    margin-top: 7pt;
+    font-size: 8.8pt;
+  }
+  .cv-contact .cv-k {
+    display: none;
+  }
+
+  /* ---- section titles --------------------------------------------------- */
+  .cv-sec {
+    break-inside: auto;
+  }
+  .cv-h2,
+  .cv-h2s {
+    padding: 8pt 0 3pt;
+    font: 600 8pt/1.2 var(--cv-mono);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    border-bottom: 0.75pt solid #111;
+    break-after: avoid;
+  }
+
+  /* ---- page 1: the rail beside Experience ------------------------------- */
+  .cv-ref {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  #experience {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  #education {
+    margin-top: 6pt;
+  }
+  .cv-skills > li {
+    margin-top: 5pt;
+    break-inside: avoid;
+  }
+  .cv-skills h3 {
+    font: 600 7pt/1.3 var(--cv-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #444;
+  }
+  .cv-items {
+    font-size: 8.8pt;
+    line-height: 1.34;
+  }
+  .cv-items li:not(:last-child)::after,
+  .cv-stack li:not(:last-child)::after {
+    color: #777;
+  }
+  .cv-edu > li {
+    padding-top: 5pt;
+    break-inside: avoid;
+  }
+  .cv-edu > li + li {
+    margin-top: 6pt;
+    padding-top: 6pt;
+    border-top: 0.5pt solid #999;
+  }
+  .cv-edu h3 {
+    font-size: 9.4pt;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .cv-edu .deg {
+    margin-top: 1pt;
+    font-size: 8.8pt;
+    line-height: 1.3;
+  }
+  .cv-edu .when {
+    margin-top: 1.5pt;
+    font: 400 7.4pt/1.45 var(--cv-mono);
+  }
+
+  /* ---- entries ---------------------------------------------------------- */
+  .cv-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 10pt;
+    align-items: baseline;
+    padding: 6pt 0 7pt;
+    break-inside: avoid;
+  }
+  /* The rule between entries hangs under the upper one (screen draws it over
+     the lower): an entry that moves to a new page takes no rule with it, so
+     no page opens with one. */
+  .cv-entry:not(:last-child) {
+    border-bottom: 0.5pt solid #999;
+  }
+  .cv-entry > * {
+    grid-column: 1 / -1;
+  }
+  .cv-job > .cv-org {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .cv-job > .cv-role {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .cv-job > .cv-when {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    padding-top: 1.5pt;
+    text-align: right;
+  }
+  .cv-when {
+    font: 400 7.8pt/1.45 var(--cv-mono);
+    color: #222;
+  }
+  .cv-when .pl {
+    display: block;
+  }
+  .cv-org {
+    font-size: 10.8pt;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .tag {
+    display: inline-block;
+    margin-left: 4pt;
+    padding: 0.6pt 3.5pt 0.4pt;
+    font: 500 6.4pt/1.3 var(--cv-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    vertical-align: 1.5pt;
+    border: 0.6pt solid #111;
+  }
+  .cv-role {
+    font-size: 9.6pt;
+    font-weight: 500;
+    color: #222;
+  }
+  .cv-bullets {
+    margin-top: 2.5pt;
+  }
+  .cv-bullets li {
+    position: relative;
+    padding-left: 10pt;
+  }
+  .cv-bullets li + li {
+    margin-top: 1.5pt;
+  }
+  /* borders, not backgrounds: they print with "background graphics" off */
+  .cv-bullets li::before {
+    content: '';
+    position: absolute;
+    left: 1pt;
+    top: 0.66em;
+    width: 4pt;
+    border-top: 0.7pt solid #111;
+  }
+  .cv-outcome {
+    margin-top: 2.5pt;
+    padding-left: 10pt;
+    font-weight: 600;
+  }
+
+  /* ---- projects + publication: full width, the year in the margin ------- */
+  #projects {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 2pt;
+  }
+  #publication {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin-top: 2pt;
+  }
+  .cv-proj,
+  .cv-pub {
+    grid-template-columns: 0.5in minmax(0, 1fr);
+    column-gap: 0.16in;
+    padding: 5.5pt 0 6.5pt;
+  }
+  .cv-proj > *,
+  .cv-pub > * {
+    grid-column: 2;
+  }
+  .cv-proj > .cv-when,
+  .cv-pub > .cv-when {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    font-size: 8.2pt;
+  }
+  .cv-stack {
+    margin-top: 0.5pt;
+    font: 400 7.4pt/1.45 var(--cv-mono);
+    color: #333;
+  }
+  .cv-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 12pt;
+    margin-top: 2pt;
+    font: 500 7.2pt/1.45 var(--cv-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .cv-links a::after {
+    content: attr(data-print);
+    margin-left: 4pt;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #333;
+  }
+  /* The case files live on the site, whose address the masthead prints;
+     the paper's address prints once, under Publication. */
+  .cv-links .is-case,
+  .cv-proj .cv-links .is-paper,
+  .cv-proj .cv-links:not(:has(a:not(.is-case, .is-paper))) {
+    display: none;
+  }
+  .cv-cite {
+    margin-top: 2pt;
+  }
+  .cv-doi {
+    margin-top: 1.5pt;
+    font: 400 7.4pt/1.45 var(--cv-mono);
+  }
+}

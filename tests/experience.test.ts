@@ -153,6 +153,12 @@ describe('figures (Cinzel lining numerals)', () => {
     ])
     expect(figures('used by 10,000+ employees').find((s) => s.figure)?.text).toBe('10,000+')
     expect(figures('no digits')).toEqual([{ text: 'no digits', figure: false }])
+    // a list comma after a figure stays outside it
+    expect(figures('S3, EC2, React 19,').filter((s) => s.figure).map((s) => s.text)).toEqual([
+      '3',
+      '2',
+      '19',
+    ])
   })
 })
 

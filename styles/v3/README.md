@@ -150,6 +150,16 @@ Section agents append their rules at the bottom of screen.css / print.css
 under `/* ---- <section> ---- */`, nested under the file's html selector —
 never unscoped, never in globals.css.
 
+`cv.css` (/cv, imported by `app/cv/page.tsx` only) is the one exception to
+the selector: its SCREEN skin is nested under
+`html:not([data-edition='print'])`, so the zero-JS résumé page keeps its
+skin even with scripts off. It has a third skin, paper (`@media print`),
+shared by both editions; every on-screen rule sits in `@media screen`, and
+every width query is `@media screen and (…)` (Chrome lays a Letter page out
+~710 px wide, so an unscoped width query fires on paper). Its page rules are
+on the named page `cv` (`.cv { page: cv }`), so they never apply to a print
+of '/' made after a client-side visit to /cv left the stylesheet loaded.
+
 ## 5. Switching (switch.css)
 
 `switchEdition(next, { originEl, via })` (lib/commands/context.ts):
