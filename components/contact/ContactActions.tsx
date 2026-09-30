@@ -21,45 +21,9 @@ import EdText from '@/components/projects/EdText'
 import { useEdition } from '@/components/projects/useEdition'
 import { copyEmailAction } from '@/lib/commands/context'
 import { profile } from '@/lib/data/profile'
-import { EASE_OUT_EXPO } from '@/lib/motion/tokens'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import ContactLinks from './ContactLinks'
 import { contactCopy, writeHref } from './copy'
-
-/** Page-session latch: the micro-burst fires once per session (§4.8). */
-let burstFired = false
-
-function fireBurst(x: number, y: number): void {
-  if (burstFired || typeof document === 'undefined') return
-  burstFired = true
-
-  const host = document.createElement('div')
-  host.setAttribute('aria-hidden', 'true')
-  host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:var(--z-toast)'
-  document.body.appendChild(host)
-
-  const easing = `cubic-bezier(${EASE_OUT_EXPO.join(', ')})`
-  for (let i = 0; i < 12; i++) {
-    const p = document.createElement('span')
-    p.style.cssText =
-      `position:absolute;left:${x}px;top:${y}px;width:4px;height:4px;` +
-      'border-radius:999px;background:var(--accent-signal)'
-    host.appendChild(p)
-    if (typeof p.animate !== 'function') continue
-    const angle = (i / 12) * Math.PI * 2
-    const dist = 36 + (i % 3) * 14
-    const dx = Math.cos(angle) * dist
-    const dy = Math.sin(angle) * dist
-    p.animate(
-      [
-        { transform: 'translate(-50%, -50%)', opacity: 1 },
-        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`, opacity: 0 },
-      ],
-      { duration: 600, easing, fill: 'forwards' },
-    )
-  }
-  window.setTimeout(() => host.remove(), 650)
-}
 
 const COPIED_MS = 1600
 
@@ -83,7 +47,7 @@ export default function ContactActions() {
     const x = e.clientX || rect.left + rect.width / 2
     const y = e.clientY || rect.top + rect.height / 2
     await copyEmailAction(profile.email)
-    if (!reduced) fireBurst(x, y)
+    if (!reduced) void import('./burst').then((m) => m.fireBurst(x, y)).catch(() => {})
     setCopied(true)
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     timerRef.current = window.setTimeout(() => setCopied(false), COPIED_MS)

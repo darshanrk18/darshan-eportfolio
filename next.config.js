@@ -17,6 +17,8 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
+  // No client source maps: each chunk would carry a sourceMappingURL comment,
+  // and on '/' that alone tips the 178 KB gz first-load budget (measured).
   productionBrowserSourceMaps: false,
   compiler: {
     // Strip console.* in production, keep errors/warnings.
