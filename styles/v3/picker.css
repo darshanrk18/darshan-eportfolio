@@ -1,0 +1,1055 @@
+/* ============================================================================
+   SIGNAL v3 — picker.css  (V3_SPEC §2.5, inventory X1-Picker, MOTION X1)
+   "Choose your edition": the first screen a visitor meets. OWNER: C5.
+   Imported by components/edition/EditionPicker.client.tsx (the gate), so it
+   loads on '/' only; the surface markup is the lazy
+   EditionPickerSurface.client.tsx chunk.
+
+   The picker is EDITION-INDEPENDENT: its SCREEN half is always design 41
+   and its PRINT half is always the comic, whatever html[data-edition] says
+   (the palette's `choose-edition` can re-open it from PRINT). So every
+   colour here is a literal from palette-41 / kit-print on the .pk root —
+   never --text-primary & co., which flip per edition. Fonts come from the
+   next/font variables, which never flip.
+
+   Geometry: the frame is 1280 × 800. Positions are container-query units
+   of the picker root (cqw / cqh), so the composition holds at any size:
+   the seam sits at 49.7 cqw, the one portrait is placed so its facial
+   midline (44.1 % of its width) lies on the seam, and BOTH halves draw the
+   same file through the same silhouette at the same page position — the
+   features meet at the tear. Under 768 px the halves stack (director call
+   (h)): SCREEN card over the PRINT sheet with a HORIZONTAL tear, the
+   figure right-aligned with its shoulders on the seam (never the face).
+   ========================================================================== */
+
+/* Pre-paint cover: while the picker is eligible, hide the page from the
+   first paint until the surface chunk arrives (the SCREEN field colour,
+   which the picker's left half continues). Cleared with the attribute. */
+html[data-pick='1'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 89;
+  background: #050607;
+  pointer-events: none;
+}
+
+.pk {
+  /* ---- palette-41 (SCREEN half) ---------------------------------------- */
+  --pk-black: #050607;
+  --pk-text: #d9dde4;
+  --pk-text2: #aab3c0;
+  --pk-text3: #8b96a4;
+  --pk-bright: #ccd4de;
+  --pk-champ: #d8c49a;
+  --pk-btn: linear-gradient(175deg, #e9dfc8, #c6b78f);
+  --pk-btn-ink: #0b0d10;
+  /* ---- kit-print (PRINT half) ------------------------------------------ */
+  --pk-paper: #f3e8cf;
+  --pk-white: #fffaf0;
+  --pk-ink: #17141b;
+  --pk-ink2: #3a3340;
+  --pk-red: #d7262d;
+  --pk-yellow: #f6c21c;
+  --pk-blue: #1e6fd6;
+  /* ---- geometry ---------------------------------------------------------- */
+  --pk-seam: 49.7cqw; /* the facial midline / the tear (636 of 1280) */
+  --pk-sheet-x: calc(var(--pk-seam) - 10px); /* the sheet's left (626) */
+  --pk-fig: 100cqh; /* the 800 × 800 figure box */
+  /* the Sep 29 studio portrait, option A: hair clears the question line at
+     129 of 800; its facial midline sits at 346.3 of 800 (OPTIONS.md) */
+  --pk-fig-top: 16.1cqh; /* 129 of 800 */
+  --pk-fig-x: calc(var(--pk-seam) - 0.4329 * var(--pk-fig)); /* midline on the seam */
+  --pk-gutter: 5cqw; /* 64 of 1280 */
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-picker, 90);
+  overflow: hidden;
+  container-type: size;
+  background: var(--pk-black);
+  color: var(--pk-text);
+  font-family: var(--font-marcellus), Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  opacity: 1;
+  transition: opacity 400ms var(--ease-swift, ease);
+}
+.pk[data-leaving='screen'] {
+  opacity: 0;
+}
+.pk[data-leaving='print'] {
+  opacity: 0;
+  transition-duration: 500ms;
+}
+.pk * {
+  box-sizing: border-box;
+}
+.pk .pk-abs {
+  position: absolute;
+}
+
+/* ---- the two halves are the two controls ---------------------------------- */
+.pk-half {
+  position: absolute;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.pk-half:focus {
+  outline: none;
+}
+.pk-half:focus-visible {
+  outline: 2px solid var(--pk-champ);
+  outline-offset: -4px;
+}
+.pk-half-p:focus-visible {
+  outline-color: var(--pk-ink);
+}
+
+/* ============================================================================
+   SCREEN half (left 660 × 800)
+   ========================================================================== */
+.pk-half-s {
+  left: 0;
+  top: 0;
+  width: calc(var(--pk-seam) + 24px);
+  height: 100%;
+  z-index: 1;
+  background: var(--pk-black);
+}
+.pk-atm {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.pk-beam {
+  left: -3cqw;
+  top: 0;
+  width: 59cqw;
+  height: 55cqh;
+  border-radius: 0;
+  opacity: 0.25;
+  background: radial-gradient(
+    ellipse 50% 60% at 50% 0%,
+    rgba(214, 196, 158, 0.16) 0%,
+    rgba(140, 155, 175, 0.07) 42%,
+    rgba(5, 6, 7, 0) 72%
+  );
+}
+.pk-light {
+  left: -24cqw;
+  top: -42cqh;
+  width: 86cqw;
+  height: 112cqh;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(214, 196, 158, 0.16) 0%,
+    rgba(140, 155, 175, 0.07) 42%,
+    rgba(5, 6, 7, 0) 72%
+  );
+  animation: pk-breathe 16s ease-in-out infinite;
+}
+.pk-spot {
+  left: 26cqw;
+  top: 23cqh;
+  width: 47cqw;
+  height: 75cqh;
+  background: radial-gradient(
+    closest-side,
+    rgba(214, 196, 158, 0.14) 0%,
+    rgba(140, 155, 175, 0.05) 45%,
+    rgba(5, 6, 7, 0) 100%
+  );
+}
+.pk-leak {
+  left: -17cqw;
+  top: 59cqh;
+  width: 50cqw;
+  height: 65cqh;
+  background: radial-gradient(closest-side, rgba(90, 110, 140, 0.015), rgba(90, 110, 140, 0));
+}
+.pk-halo {
+  left: -5cqw;
+  top: 25cqh;
+  width: 47cqw;
+  height: 40cqh;
+  background: radial-gradient(
+    ellipse 57% 56% at 50% 50%,
+    rgba(214, 196, 158, 0.14) 0%,
+    rgba(214, 196, 158, 0.09) 32%,
+    rgba(214, 196, 158, 0.035) 58%,
+    rgba(5, 6, 7, 0) 76%
+  );
+  transition: opacity 400ms var(--ease-swift, ease);
+}
+.pk[data-hover='screen'] .pk-halo {
+  opacity: 1.15;
+}
+.pk-gate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 56% 40%, rgba(0, 0, 0, 0) 56%, rgba(0, 0, 0, 0.42) 100%);
+}
+.pk-filmgate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0) 12%,
+    rgba(0, 0, 0, 0) 82%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+.pk-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.6'/></svg>");
+}
+.pk-ember {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--pk-champ);
+  box-shadow: 0 0 6px rgba(216, 196, 154, 0.8);
+  animation: pk-ember 14s linear infinite;
+  pointer-events: none;
+}
+.pk-ember.is-steel {
+  width: 2px;
+  height: 2px;
+  background: #c8d2de;
+  box-shadow: 0 0 5px rgba(200, 210, 222, 0.7);
+}
+
+/* the figure: ONE photograph, one cut (the silhouette clip in the defs) */
+.pk-fig {
+  position: absolute;
+  top: var(--pk-fig-top);
+  left: var(--pk-fig-x);
+  width: var(--pk-fig);
+  height: var(--pk-fig);
+  clip-path: url(#pk-sil);
+  pointer-events: none;
+}
+.pk-fig img,
+.pk-fig .pk-ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* The photograph keeps its own proportions inside the square figure box:
+   a replacement portrait covers it from the top instead of stretching. */
+.pk-fig img {
+  object-fit: cover;
+  object-position: 50% 0;
+}
+/* the key light on the face, the far side turning away from it */
+.pk-fig-s .pk-key {
+  mix-blend-mode: soft-light;
+  background: radial-gradient(
+    ellipse 35.5% 42.6% at 41.1% 29.3%,
+    rgba(236, 230, 220, 0.42),
+    rgba(236, 230, 220, 0.14) 55%,
+    rgba(236, 230, 220, 0) 100%
+  );
+}
+.pk-fig-s .pk-turn {
+  mix-blend-mode: multiply;
+  background: linear-gradient(90deg, rgba(8, 10, 12, 0.42) 0%, rgba(8, 10, 12, 0.22) 30%, rgba(8, 10, 12, 0) 40%);
+}
+.pk-rim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  mix-blend-mode: screen;
+  transition: opacity 400ms var(--ease-swift, ease);
+}
+.pk[data-hover='screen'] .pk-rim {
+  opacity: 1.15;
+}
+
+/* name · the one champagne rule · the block */
+.pk-name {
+  left: var(--pk-gutter);
+  top: 8.75cqh;
+  font: 500 12.5px/1 var(--font-cinzel), Georgia, serif;
+  letter-spacing: 0.34em;
+  color: var(--pk-text2);
+  white-space: nowrap;
+}
+.pk-rule {
+  left: calc(var(--pk-gutter) + 202px);
+  top: 9.5cqh;
+  width: calc(var(--pk-seam) - 70px - var(--pk-gutter) - 202px);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(216, 196, 154, 0),
+    rgba(216, 196, 154, 0.28) 45%,
+    rgba(216, 196, 154, 0.8) 88%,
+    rgba(216, 196, 154, 0)
+  );
+}
+.pk-blk-s {
+  left: var(--pk-gutter);
+  top: 40cqh;
+  width: min(440px, calc(var(--pk-seam) - var(--pk-gutter) - 120px));
+}
+.pk-h-s {
+  margin: 0;
+  font: 500 clamp(56px, 6.6cqw, 84px) / 0.95 var(--font-cinzel), Georgia, serif;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--pk-text);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.45),
+    0 18px 40px rgba(0, 0, 0, 0.5);
+}
+.pk-body-s {
+  margin: 22px 0 0;
+  font: 400 18px/1.5 var(--font-marcellus), Georgia, serif;
+  color: var(--pk-text2);
+}
+.pk-cta-s {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+  margin-top: 28px;
+  padding: 0 20px 0 24px;
+  font: 500 11.5px/1 var(--font-plexmono), ui-monospace, monospace;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--pk-btn-ink);
+  background: var(--pk-btn);
+  border-radius: 2px;
+  box-shadow: 0 10px 30px rgba(198, 183, 143, 0.18);
+  transition:
+    box-shadow 200ms var(--ease-swift, ease),
+    filter 200ms var(--ease-swift, ease);
+}
+.pk-cta-s svg {
+  display: block;
+}
+.pk-half-s:hover .pk-cta-s,
+.pk-half-s:focus-visible .pk-cta-s {
+  filter: brightness(1.06);
+  box-shadow: 0 12px 34px rgba(198, 183, 143, 0.28);
+}
+
+/* ============================================================================
+   the axis: the question and the caption
+   ========================================================================== */
+.pk-ask {
+  position: absolute;
+  left: 0;
+  top: 20cqh;
+  width: 100%;
+  margin: 0;
+  display: grid;
+  grid-template-columns: calc(var(--pk-seam) - 36px) 72px 1fr;
+  white-space: nowrap;
+  pointer-events: none;
+  font: 600 12px/1 var(--font-cinzel), Georgia, serif;
+  letter-spacing: 0.44em;
+  text-transform: uppercase;
+  color: var(--pk-bright);
+  z-index: 2;
+}
+.pk-ask .pk-ask-a {
+  justify-self: end;
+  margin-right: -0.44em;
+}
+.pk-ask .pk-ask-b {
+  justify-self: start;
+}
+/* the paper prints the same words in ink at the same page position */
+.pk-sheet .pk-ask {
+  left: calc(-1 * var(--pk-sheet-x));
+  color: var(--pk-ink);
+  z-index: auto;
+}
+.pk-cap {
+  position: absolute;
+  z-index: 2;
+  left: var(--pk-gutter);
+  bottom: 26px;
+  margin: 0;
+  font: 400 14px/20px var(--font-marcellus), Georgia, serif;
+  color: var(--pk-text3);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   the seal presiding over the seam: one mark, two finishes
+   ========================================================================== */
+.pk-seal {
+  position: absolute;
+  left: calc(var(--pk-seam) - 68px);
+  top: 8px;
+  width: 136px;
+  height: 136px;
+  z-index: 8;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  animation: pk-seal-in 400ms var(--ease-out-expo, ease-out) both;
+}
+.pk-seal .pk-seal-l {
+  clip-path: url(#pk-cl);
+}
+.pk-seal .pk-seal-r {
+  clip-path: url(#pk-cr);
+}
+.pk-seal .pk-spec {
+  animation: pk-spec 600ms ease-out 250ms both;
+}
+
+/* ============================================================================
+   PRINT: a torn sheet of newsprint lying over the screen (626 → 1280)
+   ========================================================================== */
+.pk-sheet-wrap {
+  position: absolute;
+  left: var(--pk-sheet-x);
+  top: 0;
+  width: calc(100% - var(--pk-sheet-x));
+  height: 100%;
+  z-index: 5;
+  filter: drop-shadow(-4px 0 7px rgba(0, 0, 0, 0.42)) drop-shadow(-1px 0 1.5px rgba(0, 0, 0, 0.5));
+  animation: pk-sheet-in 300ms var(--ease-out-expo, ease-out) 500ms both;
+  transition: transform 320ms var(--ease-swift, ease);
+}
+.pk[data-hover='screen'] .pk-sheet-wrap {
+  transform: translateX(4px);
+}
+.pk[data-hover='print'] .pk-sheet-wrap {
+  transform: translateX(-6px);
+}
+.pk-fiber {
+  position: absolute;
+  left: -8px;
+  top: 0;
+  width: calc(100% + 8px);
+  height: 100%;
+  background: linear-gradient(180deg, #fbf1e4, #fffaf0 40%, #f4ebdc);
+  clip-path: polygon(
+    22px 0%, 15px 1%, 18px 2.13%, 13px 3.38%, 11px 4.88%, 4px 6.5%, 1px 7.63%, 9px 9.13%,
+    12px 10.38%, 12px 11.75%, 16px 13.25%, 10px 14.88%, 14px 15.88%, 21px 17.37%, 8px 18.38%,
+    14px 19.63%, 18px 21.13%, 18px 22.38%, 10px 23.63%, 5px 25.37%, 18px 26.63%, 16px 28.13%,
+    6px 29.75%, 14px 30.88%, 13px 32.25%, 15px 33.38%, 21px 35%, 20px 36%, 14px 37.13%,
+    11px 38.38%, 10px 39.63%, 15px 41.38%, 13px 42.63%, 14px 44.25%, 19px 45.38%, 17px 46.88%,
+    10px 48.63%, 14px 49.75%, 15px 50.75%, 20px 52.5%, 16px 53.63%, 14px 55%, 14px 56.5%,
+    7px 57.5%, 11px 58.75%, 12px 59.75%, 13px 61.38%, 18px 62.75%, 12px 64%, 10px 65.25%,
+    14px 66.25%, 11px 67.38%, 14px 68.88%, 16px 69.88%, 12px 71.25%, 8px 72.38%, 7px 73.5%,
+    14px 74.63%, 10px 75.63%, 19px 77%, 11px 78.13%, 7px 79.75%, 10px 81.25%, 14px 82.5%,
+    17px 84%, 14px 85.5%, 9px 87.25%, 6px 88.88%, 14px 90.63%, 20px 92%, 23px 93.75%,
+    19px 95.5%, 17px 96.5%, 17px 97.63%, 13px 99.38%, 12px 100%, 100% 100%, 100% 0
+  );
+}
+.pk-sheet {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pk-paper);
+  color: var(--pk-ink);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  clip-path: polygon(
+    18px 0%, 14px 1%, 17px 2.13%, 9px 3.38%, 6px 4.88%, 0px 6.5%, 0px 7.63%, 8px 9.13%,
+    9px 10.38%, 11px 11.75%, 11px 13.25%, 8px 14.88%, 12px 15.88%, 20px 17.37%, 7px 18.38%,
+    9px 19.63%, 13px 21.13%, 14px 22.38%, 5px 23.63%, 1px 25.37%, 13px 26.63%, 12px 28.13%,
+    3px 29.75%, 13px 30.88%, 9px 32.25%, 14px 33.38%, 18px 35%, 15px 36%, 10px 37.13%,
+    6px 38.38%, 5px 39.63%, 10px 41.38%, 12px 42.63%, 10px 44.25%, 14px 45.38%, 12px 46.88%,
+    9px 48.63%, 10px 49.75%, 13px 50.75%, 16px 52.5%, 14px 53.63%, 10px 55%, 9px 56.5%,
+    6px 57.5%, 8px 58.75%, 8px 59.75%, 9px 61.38%, 13px 62.75%, 10px 64%, 8px 65.25%,
+    9px 66.25%, 6px 67.38%, 13px 68.88%, 14px 69.88%, 10px 71.25%, 7px 72.38%, 5px 73.5%,
+    13px 74.63%, 8px 75.63%, 15px 77%, 10px 78.13%, 3px 79.75%, 9px 81.25%, 10px 82.5%,
+    12px 84%, 9px 85.5%, 7px 87.25%, 1px 88.88%, 9px 90.63%, 15px 92%, 18px 93.75%,
+    17px 95.5%, 12px 96.5%, 16px 97.63%, 10px 99.38%, 9px 100%, 100% 100%, 100% 0
+  );
+}
+.pk-halftone {
+  position: absolute;
+  inset: 0;
+  opacity: 0.8;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(23, 20, 27, 0.16) 1px, transparent 1.5px);
+  background-size: 6px 6px;
+}
+.pk-curl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 56px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(23, 20, 27, 0.14), rgba(23, 20, 27, 0));
+  pointer-events: none;
+}
+/* the sunburst behind his head, its flat side the tear */
+.pk-sun {
+  position: absolute;
+  left: -32cqh;
+  top: 27cqh;
+  width: 67.5cqh;
+  height: 67.5cqh;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 6px var(--pk-ink);
+  background: repeating-conic-gradient(from 0deg, #f6c21c 0 6deg, #ef9f18 6deg 12deg);
+  transition: transform 400ms var(--ease-swift, ease);
+  pointer-events: none;
+}
+.pk[data-hover='print'] .pk-sun {
+  transform: rotate(3deg);
+}
+.pk-sun-dots {
+  position: absolute;
+  left: -31.25cqh;
+  top: 27.6cqh;
+  width: 66cqh;
+  height: 66cqh;
+  border-radius: 50%;
+  opacity: 0.34;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(215, 38, 45, 0.42) 1.1px, transparent 1.6px);
+  background-size: 7px 7px;
+}
+/* the same photograph through the same cut, printed as a halftone */
+.pk-sheet .pk-fig {
+  left: calc(var(--pk-fig-x) - var(--pk-sheet-x));
+}
+.pk-fig-p .pk-photo {
+  filter: grayscale(1) contrast(1.16) brightness(1.12);
+}
+.pk-fig-p .pk-ht {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  filter: contrast(14);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+.pk-fig-p .pk-ht img {
+  filter: grayscale(1) brightness(1.27) contrast(1.1) blur(0.3px);
+}
+.pk-fig-p .pk-scr {
+  position: absolute;
+  left: -30%;
+  top: -30%;
+  width: 160%;
+  height: 160%;
+  background-image: radial-gradient(circle at 50% 50%, #000 0, #fff 2.8px);
+  background-size: 4px 4px;
+  transform: rotate(45deg);
+  opacity: 0.5;
+}
+.pk-fig-p .pk-tint {
+  background: #f7ecd4;
+  mix-blend-mode: multiply;
+}
+.pk-outline {
+  position: absolute;
+  top: var(--pk-fig-top);
+  left: calc(var(--pk-fig-x) - var(--pk-sheet-x));
+  width: var(--pk-fig);
+  height: var(--pk-fig);
+  overflow: visible;
+  pointer-events: none;
+}
+/* No. 1 */
+.pk-burst {
+  position: absolute;
+  left: 26.4cqh;
+  top: 37.9cqh;
+  width: 9.75cqh;
+  height: 9.75cqh;
+  display: inline-grid;
+  place-items: center;
+  background: var(--pk-red);
+  color: var(--pk-white);
+  font: 400 clamp(12px, 2.1cqh, 17px) / 1 var(--font-bangers), Impact, sans-serif;
+  text-align: center;
+  transform: rotate(9deg);
+  clip-path: polygon(
+    50% 0%, 61% 12%, 76% 6%, 78% 22%, 94% 26%, 86% 40%, 100% 50%, 86% 60%, 94% 74%, 78% 78%,
+    76% 94%, 61% 88%, 50% 100%, 39% 88%, 24% 94%, 22% 78%, 6% 74%, 14% 60%, 0% 50%, 14% 40%,
+    6% 26%, 22% 22%, 24% 6%, 39% 12%
+  );
+  transition: transform 220ms var(--ease-swift, ease);
+  pointer-events: none;
+}
+.pk[data-hover='print'] .pk-burst {
+  animation: pk-pop 360ms var(--ease-swift, ease);
+}
+/* masthead, on the same axis as the screen's */
+.pk-mast-rule {
+  left: 14%;
+  top: 9.4cqh;
+  width: 47.7%;
+  height: 3px;
+  background: var(--pk-ink);
+}
+.pk-mast {
+  right: var(--pk-gutter);
+  top: 7.25cqh;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pk-price {
+  display: inline-grid;
+  place-items: center;
+  height: 30px;
+  padding: 0 9px;
+  border: 2.5px solid var(--pk-ink);
+  box-shadow: 3px 3px 0 var(--pk-ink);
+  background: var(--pk-white);
+  font: 400 17px/1 var(--font-alfa), Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--pk-ink);
+}
+.pk-word {
+  font: 400 19px/0.92 var(--font-alfa), Georgia, serif;
+  letter-spacing: 0.01em;
+  color: var(--pk-ink);
+  text-align: right;
+}
+/* the block */
+.pk-blk-p {
+  right: var(--pk-gutter);
+  top: 36cqh;
+  width: min(360px, calc(100% - 2 * var(--pk-gutter)));
+  text-align: right;
+}
+.pk-h-p {
+  margin: 0;
+  font: 400 clamp(72px, 9.7cqw, 124px) / 0.9 var(--font-bangers), Impact, sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--pk-yellow);
+  -webkit-text-stroke: 0.045em var(--pk-ink);
+  paint-order: stroke fill;
+  text-shadow:
+    0.06em 0.06em 0 var(--pk-red),
+    0.1em 0.1em 0 var(--pk-ink);
+}
+.pk-body-p {
+  margin: 20px 0 0;
+  font: 500 16.5px/1.45 var(--font-archivo), system-ui, sans-serif;
+  color: var(--pk-ink);
+}
+.pk-cta-p {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 30px;
+  padding: 8px 16px;
+  border: 3px solid var(--pk-ink);
+  box-shadow: 4px 4px 0 var(--pk-ink);
+  background: var(--pk-red);
+  color: var(--pk-white);
+  font: 400 19px/1 var(--font-bangers), Impact, sans-serif;
+  letter-spacing: 0.06em;
+  transition:
+    transform 160ms var(--ease-swift, ease),
+    box-shadow 160ms var(--ease-swift, ease),
+    background-color 160ms var(--ease-swift, ease);
+}
+.pk-half-p:hover .pk-cta-p,
+.pk-half-p:focus-visible .pk-cta-p {
+  background: #b11e25;
+}
+.pk-half-p:active .pk-cta-p {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--pk-ink);
+}
+/* printer's marks */
+.pk-reg {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.pk-reg.is-top {
+  right: 18px;
+  top: 18px;
+}
+.pk-reg.is-bottom {
+  right: 18px;
+  bottom: 18px;
+}
+.pk-cmyk {
+  position: absolute;
+  right: var(--pk-gutter);
+  bottom: 30px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+.pk-cmyk i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--pk-ink);
+}
+
+/* ============================================================================
+   keyframes (X1 motion note)
+   ========================================================================== */
+@keyframes pk-breathe {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+}
+@keyframes pk-ember {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  88% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(46px, -210px);
+    opacity: 0;
+  }
+}
+@keyframes pk-seal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pk-spec {
+  from {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.75;
+  }
+}
+@keyframes pk-sheet-in {
+  from {
+    transform: translateX(6px);
+    filter: drop-shadow(-2px 0 4px rgba(0, 0, 0, 0.25)) drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.3));
+  }
+  to {
+    transform: translateX(0);
+    filter: drop-shadow(-4px 0 7px rgba(0, 0, 0, 0.42)) drop-shadow(-1px 0 1.5px rgba(0, 0, 0, 0.5));
+  }
+}
+@keyframes pk-pop {
+  0% {
+    transform: rotate(9deg) scale(1);
+  }
+  45% {
+    transform: rotate(9deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(9deg) scale(1);
+  }
+}
+
+/* ============================================================================
+   phone (< 768): stacked — SCREEN card over the PRINT sheet, horizontal
+   tear (director call (h)); the figure is right-aligned with its shoulders
+   on the seam so the face is never cut.
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  .pk {
+    --pk-seam: 50cqh; /* the horizontal seam */
+    --pk-sheet-x: 0px;
+    /* the Sep 29 studio portrait (option A): its head fills 11–67 % of the
+       figure box, so the box is a little smaller and lower than the frame's
+       and shifted right — the face sits between the SCREEN button and the
+       seam, the chin clears the seal, and the seal lands on the collar */
+    --pk-fig: 33cqh;
+    --pk-fig-top: 24cqh;
+    --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh);
+    --pk-gutter: 20px;
+  }
+  .pk-half-s {
+    width: 100%;
+    height: var(--pk-seam);
+  }
+  .pk-beam {
+    left: 0;
+    width: 100%;
+    height: 40cqh;
+  }
+  .pk-light {
+    left: -30cqw;
+    top: -40cqh;
+    width: 160cqw;
+    height: 90cqh;
+  }
+  .pk-spot {
+    left: 45cqw;
+    top: 18cqh;
+    width: 70cqw;
+    height: 40cqh;
+  }
+  .pk-halo {
+    left: -20cqw;
+    top: 4cqh;
+    width: 90cqw;
+    height: 30cqh;
+  }
+  .pk-leak,
+  .pk-ember:nth-of-type(n + 3),
+  .pk-filmgate {
+    display: none;
+  }
+  .pk-name {
+    top: 20px;
+    left: 20px;
+  }
+  .pk-rule {
+    left: 176px;
+    width: calc(100% - 196px);
+    top: 26px;
+  }
+  .pk-ask {
+    top: 46px;
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    grid-template-columns: none;
+  }
+  .pk-ask .pk-ask-a {
+    margin-right: 0;
+  }
+  .pk-ask .pk-ask-a::after {
+    content: ' ';
+  }
+  .pk-sheet .pk-ask {
+    display: none;
+  }
+  .pk-blk-s {
+    top: 84px;
+    width: calc(100% - 40px);
+  }
+  .pk-h-s {
+    font-size: 52px;
+  }
+  .pk-body-s {
+    margin-top: 14px;
+    font-size: 16px;
+  }
+  .pk-cta-s {
+    margin-top: 18px;
+  }
+  /* the caption prints once, at the foot of the sheet (so above it in z) */
+  .pk-cap {
+    z-index: 6;
+    left: 20px;
+    right: 20px;
+    bottom: 14px;
+    color: var(--pk-ink2);
+    font-size: 13px;
+    line-height: 18px;
+    white-space: normal;
+  }
+  .pk-seal {
+    left: calc(50% - 48px);
+    top: calc(var(--pk-seam) - 48px);
+    width: 96px;
+    height: 96px;
+  }
+  .pk-seal .pk-seal-l {
+    clip-path: url(#pk-ct);
+  }
+  .pk-seal .pk-seal-r {
+    clip-path: url(#pk-cb);
+  }
+  .pk-sheet-wrap {
+    left: 0;
+    top: calc(var(--pk-seam) - 10px);
+    width: 100%;
+    height: calc(100% - var(--pk-seam) + 10px);
+    filter: drop-shadow(0 -4px 7px rgba(0, 0, 0, 0.42)) drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.5));
+    animation: none;
+  }
+  .pk[data-hover='screen'] .pk-sheet-wrap {
+    transform: translateY(4px);
+  }
+  .pk[data-hover='print'] .pk-sheet-wrap {
+    transform: translateY(-6px);
+  }
+  .pk-fiber {
+    left: 0;
+    top: -8px;
+    width: 100%;
+    height: calc(100% + 8px);
+    clip-path: polygon(
+      0% 22px, 1% 15px, 2.13% 18px, 3.38% 13px, 4.88% 11px, 6.5% 4px, 7.63% 1px, 9.13% 9px,
+      10.38% 12px, 11.75% 12px, 13.25% 16px, 14.88% 10px, 15.88% 14px, 17.37% 21px, 18.38% 8px,
+      19.63% 14px, 21.13% 18px, 22.38% 18px, 23.63% 10px, 25.37% 5px, 26.63% 18px, 28.13% 16px,
+      29.75% 6px, 30.88% 14px, 32.25% 13px, 33.38% 15px, 35% 21px, 36% 20px, 37.13% 14px,
+      38.38% 11px, 39.63% 10px, 41.38% 15px, 42.63% 13px, 44.25% 14px, 45.38% 19px, 46.88% 17px,
+      48.63% 10px, 49.75% 14px, 50.75% 15px, 52.5% 20px, 53.63% 16px, 55% 14px, 56.5% 14px,
+      57.5% 7px, 58.75% 11px, 59.75% 12px, 61.38% 13px, 62.75% 18px, 64% 12px, 65.25% 10px,
+      66.25% 14px, 67.38% 11px, 68.88% 14px, 69.88% 16px, 71.25% 12px, 72.38% 8px, 73.5% 7px,
+      74.63% 14px, 75.63% 10px, 77% 19px, 78.13% 11px, 79.75% 7px, 81.25% 10px, 82.5% 14px,
+      84% 17px, 85.5% 14px, 87.25% 9px, 88.88% 6px, 90.63% 14px, 92% 20px, 93.75% 23px,
+      95.5% 19px, 96.5% 17px, 97.63% 17px, 99.38% 13px, 100% 12px, 100% 100%, 0 100%
+    );
+  }
+  .pk-sheet {
+    clip-path: polygon(
+      0% 18px, 1% 14px, 2.13% 17px, 3.38% 9px, 4.88% 6px, 6.5% 0px, 7.63% 0px, 9.13% 8px,
+      10.38% 9px, 11.75% 11px, 13.25% 11px, 14.88% 8px, 15.88% 12px, 17.37% 20px, 18.38% 7px,
+      19.63% 9px, 21.13% 13px, 22.38% 14px, 23.63% 5px, 25.37% 1px, 26.63% 13px, 28.13% 12px,
+      29.75% 3px, 30.88% 13px, 32.25% 9px, 33.38% 14px, 35% 18px, 36% 15px, 37.13% 10px,
+      38.38% 6px, 39.63% 5px, 41.38% 10px, 42.63% 12px, 44.25% 10px, 45.38% 14px, 46.88% 12px,
+      48.63% 9px, 49.75% 10px, 50.75% 13px, 52.5% 16px, 53.63% 14px, 55% 10px, 56.5% 9px,
+      57.5% 6px, 58.75% 8px, 59.75% 8px, 61.38% 9px, 62.75% 13px, 64% 10px, 65.25% 8px,
+      66.25% 9px, 67.38% 6px, 68.88% 13px, 69.88% 14px, 71.25% 10px, 72.38% 7px, 73.5% 5px,
+      74.63% 13px, 75.63% 8px, 77% 15px, 78.13% 10px, 79.75% 3px, 81.25% 9px, 82.5% 10px,
+      84% 12px, 85.5% 9px, 87.25% 7px, 88.88% 1px, 90.63% 9px, 92% 15px, 93.75% 18px,
+      95.5% 17px, 96.5% 12px, 97.63% 16px, 99.38% 10px, 100% 9px, 100% 100%, 0 100%
+    );
+  }
+  .pk-curl {
+    width: 100%;
+    height: 56px;
+    background: linear-gradient(180deg, rgba(23, 20, 27, 0.14), rgba(23, 20, 27, 0));
+  }
+  /* the sheet's own coordinates: fig-top is measured from the picker top */
+  .pk-sheet .pk-fig,
+  .pk-outline {
+    top: calc(var(--pk-fig-top) - var(--pk-seam) + 10px);
+  }
+  .pk-sun {
+    left: auto;
+    right: -12cqh;
+    top: -14cqh;
+    width: 38cqh;
+    height: 38cqh;
+  }
+  .pk-sun-dots {
+    left: auto;
+    right: -11.5cqh;
+    top: -13.4cqh;
+    width: 37cqh;
+    height: 37cqh;
+  }
+  .pk-burst {
+    left: auto;
+    right: 2cqh;
+    top: 9cqh;
+    width: 64px;
+    height: 64px;
+    font-size: 14px;
+  }
+  .pk-mast-rule {
+    display: none;
+  }
+  /* the imprint moves to the sheet's foot, above the caption: the seal owns
+     the seam and the figure's shoulders run down the sheet's top */
+  .pk-mast {
+    right: auto;
+    left: 20px;
+    top: auto;
+    bottom: 60px;
+    flex-direction: row-reverse;
+  }
+  .pk-word {
+    font-size: 15px;
+    text-align: left;
+  }
+  .pk-price {
+    height: 26px;
+    font-size: 14px;
+  }
+  .pk-blk-p {
+    left: 20px;
+    right: 20px;
+    top: 15cqh;
+    width: auto;
+  }
+  .pk-h-p {
+    font-size: 72px;
+  }
+  .pk-body-p {
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .pk-cta-p {
+    margin-top: 18px;
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .pk-reg.is-top {
+    top: 14px;
+    right: 14px;
+  }
+  .pk-reg.is-bottom {
+    display: none;
+  }
+  .pk-cmyk {
+    right: 20px;
+    bottom: 66px;
+  }
+}
+
+/* ============================================================================
+   reduced motion: everything static; hover changes only the button fill
+   ========================================================================== */
+html[data-motion='reduced'] .pk,
+html[data-motion='reduced'] .pk *,
+html[data-motion='reduced'] .pk *::before,
+html[data-motion='reduced'] .pk *::after {
+  animation: none !important;
+  transition: none !important;
+}
+html[data-motion='reduced'] .pk[data-leaving] {
+  transition: opacity 300ms linear !important;
+}
+html[data-motion='reduced'] .pk .pk-sheet-wrap,
+html[data-motion='reduced'] .pk .pk-sun,
+html[data-motion='reduced'] .pk .pk-halo,
+html[data-motion='reduced'] .pk .pk-rim {
+  transform: none !important;
+  opacity: revert;
+}
