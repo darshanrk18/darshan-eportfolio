@@ -3,6 +3,11 @@
  * navbar, and hash-anchor handling. Build it in client components with
  * `createCommandCtx(useRouter())`. All DOM access is guarded, so importing
  * this module from server code for types is safe.
+ *
+ * v3 (V3_SPEC §2.1 / §2.4): the dark/light Theme API is gone — no
+ * data-theme, no signal.theme, no applyTheme/getCurrentTheme. The edition
+ * (SCREEN | PRINT) lives here instead: getCurrentEdition / applyEdition /
+ * switchEdition / requestEditionPick and CommandCtx.setEdition.
  */
 
 import { getLenis } from '@/lib/motion/lenis'
@@ -10,26 +15,64 @@ import { setMotionPreference } from '@/lib/motion/useReducedMotion'
 import { useSignalStore } from '@/lib/state/store'
 import { copyToClipboard } from '@/lib/utils/copy'
 import {
-  trackEvent,
+  trackEditionSwitched,
   trackEmailCopied,
+  trackEvent,
   trackMotionDisabled,
   trackProjectOpened,
   trackResumeDownloaded,
-  trackThemeToggled,
   type AnalyticsParams,
 } from '@/lib/utils/analytics'
+import {
+  EDITION_ATTR,
+  EDITION_STORAGE_KEY,
+  PICK_ATTR,
+  type Edition,
+  type EditionVia,
+} from '@/lib/edition/prepaint'
 import type { ProjectSlug } from '@/lib/data/projects'
 
-export type Theme = 'dark' | 'light'
+/* v3 §2.1 — the edition constants are DEFINED in lib/edition/prepaint.ts
+   (the pre-paint script string is built from them, so the script and this
+   module can never disagree) and re-exported here, the import site the
+   spec names for client code. */
+export {
+  EDITION_ATTR,
+  EDITION_STORAGE_KEY,
+  INTRO_ATTR,
+  INTRO_SESSION_KEY,
+  PICK_ATTR,
+} from '@/lib/edition/prepaint'
+export type { Edition, EditionVia } from '@/lib/edition/prepaint'
 
-/** localStorage key read by the pre-paint inline script in app/layout.tsx. */
-export const THEME_STORAGE_KEY = 'signal.theme'
-/** sessionStorage key marking the boot overlay as already shown (§4.1). */
-export const BOOT_STORAGE_KEY = 'signal.boot'
 /**
- * v2 §6.3 — localStorage flag ('1') that a boot has completed once on this
- * browser. WRITTEN by BootOverlay's finalize(); READ by BootOverlay
- * (first-vs-return variant) and by the §10.3 footer payoff (`--incremental`).
+ * v3 §2.4 — html attribute set by switchEdition() for the lifetime of ONE
+ * view transition: 'press' (SCREEN → PRINT) or 'projector' (PRINT → SCREEN).
+ * styles/v3/switch.css keys its choreography off it. Never set it by hand.
+ */
+export const EDITION_SWITCH_ATTR = 'data-edition-switch'
+/**
+ * v3 §2.4 — inline html style vars switchEdition() writes before a press:
+ * the centre of the control that asked (the toggle), in px, the origin of
+ * the dot wave. switch.css falls back to the top-right corner without them.
+ */
+export const SWITCH_ORIGIN_X_VAR = '--switch-x'
+export const SWITCH_ORIGIN_Y_VAR = '--switch-y'
+/**
+ * v3 §2.2 — `<meta name="theme-color">` per edition. The SSR meta is dark
+ * for both schemes; syncEditionMeta() corrects it after mount / on switch.
+ */
+export const EDITION_THEME_COLOR: Record<Edition, string> = {
+  screen: '#050607',
+  print: '#f3e8cf',
+}
+
+/**
+ * v2 §6.3 — localStorage flag ('1') that the site had been visited before.
+ * v3: the boot overlay that WROTE it is retired; the key stays because the
+ * §10.3 footer payoff (BuildCompleteIsland) still READS it. Nothing writes
+ * it any more (a fresh read of null = first visit, which is honest) until
+ * C1 re-homes the payoff behind Build info.
  */
 export const SEEN_STORAGE_KEY = 'signal.seen'
 /**
@@ -76,6 +119,13 @@ export const SIGNAL_EVENTS = {
    * state (e.g. GlyphField pause); never re-toggle from this event.
    */
   sourceMode: 'signal:source-mode',
+  /**
+   * v3 §2.7 — no detail. Fired by the `replay-intro` registry command AFTER
+   * the edition is PRINT (the command switches first when needed) and after
+   * sessionStorage['signal.intro'] was cleared. The intro host (C6) listens
+   * on window, dynamically imports the intro and runs it from beat one.
+   */
+  replayIntro: 'signal:replay-intro',
 } as const
 
 export interface CommandCtx {
@@ -87,8 +137,15 @@ export interface CommandCtx {
   copy(text: string): Promise<boolean>
   /** Trigger a same-origin file download (resume PDF). */
   download(url: string, filename?: string): void
-  /** Set or toggle the theme (persists + fires theme_toggled). */
-  setTheme(theme: Theme | 'toggle'): void
+  /**
+   * v3 §2.1 — set or toggle the edition. Runs the §2.4 press / projector
+   * view transition when the browser has one, then applyEdition (attribute
+   * + localStorage + store mirror + theme-color meta +
+   * `edition_switched { edition, via }`). `via` defaults to 'palette'; the
+   * terminal passes 'terminal'. Resolves when the transition has finished
+   * (immediately when there is none or the edition is already in force).
+   */
+  setEdition(edition: Edition | 'toggle', via?: EditionVia): Promise<void>
   /** Set reduced motion (persists; fires motion_disabled when reducing). */
   setMotion(reduced: boolean): void
   /** Scroll to Skills and open the inspector for a node id (e.g. 'docker'). */
@@ -103,22 +160,121 @@ function prefersReducedNow(): boolean {
   return typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduced'
 }
 
-/** Read the current theme from the DOM (dark is the default). */
-export function getCurrentTheme(): Theme {
-  if (typeof document === 'undefined') return 'dark'
-  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+/* ------------------------------------------------------------------------- */
+/* v3 §2.1 / §2.4 — editions (the ONE owner of html[data-edition])           */
+/* ------------------------------------------------------------------------- */
+
+/** Read the edition in force from the DOM ('screen' is the default and the SSR answer). */
+export function getCurrentEdition(): Edition {
+  if (typeof document === 'undefined') return 'screen'
+  return document.documentElement.dataset.edition === 'print' ? 'print' : 'screen'
 }
 
-/** Apply + persist a theme. Exported for ThemeToggle. Fires theme_toggled. */
-export function applyTheme(theme: Theme): void {
+/** The edition that is not this one. */
+export function otherEdition(edition: Edition): Edition {
+  return edition === 'print' ? 'screen' : 'print'
+}
+
+/**
+ * v3 §2.2 — point every `<meta name="theme-color">` at the edition's page
+ * colour. Called by applyEdition() and by EditionToggle on mount (the SSR
+ * meta is dark; a stored PRINT visitor gets paper after hydration).
+ */
+export function syncEditionMeta(edition: Edition): void {
+  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return
+  const color = EDITION_THEME_COLOR[edition]
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    meta.setAttribute('content', color)
+  })
+}
+
+/**
+ * v3 §2.1 — apply an edition NOW, no transition: sets html[data-edition],
+ * persists localStorage['signal.edition'], mirrors the store, syncs the
+ * theme-color meta and fires `edition_switched { edition, via }`. The
+ * picker calls this directly (via 'picker'); everything else should go
+ * through switchEdition() so the §2.4 choreography plays.
+ */
+export function applyEdition(edition: Edition, via: EditionVia): void {
   if (typeof document === 'undefined') return
-  document.documentElement.dataset.theme = theme
+  document.documentElement.setAttribute(EDITION_ATTR, edition)
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme)
+    localStorage.setItem(EDITION_STORAGE_KEY, edition)
   } catch {
-    /* storage unavailable — attribute still applies */
+    /* storage unavailable — the attribute still applies for this page */
   }
-  trackThemeToggled(theme)
+  useSignalStore.getState().setEdition(edition)
+  syncEditionMeta(edition)
+  trackEditionSwitched(edition, via)
+}
+
+export interface SwitchEditionOptions {
+  /** The control that asked (the toggle): its centre seeds the press dot wave. */
+  originEl?: Element | null
+  /** Analytics origin; defaults to 'toggle'. */
+  via?: EditionVia
+}
+
+/**
+ * v3 §2.4 — switch editions with the X2 choreography. With
+ * document.startViewTransition: writes --switch-x/--switch-y from
+ * `originEl`, sets html[data-edition-switch]='press' (→ PRINT) or
+ * 'projector' (→ SCREEN), runs applyEdition inside the transition and
+ * removes the attribute on `finished` (also when the transition is skipped).
+ * styles/v3/switch.css plays the 700 ms press / projector under full
+ * motion and a 200 ms crossfade under html[data-motion='reduced'].
+ * Without the API: applyEdition immediately (instant). Already in `next`:
+ * no-op. Scroll position is untouched either way.
+ */
+export function switchEdition(next: Edition, opts: SwitchEditionOptions = {}): Promise<void> {
+  if (typeof document === 'undefined') return Promise.resolve()
+  const via = opts.via ?? 'toggle'
+  if (getCurrentEdition() === next) return Promise.resolve()
+  const root = document.documentElement
+  if (typeof document.startViewTransition !== 'function') {
+    applyEdition(next, via)
+    return Promise.resolve()
+  }
+  const origin = opts.originEl
+  const rect =
+    origin && typeof origin.getBoundingClientRect === 'function'
+      ? origin.getBoundingClientRect()
+      : null
+  root.style.setProperty(
+    SWITCH_ORIGIN_X_VAR,
+    rect ? `${rect.left + rect.width / 2}px` : 'calc(100% - 72px)'
+  )
+  root.style.setProperty(SWITCH_ORIGIN_Y_VAR, rect ? `${rect.top + rect.height / 2}px` : '24px')
+  root.setAttribute(EDITION_SWITCH_ATTR, next === 'print' ? 'press' : 'projector')
+  const settle = () => {
+    root.removeAttribute(EDITION_SWITCH_ATTR)
+    // The origin vars are only meaningful for the life of one transition;
+    // clear them so no inline style lingers on <html> afterwards.
+    root.style.removeProperty(SWITCH_ORIGIN_X_VAR)
+    root.style.removeProperty(SWITCH_ORIGIN_Y_VAR)
+  }
+  try {
+    const transition = document.startViewTransition(() => applyEdition(next, via))
+    return transition.finished
+      .catch(() => {
+        /* skipped / interrupted transitions still settle the attribute */
+      })
+      .finally(settle)
+  } catch {
+    settle()
+    applyEdition(next, via)
+    return Promise.resolve()
+  }
+}
+
+/**
+ * v3 §2.5 — ask the edition picker to show: sets html[data-pick='1']. The
+ * EditionPicker island (mounted on '/' only) watches the attribute, renders
+ * while it is set and clears it on a choice. Palette `choose-edition`.
+ */
+export function requestEditionPick(): void {
+  if (typeof document === 'undefined') return
+  document.documentElement.setAttribute(PICK_ATTR, '1')
 }
 
 /* ------------------------------------------------------------------------- */
@@ -214,10 +370,9 @@ export function createCommandCtx(router: { push(href: string): void }): CommandC
       a.remove()
     },
 
-    setTheme(theme) {
-      const next: Theme =
-        theme === 'toggle' ? (getCurrentTheme() === 'dark' ? 'light' : 'dark') : theme
-      applyTheme(next)
+    setEdition(edition, via = 'palette') {
+      const next: Edition = edition === 'toggle' ? otherEdition(getCurrentEdition()) : edition
+      return switchEdition(next, { via })
     },
 
     setMotion(reduced) {
