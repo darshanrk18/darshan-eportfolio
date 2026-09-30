@@ -909,6 +909,33 @@ html[data-edition='screen'] {
   inherits: false;
   initial-value: 74px;
 }
+/* PRINT's TRY strip: the edge fades, driven by the strip's own scroll */
+@property --ct-fl {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --ct-fr {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes ct-sugs-fl {
+  from {
+    --ct-fl: 0px;
+  }
+  to {
+    --ct-fl: 40px;
+  }
+}
+@keyframes ct-sugs-fr {
+  from {
+    --ct-fr: 40px;
+  }
+  to {
+    --ct-fr: 0px;
+  }
+}
 
 /* ============================================================================
    PRINT — the comic (P6): the envelope, the tube, the TRY strip, the closer
@@ -1468,14 +1495,9 @@ html[data-edition='print'] {
     align-items: center;
     gap: 12px;
     min-height: 60px;
-    padding: 0 16px;
+    padding: 0 0 0 16px;
     border-top: 3px solid var(--text-primary);
     background: var(--ed-white);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .ct-rail::-webkit-scrollbar {
-    display: none;
   }
   .ct-rail-label {
     font: 400 19px/1 var(--font-display);
@@ -1484,9 +1506,42 @@ html[data-edition='print'] {
     color: var(--accent-signal);
     flex-shrink: 0;
   }
+  /* The chips scroll under a fixed TRY. The 6 px / 4 px padding keeps the
+     chips' shadows, their press and the focus ring inside the scroller. */
   .ct-sugs {
     display: flex;
+    flex: 1 1 auto;
     gap: 12px;
+    min-width: 0;
+    margin-left: -4px;
+    padding: 6px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-padding-inline: 40px;
+  }
+  .ct-sugs::-webkit-scrollbar {
+    display: none;
+  }
+  /* The cue: an edge that has chips beyond it fades into the paper. The
+     fade grows with what is hidden (2.5 px per px, up to 40 px), so it shows
+     only when a chip is cut off; nothing overflows → no timeline, no fade. */
+  @supports (animation-timeline: scroll()) {
+    .ct-sugs {
+      mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 var(--ct-fl),
+        #000 calc(100% - var(--ct-fr)),
+        transparent
+      );
+      animation:
+        ct-sugs-fl linear both,
+        ct-sugs-fr linear both;
+      animation-timeline: scroll(self inline), scroll(self inline);
+      animation-range:
+        0px 16px,
+        calc(100% - 16px) 100%;
+    }
   }
   .ct-sugs li {
     flex-shrink: 0;
