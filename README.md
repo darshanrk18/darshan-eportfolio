@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  The source of his personal site: one story, told in two editions.<br>
+  The source of this personal site: one story, told in two editions.<br>
   <b>SCREEN</b> is a dark, cinematic cut. <b>PRINT</b> is an inked, four-color comic.
 </p>
 
