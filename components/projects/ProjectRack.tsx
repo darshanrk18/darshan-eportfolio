@@ -79,9 +79,12 @@ function RackCard({
   const award = project.award?.split(' — ') ?? null
   const more = coverMoreCount(project)
   const issue = String(index + 1).padStart(2, '0')
+  /* Read (visually hidden) right after the visible title, so the link's
+     name is the words a visitor sees plus the facts the art carries — never
+     an aria-label that replaces the visible text (WCAG 2.5.3, label in name). */
   const facts = [
-    `Issue ${issue}, ${project.name}, ${project.year}`,
-    award ? `${award[0]}, ${award[1] ?? ''}`.trim() : null,
+    String(project.year),
+    award ? [award[0], award[1]].filter(Boolean).join(', ') : null,
     project.live ? 'Live in production' : null,
     open ? 'Open above' : null,
   ]
@@ -101,7 +104,6 @@ function RackCard({
         data-surface="panel"
         href={`/work/${project.slug}`}
         aria-current={open ? 'true' : undefined}
-        aria-label={facts}
         onClick={(e) => {
           e.preventDefault()
           onSelect(project.slug)
@@ -147,6 +149,7 @@ function RackCard({
               </i>
             ) : null}
           </span>
+          <span className="sr-only">{`, ${facts}. `}</span>
           <span className="rk-line">
             <EdText screen={project.short} print={project.coverLine} />
           </span>
