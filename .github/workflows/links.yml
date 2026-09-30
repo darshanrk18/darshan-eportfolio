@@ -1,7 +1,7 @@
 name: links
 
 # Every link on the live site, once a week. A failure opens an issue
-# labelled "broken-links" with the report, or updates the one already open.
+# labeled "broken-links" with the report, or updates the one already open.
 on:
   schedule:
     - cron: '0 13 * * 1' # Mondays 13:00 UTC
@@ -113,7 +113,7 @@ jobs:
         shell: bash
         run: |
           if [ "$EXIT_CODE" = "2" ]; then
-            echo "::error::Broken links on the live site. The report is in the issue labelled broken-links."
+            echo "::error::Broken links on the live site. The report is in the issue labeled broken-links."
           else
             echo "::error::The link check itself failed (lychee exit code $EXIT_CODE)."
           fi

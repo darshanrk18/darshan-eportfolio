@@ -42,7 +42,7 @@ body:
   - type: checkboxes
     id: settings
     attributes:
-      label: Settings that change the site's behaviour
+      label: Settings that change the site's behavior
       options:
         - label: Reduce motion is switched on in this device's settings
         - label: The browser window was narrower than 768 px (a phone, or a narrow window)

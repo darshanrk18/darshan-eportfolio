@@ -422,7 +422,7 @@ class Tab {
     return false
   }
 
-  /** A real mouse click at the centre of the first match, after checking nothing covers it. */
+  /** A real mouse click at the center of the first match, after checking nothing covers it. */
   async click(selector, what) {
     await this.until(
       `(() => {
