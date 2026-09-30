@@ -870,11 +870,6 @@ html[data-edition='screen'] {
     .xp-stage {
       padding: 24px 16px 32px;
     }
-    /* the IEEE lane sits 20 px left of the rail (the fork's width); 12 px of
-       graph inset keeps it, and the tag on it, inside the stage's clip */
-    .xp-graph {
-      padding-left: 12px;
-    }
     /* §6: every control in the panel and the IEEE row is a 44 px target */
     .xp-tile,
     .xp-lnk {
@@ -902,14 +897,24 @@ html[data-edition='screen'] {
     .xp-job[data-node='n3'] .xp-node {
       left: 0;
     }
-    /* the fork starts on the n3 node's centre (4.5 px) and ends 20 px left */
-    .xp-fork,
-    .xp-fork-lane,
-    .xp-ieee::before {
+    /* The rail sits 20 px inside the stage's clip here, so a 20 px fork would
+       put the IEEE lane on the clip and cut the tag. The fork keeps its curve
+       but jogs 8 px: it leaves the n3 node's centre (4.5 px) and lands on a
+       lane 12 px inside the clip, with the text column where it was. */
+    .xp-fork {
       left: -16px;
     }
+    .xp-fork path {
+      transform-origin: 20.5px 0;
+      transform: scaleX(0.4);
+      vector-effect: non-scaling-stroke;
+    }
+    .xp-fork-lane,
+    .xp-ieee::before {
+      left: -4px;
+    }
     .xp-node--tag {
-      left: -20px;
+      left: -8px;
     }
     .xp-job::after {
       left: 16px;
