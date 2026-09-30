@@ -1,0 +1,120 @@
+name: links
+
+# Every link on the live site, once a week. A failure opens an issue
+# labelled "broken-links" with the report, or updates the one already open.
+on:
+  schedule:
+    - cron: '0 13 * * 1' # Mondays 13:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: check live links
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SITE: https://www.darshankonnur.com
+    steps:
+      - name: List the live pages
+        shell: bash
+        run: |
+          # The sitemap lists the indexed pages; /arcade is hidden from it
+          # (noindex) and /cv is added so it is checked even if the sitemap
+          # ever drops it. Anything that is not a plain URL on the site is
+          # refused rather than passed on to the link checker.
+          curl --silent --show-error --fail --location --retry 3 "$SITE/sitemap.xml" |
+            grep -oE '<loc>[^<]+</loc>' | sed -E 's#</?loc>##g' > pages.txt
+          printf '%s\n' "$SITE/cv" "$SITE/arcade" >> pages.txt
+          sort -u -o pages.txt pages.txt
+          if grep -vqE "^${SITE//./\\.}(/[A-Za-z0-9/_-]*)?$" pages.txt; then
+            echo "::error::The sitemap lists something that is not a page on $SITE:"
+            grep -vE "^${SITE//./\\.}(/[A-Za-z0-9/_-]*)?$" pages.txt
+            exit 1
+          fi
+          echo "Checking the links on $(wc -l < pages.txt) pages:"
+          cat pages.txt
+
+      - name: Check every link on those pages
+        id: lychee
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          # 403 and 429: sites that refuse or rate-limit automated requests.
+          # 999: LinkedIn's answer to any request that is not a signed-in browser.
+          # Only http(s) links are checked; mailto: and tel: links never are.
+          args: >-
+            --no-progress
+            --scheme https
+            --scheme http
+            --exclude '^(mailto|tel):'
+            --accept '200..=299,403,429,999'
+            --max-retries 3
+            --retry-wait-time 5
+            --timeout 30
+            --max-concurrency 16
+            --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
+            --files-from pages.txt
+          output: lychee/report.md
+          fail: false
+
+      # lychee exits 2 when links are broken; any other non-zero code is a
+      # failure of the check itself, which fails the run without an issue.
+      - name: Find the open broken-links issue
+        id: issue
+        if: ${{ steps.lychee.outputs.exit_code != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --label broken-links --state open \
+            --limit 1 --json number --jq '.[0].number // empty')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: Create the broken-links label
+        if: ${{ steps.lychee.outputs.exit_code == '2' && steps.issue.outputs.number == '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh label create broken-links --repo "$GITHUB_REPOSITORY" --force \
+            --color d73a4a --description "A link on the live site is broken"
+
+      - name: Open or update the issue
+        if: ${{ steps.lychee.outputs.exit_code == '2' }}
+        uses: peter-evans/create-issue-from-file@fca9117c27cdc29c6c4db3b86c48e4115a786710 # v6.0.0
+        with:
+          title: Broken links on the live site
+          content-filepath: lychee/report.md
+          labels: broken-links
+          issue-number: ${{ steps.issue.outputs.number }}
+
+      - name: Close the issue once every link works
+        if: ${{ steps.lychee.outputs.exit_code == '0' && steps.issue.outputs.number != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.issue.outputs.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed \
+            --comment "Every link on the live site works again ([link check]($RUN_URL))."
+
+      - name: Fail the run when the check did not pass
+        if: ${{ steps.lychee.outputs.exit_code != '0' }}
+        env:
+          EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+        shell: bash
+        run: |
+          if [ "$EXIT_CODE" = "2" ]; then
+            echo "::error::Broken links on the live site. The report is in the issue labelled broken-links."
+          else
+            echo "::error::The link check itself failed (lychee exit code $EXIT_CODE)."
+          fi
+          exit 1
