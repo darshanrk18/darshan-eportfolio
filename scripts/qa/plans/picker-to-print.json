@@ -1,0 +1,112 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": null,
+   "intro": false
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 600
+ },
+ {
+  "click": ".pk-half-p",
+  "settle": 80
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-080.png"
+ },
+ {
+  "wait": 170
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-250.png"
+ },
+ {
+  "wait": 200
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-450.png"
+ },
+ {
+  "wait": 250
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-700.png"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-1000.png"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-1500.png"
+ },
+ {
+  "eval": "!!document.querySelector('[data-component=Intro]') + ' pick=' + document.documentElement.getAttribute('data-pick') + ' ed=' + document.documentElement.getAttribute('data-edition') + ' picker=' + !!document.querySelector('.pk')",
+  "label": "state"
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-intro-mid.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 2500
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toprint-after-skip.png"
+ },
+ {
+  "eval": "sessionStorage.getItem('signal.intro') + ' overlay=' + !!document.querySelector('[data-component=Intro]') + ' scrollY=' + window.scrollY",
+  "label": "after-skip"
+ },
+ {
+  "console": "design-workshop/v3/qa/X1-toprint-console.txt"
+ },
+ {
+  "seed": {
+   "edition": null,
+   "intro": false
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 600
+ },
+ {
+  "click": ".pk-half-s",
+  "settle": 150
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toscreen-150.png"
+ },
+ {
+  "wait": 900
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-toscreen-1050.png"
+ },
+ {
+  "eval": "localStorage.getItem('signal.edition') + ' pick=' + document.documentElement.getAttribute('data-pick') + ' picker=' + !!document.querySelector('.pk')",
+  "label": "screen-choice"
+ }
+]

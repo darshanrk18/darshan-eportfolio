@@ -1,0 +1,97 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1200
+ },
+ {
+  "type": "light",
+  "settle": 700
+ },
+ {
+  "eval": "(()=>{const sel=document.querySelector('[cmdk-item][aria-selected=true]');const all=Array.from(document.querySelectorAll('[cmdk-item]')).map(e=>e.textContent.trim());return 'selected='+(sel&&sel.textContent.trim())+' | '+all.join(' ; ')})()",
+  "label": "light"
+ },
+ {
+  "shot": "design-workshop/v3/qa/PALETTE-light-print.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1000
+ },
+ {
+  "shot": "design-workshop/v3/qa/PALETTE-open-print.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 400
+ },
+ {
+  "scroll": "#skills",
+  "settle": 1500
+ },
+ {
+  "click": ".sk-light-up",
+  "settle": 1300
+ },
+ {
+  "shot": "design-workshop/v3/qa/P3-lightup-mid.png"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "shot": "design-workshop/v3/qa/P3-lightup-end.png"
+ },
+ {
+  "scroll": "#experience",
+  "settle": 1500
+ },
+ {
+  "click": ".xp-switch",
+  "settle": 900
+ },
+ {
+  "shot": "design-workshop/v3/qa/P5-switch-on.png"
+ },
+ {
+  "scroll": "#skills",
+  "settle": 1500
+ },
+ {
+  "click": "[data-skill-id='docker'].sk-tile",
+  "settle": 900
+ },
+ {
+  "shot": "design-workshop/v3/qa/P3-docker-closeup.png"
+ },
+ {
+  "eval": "Array.from(document.querySelectorAll('.sk-urow-who')).slice(0,3).map(b=>b.innerText.replace(/\\n/g,' / ')).join(' || ')",
+  "label": "usage-rows-print"
+ }
+]
