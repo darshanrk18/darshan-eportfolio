@@ -1347,13 +1347,18 @@ html[data-edition='screen'] {
   .rk-award svg {
     color: var(--accent-electron);
   }
-  /* The words stop short of the plate's bar rail (it starts three quarters
-     of the way across): on a card too narrow for the one-line sub-line it
-     breaks in balance ("Google MLOps / Project Expo") instead of running
-     into the bars, and never narrower than those two lines need. A halo in
-     the plate's own black keeps the drifting points off the glyphs. */
+  /* The words stop 8 px short of the plate's bar rail. The plate is drawn
+     cover-fit, so the rail starts at max(73.3% of the plate, 50% + 41.8 px);
+     in the award's own width (the plate less 25 px) that leaves
+     max(50% + 3.3 px, 73.33% - 32.7 px) after the 30 px laurels and gap. On
+     a card too narrow for the one-line sub-line it breaks in balance
+     ("Google MLOps / Project Expo") instead of running into the bars. The
+     70 px floor keeps "Google MLOps" on one line on the narrowest two-up
+     phone cards (360-376), where its glyphs still clear the rail by 5.5 px
+     or more. A halo in the plate's own black keeps the drifting points off
+     the glyphs. */
   .rk-award > span {
-    max-width: max(76px, 100% - 88px);
+    max-width: max(70px, 50% + 3.3px, 73.33% - 32.7px);
   }
   .rk-award b,
   .rk-award span span {
