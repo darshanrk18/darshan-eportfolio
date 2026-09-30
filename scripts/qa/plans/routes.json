@@ -1,0 +1,145 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/cv",
+  "settle": 2000
+ },
+ {
+  "shot": "design-workshop/v3/qa/CV-screen-1280.png"
+ },
+ {
+  "eval": "document.querySelectorAll('script[src]').length + ' scripts; ' + document.documentElement.getAttribute('data-edition')",
+  "label": "cv-screen"
+ },
+ {
+  "goto": "/work/ticket-forge",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "design-workshop/v3/qa/WORK-tf-screen-1280.png"
+ },
+ {
+  "goto": "/arcade",
+  "settle": 2500
+ },
+ {
+  "wait": 1200
+ },
+ {
+  "shot": "design-workshop/v3/qa/ARCADE-screen-1280.png"
+ },
+ {
+  "console": "design-workshop/v3/qa/routes-screen-console.txt"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/cv",
+  "settle": 2000
+ },
+ {
+  "shot": "design-workshop/v3/qa/CV-print-1280.png"
+ },
+ {
+  "goto": "/work/ticket-forge",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "design-workshop/v3/qa/WORK-tf-print-1280.png"
+ },
+ {
+  "goto": "/arcade",
+  "settle": 2500
+ },
+ {
+  "wait": 1200
+ },
+ {
+  "shot": "design-workshop/v3/qa/ARCADE-print-1280.png"
+ },
+ {
+  "console": "design-workshop/v3/qa/routes-print-console.txt"
+ },
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "goto": "/cv",
+  "settle": 2000
+ },
+ {
+  "shot": "design-workshop/v3/qa/CV-print-375.png"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-cv"
+ },
+ {
+  "goto": "/work/ticket-forge",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "design-workshop/v3/qa/WORK-tf-print-375.png"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-work"
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/work/ticket-forge",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "design-workshop/v3/qa/WORK-tf-screen-375.png"
+ },
+ {
+  "goto": "/arcade",
+  "settle": 2500
+ },
+ {
+  "wait": 1200
+ },
+ {
+  "shot": "design-workshop/v3/qa/ARCADE-screen-375.png"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-arcade"
+ }
+]

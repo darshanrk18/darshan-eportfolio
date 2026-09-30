@@ -1,0 +1,257 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#skills",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-skills-screen.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-skills-screen"
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#projects",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-projects-screen.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-projects-screen"
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit",
+    "play-c4",
+    "open-project"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#experience",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-experience-screen.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-exp-screen"
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit",
+    "play-c4",
+    "open-project",
+    "skills-per-job"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#contact",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-contact-screen.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-contact-screen"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#about",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-about-print.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-about-print"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#skills",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-skills-print.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-skills-print"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#projects",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-projects-print.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-projects-print"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit",
+    "play-c4",
+    "open-project"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#experience",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-experience-print.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-exp-print"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "guide": [
+    "go-anywhere",
+    "other-edition",
+    "reveal-portrait",
+    "light-toolkit",
+    "play-c4",
+    "open-project",
+    "skills-per-job"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "scroll": "#contact",
+  "settle": 3200
+ },
+ {
+  "shot": "design-workshop/v3/qa/COACH-contact-print.png"
+ },
+ {
+  "probe": ".gd-coach",
+  "label": "coach-contact-print"
+ }
+]

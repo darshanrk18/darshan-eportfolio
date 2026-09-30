@@ -1,0 +1,54 @@
+[
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 600
+ },
+ {
+  "eval": "(()=>{document.documentElement.setAttribute('data-pick','1');return 1})()",
+  "label": "reopen"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-reopen-375-print.png"
+ },
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 600
+ },
+ {
+  "eval": "(()=>{document.documentElement.setAttribute('data-pick','1');return 1})()",
+  "label": "reopen"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-reopen-1280-print.png"
+ }
+]

@@ -1,0 +1,51 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": null,
+   "intro": false
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "eval": "document.documentElement.getAttribute('data-pick')+'/'+document.documentElement.getAttribute('data-edition')+' focus='+(document.activeElement&&document.activeElement.className)",
+  "label": "pick"
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-first-1280.png"
+ },
+ {
+  "console": "design-workshop/v3/qa/X1-first-1280-console.txt"
+ },
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "design-workshop/v3/qa/X1-first-375.png"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll375"
+ }
+]

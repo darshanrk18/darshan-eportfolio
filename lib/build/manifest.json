@@ -1,32 +1,32 @@
 {
-  "generatedAt": "2026-09-24T10:10:22.592Z",
-  "totalFirstLoadGzKb": 174.3,
-  "sharedGzKb": 100.6,
+  "generatedAt": "2026-09-30T00:29:21.390Z",
+  "totalFirstLoadGzKb": 177.6,
+  "sharedGzKb": 101.2,
   "routes": [
     {
       "route": "/",
-      "firstLoadGzKb": 174.3,
-      "routeGzKb": 73.7
+      "firstLoadGzKb": 177.6,
+      "routeGzKb": 76.4
     },
     {
       "route": "/_not-found",
-      "firstLoadGzKb": 100.7,
+      "firstLoadGzKb": 101.3,
       "routeGzKb": 0.1
     },
     {
       "route": "/arcade",
-      "firstLoadGzKb": 105.3,
+      "firstLoadGzKb": 105.9,
       "routeGzKb": 4.7
     },
     {
       "route": "/cv",
-      "firstLoadGzKb": 100.7,
+      "firstLoadGzKb": 101.3,
       "routeGzKb": 0.1
     },
     {
       "route": "/work/[slug]",
-      "firstLoadGzKb": 111.7,
-      "routeGzKb": 11.1
+      "firstLoadGzKb": 118.4,
+      "routeGzKb": 17.2
     }
   ]
 }
