@@ -40,11 +40,11 @@ export const profile = {
   /** Git remote of this site (palette "Open repository", Build info). */
   siteRepoUrl: 'https://github.com/darshanrk18/darshan-eportfolio',
   /**
-   * The repo is private, so a visitor following either link gets GitHub's
-   * 404: both stay hidden until it is public. Make the repo public, then set
-   * this to true.
+   * The repo is public (Sep 30 2026), so the palette's "Open repository" row
+   * and Build info's "Source on GitHub" link are shown. Set to false if it
+   * ever goes private again — a visitor would get GitHub's 404.
    */
-  siteRepoPublic: false,
+  siteRepoPublic: true,
   siteUrl,
   /**
    * Incoming full-time role (owner-confirmed). Render as FUTURE only —

@@ -8,6 +8,11 @@ new design of the whole site; the numbers in parentheses are pull requests.
 
 ### Added
 
+- The repository is public: the palette's "Open repository" row and Build
+  info's "Source on GitHub" link are back. Pull requests also run GitHub's
+  dependency review; CodeQL, secret scanning with push protection, private
+  vulnerability reporting and a ruleset on `main` are switched on.
+
 - The site's own address, <https://www.darshankonnur.com>, used everywhere:
   canonical links, share links, the sitemap, robots.txt and structured data.
   Until then every page named the `vercel.app` address as its home. (#4)
