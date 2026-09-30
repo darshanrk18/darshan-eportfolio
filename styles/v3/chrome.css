@@ -200,7 +200,7 @@
   .sig-nav-links,
   .sig-nav-desk,
   .sig-nav-vr,
-  .sig-nav-issue {
+  .sig-nav-issue-wrap {
     display: none !important;
   }
   .sig-nav-phone {
@@ -432,12 +432,29 @@ html[data-edition='print'] {
   /* The full masthead carries GitHub · LinkedIn · CV beside P1's toggle ·
      chip · ⌘K JUMP, so it runs a notch tighter than the frame (pills 8 px
      in, tools 16 px from the pills and 6 px apart) to fit the 1152 px
-     column; the issue box joins it only where the column is at full width
-     (from 1220, so a desktop scrollbar still leaves the whole column). */
-  @media (max-width: 1219.98px) {
-    .sig-nav-issue {
-      display: none;
-    }
+     column. The issue box shows only where it fits: its wrapper takes just
+     the room the masthead has left (it grows from 0 and never past the box,
+     margins included), and a box that does not fit wraps onto a second line
+     the wrapper clips. So a narrower column, a desktop scrollbar, the wider
+     Ctrl K keycap or the guide's completion label drop the box instead of
+     pushing JUMP past the column. */
+  .sig-nav-issue-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    /* the second line starts well below the bar, rotated corner included */
+    row-gap: 24px;
+    align-items: center;
+    align-self: stretch;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: max-content;
+    overflow: hidden;
+    overflow: clip;
+  }
+  /* the first line is the bar's full height, so the box sits centred on it */
+  .sig-nav-issue-wrap::before {
+    content: '';
+    height: 100%;
   }
   .sig-nav-links {
     margin-left: auto;

@@ -155,6 +155,29 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
   })
 })
 
+describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion label', () => {
+  const css = read('styles/v3/chrome.css')
+
+  it('shows the PRINT issue box only where it fits (wrapper takes the room left, clips the rest)', () => {
+    const nav = read('components/chrome/Navbar.tsx')
+    expect(nav).toMatch(
+      /<span className="sig-nav-issue-wrap ed-print-only" aria-hidden="true">\s*<span className="sig-nav-issue">/
+    )
+    const wrap = css
+      .match(/\.sig-nav-issue-wrap \{([^}]*)\}/g)
+      ?.find((r) => r.includes('flex-wrap'))
+    expect(wrap).toBeDefined()
+    for (const decl of [
+      'flex-wrap: wrap;',
+      'flex: 1 1 0;',
+      'max-width: max-content;',
+      'overflow: clip;',
+    ]) {
+      expect(wrap).toContain(decl)
+    }
+  })
+})
+
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
   it('digits 0-9 come from the self-hosted Tenor Sans subset, in front of Marcellus', async () => {
     const { statSync } = await import('node:fs')

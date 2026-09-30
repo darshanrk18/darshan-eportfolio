@@ -7,7 +7,8 @@
  *   SCREEN (S1/S6 frames): Studio Seal ident (silver, champagne glint) · thin
  *   rule · section names in Cinzel caps · right cluster.
  *   PRINT (P1 masthead): the seal bug + "KONNUR COMICS" wordmark · "No. 1 ·
- *   10¢" issue box · ink-box nav pills · the same right cluster.
+ *   10¢" issue box (shown only where it fits) · ink-box nav pills · the
+ *   same right cluster.
  * Right cluster (both): `#guide-slot` (an EMPTY span the Guide island (C5)
  * portals its "8 things to try" chip into — rendered once, present in the
  * desktop and the phone bar) · EditionToggle · rule · GitHub · LinkedIn ·
@@ -142,11 +143,14 @@ export default function Navbar() {
             <span className="sr-only ed-screen-only">Darshan Konnur, home</span>
             <span className="sr-only ed-print-only">Konnur Comics, back to the cover</span>
           </a>
-          {/* PRINT issue box — comic furniture (decorative). */}
-          <span className="sig-nav-issue ed-print-only" aria-hidden="true">
-            <b>No. 1</b>
-            <i />
-            <span>10¢</span>
+          {/* PRINT issue box — comic furniture (decorative). The wrapper
+              lets it show only where the masthead has room (chrome.css). */}
+          <span className="sig-nav-issue-wrap ed-print-only" aria-hidden="true">
+            <span className="sig-nav-issue">
+              <b>No. 1</b>
+              <i />
+              <span>10¢</span>
+            </span>
           </span>
           <span className="sig-nav-vr ed-screen-only" aria-hidden="true" />
 
