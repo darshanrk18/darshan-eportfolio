@@ -200,6 +200,11 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
     expect(print).not.toMatch(/border: 2\.5px/)
   })
 
+  it('the menu sheet hands the wheel to the browser, so its rows scroll on a short window', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    const sheet = menu.match(/<m\.div[^>]*className="sig-menu"/)?.[0] ?? ''
+    expect(sheet).toContain('data-lenis-prevent')
+  })
 })
 
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {

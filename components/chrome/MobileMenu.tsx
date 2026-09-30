@@ -12,6 +12,8 @@
  * keycap chip) · GitHub · LinkedIn, and the edition toggle in the foot.
  * Visitor language only — no file names (`resume.pdf`), no command syntax.
  * Focus-trapped, Esc closes, body scroll locked while open.
+ * `data-lenis-prevent` hands the wheel back to the browser over the sheet:
+ * on a short window the row list scrolls, and the page behind stays put.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -125,6 +127,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             aria-label="Site menu"
             data-component="MobileMenu"
             data-island="client"
+            data-lenis-prevent
             onKeyDown={handleKeyDown}
             className="sig-menu"
             initial={reduced ? { opacity: 0 } : { y: '-100%' }}
