@@ -11,7 +11,8 @@
  */
 
 import dynamic from 'next/dynamic'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const FilmstripIsland = dynamic(() => import('./Filmstrip.client'))
+const FilmstripIsland = dynamic(() => import('./Filmstrip.client').catch(islandUnavailable<typeof import('./Filmstrip.client')>))
 
 export default FilmstripIsland

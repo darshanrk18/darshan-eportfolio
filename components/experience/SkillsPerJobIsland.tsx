@@ -16,8 +16,9 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { BLAME_ON_EVENT, type BlameRequest } from './events'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const SkillsPerJob = dynamic(() => import('./SkillsPerJob.client'))
+const SkillsPerJob = dynamic(() => import('./SkillsPerJob.client').catch(islandUnavailable<typeof import('./SkillsPerJob.client')>))
 
 export default function SkillsPerJobIsland() {
   const [request, setRequest] = useState<BlameRequest | null>(null)

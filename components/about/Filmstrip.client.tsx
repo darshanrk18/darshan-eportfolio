@@ -19,8 +19,9 @@ import dynamic from 'next/dynamic'
 import { PHOTOS, isPhotoKey, type PhotoKey } from '@/lib/data/photos'
 import { useInViewOnce } from '@/lib/motion/useInViewOnce'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const PhotoViewer = dynamic(() => import('./PhotoViewer.client'), { ssr: false })
+const PhotoViewer = dynamic(() => import('./PhotoViewer.client').catch(islandUnavailable<typeof import('./PhotoViewer.client')>), { ssr: false })
 
 export interface FilmstripProps {
   /** The order the strip shows (the viewer's prev / next follow it). */
