@@ -114,3 +114,18 @@ export function isPhotoKey(value: string): value is PhotoKey {
 export function photoSrc(key: PhotoKey, edition: PhotoEdition): string {
   return edition === 'print' ? PHOTOS[key].print : PHOTOS[key].screen
 }
+
+/**
+ * The portrait's responsive encodes: 440 and 660 px files sit beside the
+ * 880 px master (`portrait-41-440.webp`, …). Phones draw the hero portrait
+ * at the viewport width, so the smaller encodes are what they download.
+ */
+export const PORTRAIT_WIDTHS = [440, 660, 880] as const
+
+/** `srcset` for the portrait in an edition, smallest first. */
+export function portraitSrcSet(edition: PhotoEdition): string {
+  const master = photoSrc('portrait', edition)
+  return PORTRAIT_WIDTHS.map((w) =>
+    w === PHOTOS.portrait.width ? `${master} ${w}w` : `${master.replace(/(\.\w+)$/, `-${w}$1`)} ${w}w`,
+  ).join(', ')
+}
