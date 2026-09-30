@@ -103,8 +103,17 @@ export default function Hero() {
           aria-hidden="true"
           className={`ed-float hero-float hero-float-${'abc'[i]} hero-loop${i === 1 ? ' b' : i === 2 ? ' c' : ''}`}
         >
+          {/* The floats draw ≈ 130 × 180 px, blurred and dimmed: a 280 px encode
+              (`-float`) is sharper than they need at 2×, ~10 KB instead of ~70. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={p.screen} alt="" width={p.width} height={p.height} loading="lazy" decoding="async" />
+          <img
+            src={p.screen.replace(/\.webp$/, '-float.webp')}
+            alt=""
+            width={p.width}
+            height={p.height}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       ))}
       <div aria-hidden="true" className="ed-gate hero-gate" />

@@ -163,9 +163,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {gaId ? (
           <>
+            {/* The 177 KB gtag.js library loads once the page is idle
+                (lazyOnload), off the critical path. The tiny init below runs
+                early: window.gtag queues into dataLayer from the start, so no
+                event fired before the library arrives is lost (gtag.js
+                replays the queue when it loads). */}
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
             <Script id="ga4-init" strategy="afterInteractive">
               {`window.dataLayer = window.dataLayer || [];
