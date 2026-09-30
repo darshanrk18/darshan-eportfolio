@@ -97,13 +97,18 @@ const PREPAINT_TEMPLATE =
   "var t=document.createElement('meta');t.name='theme-color';" +
   "if(e=='print')t.content='@PRINT_THEME@';document.head.prepend(t)})();"
 
-export const PREPAINT_SCRIPT = PREPAINT_TEMPLATE.replace('@EDITION@', EDITION_STORAGE_KEY)
-  .replace('@MOTION@', MOTION_KEY)
-  .replace('@INTRO_SESSION@', INTRO_SESSION_KEY)
-  .replace('@PICK_ATTR@', PICK_ATTR)
-  .replace('@EDITION_ATTR@', EDITION_ATTR)
-  .replace('@INTRO_ATTR@', INTRO_ATTR)
-  .replace('@PRINT_THEME@', EDITION_THEME_COLOR.print)
+/* Client islands import this module for its constants only; the script
+   itself ships in the HTML. The pure-annotated IIFE lets the minifier drop
+   the unused string from the client chunks (it rode the '/' first-load JS
+   as a dead string statement, ~0.3 KB gz). */
+export const PREPAINT_SCRIPT: string = /* @__PURE__ */ (() =>
+  PREPAINT_TEMPLATE.replace('@EDITION@', EDITION_STORAGE_KEY)
+    .replace('@MOTION@', MOTION_KEY)
+    .replace('@INTRO_SESSION@', INTRO_SESSION_KEY)
+    .replace('@PICK_ATTR@', PICK_ATTR)
+    .replace('@EDITION_ATTR@', EDITION_ATTR)
+    .replace('@INTRO_ATTR@', INTRO_ATTR)
+    .replace('@PRINT_THEME@', EDITION_THEME_COLOR.print))()
 
 export interface PrepaintInput {
   /** localStorage['signal.edition'] (null when absent). */
