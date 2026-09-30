@@ -589,6 +589,7 @@ html[data-edition='print'] {
   padding: 0 var(--c4-pad);
   align-items: end;
   justify-items: center;
+  pointer-events: none;
 }
 .c4-bar {
   display: block;
@@ -1792,6 +1793,15 @@ html[data-edition='print'] {
     margin: 0;
     width: max-content;
     white-space: nowrap;
+  }
+  /* Outside a project window (the /arcade board) the row also carries New
+     game, which is wider than the balloon column: it takes a row of its own
+     under the bars instead of spilling over them. */
+  @media (min-width: 600px) {
+    :not(.pw-live) > .c4 > .c4-status {
+      grid-column: 1 / -1;
+      grid-row: 4;
+    }
   }
   .c4-dot,
   .c4-status-text {
