@@ -954,18 +954,23 @@ html[data-pick='1'] .pk-shell .pk-img {
     white-space: normal;
   }
 }
-/* A phone held sideways (560–767 px wide, under 480 px high) keeps
-   the frame's side-by-side composition: stacked, neither half would fit.
-   The call to action tightens its tracking so it stays clear of the face,
-   and the printer's marks, with no margin left to sit in, are left out. */
-@media (min-width: 560px) and (max-width: 767.98px) and (orientation: landscape) and
-  (max-height: 479.98px) {
+/* Under 768 px wide and 836 px high the face comes up beside the SCREEN
+   call to action (a phone held sideways, below; a stacked phone, whose hair
+   starts under the button from 836 px up): the button tightens its tracking
+   so it stays clear of the face. */
+@media (max-width: 767.98px) and (max-height: 835.98px) {
   .pk-cta-s {
     gap: 10px;
     padding: 0 14px 0 16px;
     letter-spacing: 0.16em;
     white-space: nowrap;
   }
+}
+/* A phone held sideways (560–767 px wide, under 480 px high) keeps
+   the frame's side-by-side composition: stacked, neither half would fit.
+   The printer's marks, with no margin left to sit in, are left out. */
+@media (min-width: 560px) and (max-width: 767.98px) and (orientation: landscape) and
+  (max-height: 479.98px) {
   /* the PRINT block keeps to the paper right of the sunburst (its edge is
      35.5cqh into the sheet): the line wraps there instead of crossing it */
   .pk-blk-p {
@@ -1000,6 +1005,30 @@ html[data-pick='1'] .pk-shell .pk-img {
     --pk-fig-top: 24cqh;
     --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh);
     --pk-gutter: 20px;
+    /* A phone shorter than 700 px tightens the column by its height (every
+       value here is the phone's own from 700 px up): the seal, the PRINT
+       title, the gaps over the lines and the buttons' height. */
+    --pk-seal: clamp(64px, 13.7cqh, 96px);
+    --pk-hp: clamp(52px, 10.3cqh, 72px);
+    --pk-bm: clamp(6px, 1.7cqh, 12px);
+    --pk-cm: clamp(10px, 2.57cqh, 18px);
+    --pk-cta-h: clamp(38px, 6.3cqh, 44px);
+    /* the imprint's foot: 60 px leaves room for a two-line caption */
+    --pk-mast-b: 60px;
+    /* The PRINT block, in the sheet's coordinates (its top edge is 10 px
+       over the seam): it sits 15cqh down the sheet and rises only as far as
+       a short sheet needs to keep it over the imprint — never so far that
+       the line meets the sunburst (its foot is 24cqh down) or the title
+       meets the seal. The block's height is the sum of its parts (the line
+       is one line: it is 180 px wide). */
+    --pk-p-h: calc(
+      0.9 * var(--pk-hp) + var(--pk-bm) + 21.75px + var(--pk-cm) + max(var(--pk-cta-h), 41px)
+    );
+    --pk-p-top: clamp(
+      min(15cqh, max(24cqh - 0.9 * var(--pk-hp) - var(--pk-bm), 18px + var(--pk-seal) / 2)),
+      50cqh + 10px - var(--pk-mast-b) - 40px - var(--pk-p-h),
+      15cqh
+    );
   }
   .pk-half-s {
     width: 100%;
@@ -1059,7 +1088,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     display: none;
   }
   .pk-blk-s {
-    top: 84px;
+    top: clamp(68px, 12cqh, 84px);
     bottom: auto;
     width: calc(100% - 40px);
   }
@@ -1067,14 +1096,15 @@ html[data-pick='1'] .pk-shell .pk-img {
     display: none;
   }
   .pk-h-s {
-    font-size: 52px;
+    font-size: clamp(40px, 7.43cqh, 52px);
   }
   .pk-body-s {
-    margin-top: 14px;
+    margin-top: clamp(8px, 2cqh, 14px);
     font-size: 16px;
   }
   .pk-cta-s {
-    margin-top: 18px;
+    height: var(--pk-cta-h);
+    margin-top: var(--pk-cm);
   }
   /* the caption prints once, at the foot of the sheet (so above it in z) */
   .pk-cap {
@@ -1089,10 +1119,8 @@ html[data-pick='1'] .pk-shell .pk-img {
     max-width: none;
   }
   .pk-seal {
-    left: calc(50% - 48px);
-    top: calc(var(--pk-seam) - 48px);
-    width: 96px;
-    height: 96px;
+    left: calc(50% - var(--pk-seal) / 2);
+    top: calc(var(--pk-seam) - var(--pk-seal) / 2);
   }
   .pk-seal .pk-seal-l {
     clip-path: var(--pk-clip-t);
@@ -1174,13 +1202,16 @@ html[data-pick='1'] .pk-shell .pk-img {
     width: 37cqh;
     height: 37cqh;
   }
+  /* No. 1 rides on the title's corner: 6cqh over it (9cqh down the sheet
+     while the title sits at 15cqh), and a phone shorter than 700 px draws
+     it a little smaller, so it never slides under the title */
   .pk-burst {
     left: auto;
     right: 2cqh;
-    top: 9cqh;
-    width: 64px;
-    height: 64px;
-    font-size: 14px;
+    top: calc(var(--pk-p-top) - 6cqh);
+    width: clamp(48px, 9.15cqh, 64px);
+    height: clamp(48px, 9.15cqh, 64px);
+    font-size: clamp(12px, 2cqh, 14px);
   }
   .pk-mast-rule {
     display: none;
@@ -1191,7 +1222,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     right: auto;
     left: 20px;
     top: auto;
-    bottom: 60px;
+    bottom: var(--pk-mast-b);
     flex-direction: row-reverse;
   }
   .pk-word {
@@ -1205,7 +1236,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   .pk-blk-p {
     left: 20px;
     right: 20px;
-    top: 15cqh;
+    top: var(--pk-p-top);
     bottom: auto;
     width: auto;
   }
@@ -1213,17 +1244,17 @@ html[data-pick='1'] .pk-shell .pk-img {
     display: none;
   }
   .pk-h-p {
-    font-size: 72px;
+    font-size: var(--pk-hp);
   }
   .pk-body-p {
-    margin-top: 12px;
+    margin-top: var(--pk-bm);
     font-size: 15px;
   }
   .pk-cta-p {
-    margin-top: 18px;
+    margin-top: var(--pk-cm);
     width: 100%;
     justify-content: center;
-    min-height: 44px;
+    min-height: var(--pk-cta-h);
   }
   .pk-reg.is-top {
     top: 14px;
@@ -1234,7 +1265,36 @@ html[data-pick='1'] .pk-shell .pk-img {
   }
   .pk-cmyk {
     right: 20px;
-    bottom: 66px;
+    bottom: calc(var(--pk-mast-b) + 6px);
+  }
+}
+/* A phone wide enough for a one-line caption (352 px) closes the imprint
+   down onto it as the phone gets shorter (60 px from 700 px up). A narrower
+   one, with the caption on two lines, moves the figure 3cqh further right,
+   so the face stays clear of the call to action. */
+@media (min-width: 352px) and (max-width: 767.98px) {
+  .pk {
+    --pk-mast-b: clamp(42px, 12cqh - 24px, 60px);
+  }
+}
+@media (max-width: 351.98px) {
+  .pk {
+    --pk-fig-x: calc(100cqw - var(--pk-fig) + 8cqh);
+  }
+}
+/* A stacked phone too short for the imprint as well (under 550 px, or
+   620 px with a two-line caption): the imprint and the colour bar are left
+   out rather than laid over the button; the block may then run down to
+   the caption. */
+@media (max-width: 559.98px) and (max-height: 549.98px),
+  (max-width: 767.98px) and (min-height: 480px) and (max-height: 549.98px),
+  (max-width: 351.98px) and (max-height: 619.98px) {
+  .pk-mast,
+  .pk-cmyk {
+    display: none;
+  }
+  .pk {
+    --pk-mast-b: 22px; /* the column now stops over the caption */
   }
 }
 
