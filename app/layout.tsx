@@ -20,6 +20,7 @@ import Script from 'next/script'
 import './globals.css'
 import { PREPAINT_SCRIPT } from '@/lib/edition/prepaint'
 import { profile, siteUrl } from '@/lib/data/profile'
+import { siteDescription, siteTitle } from '@/lib/utils/share'
 
 /* v3 §2.3 — six families, latin subset, swap.
    SCREEN: Cinzel (display) · Marcellus (body) · IBM Plex Mono (labels/code).
@@ -82,27 +83,25 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Darshan Konnur — Software Engineer',
+    default: siteTitle,
     template: '%s — Darshan Konnur',
   },
-  description:
-    'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.',
-  alternates: { canonical: '/' },
+  description: siteDescription,
+  /* No canonical, og:url or robots here: each page names its own (a
+     layout-level canonical was inherited by /arcade and the 404 page, and
+     'index, follow' contradicted the 404's noindex). These are the
+     defaults a page without its own share tags falls back to. */
   openGraph: {
     type: 'website',
-    url: siteUrl,
-    siteName: 'SIGNAL — Darshan Konnur',
-    title: 'Darshan Konnur — Software Engineer',
-    description:
-      'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.',
+    siteName: 'Darshan Konnur',
+    title: siteTitle,
+    description: siteDescription,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Darshan Konnur — Software Engineer',
-    description:
-      'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published.',
+    title: siteTitle,
+    description: siteDescription,
   },
-  robots: { index: true, follow: true },
 }
 
 /* v3 §2.2 — the meta stays SCREEN-dark on the server; the EditionToggle

@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — skills.css (C3: the Skills section, both editions)
+   v3 — skills.css (C3: the Skills section, both editions)
    Imported by components/skills/Skills.tsx (App Router global CSS from a
    component, so it loads on '/' only). ONE DOM, TWO SKINS: shared layout is
    unscoped under .sk-root; SCREEN rules sit under html[data-edition='screen'],

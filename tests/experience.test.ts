@@ -9,6 +9,7 @@ import { PRINT_PLATES } from '@/components/experience/copy'
 import { cityOf, commits, jobIds, nextMarker, showBranch } from '@/lib/data/experience'
 import { PHOTOS } from '@/lib/data/photos'
 import { profile } from '@/lib/data/profile'
+import { buildCitation } from '@/components/experience/citation'
 
 describe('experience data (director call (b))', () => {
   it('every entry carries the structured fields', () => {
@@ -152,5 +153,19 @@ describe('figures (Cinzel lining numerals)', () => {
     ])
     expect(figures('used by 10,000+ employees').find((s) => s.figure)?.text).toBe('10,000+')
     expect(figures('no digits')).toEqual([{ text: 'no digits', figure: false }])
+  })
+})
+
+describe('Copy the citation (the IEEE paper)', () => {
+  it('credits every author in the publisher\'s order, not the owner alone', () => {
+    const bib = buildCitation()
+    expect(bib).toContain(
+      'author    = {D S Jayalakshmi and J Geetha and Abhishek Sen and Amit Kumar Dubey and Darshan R Konnur and S Priya}'
+    )
+    expect(bib).not.toContain(`author    = {${profile.name}}`)
+    expect(bib).toContain('year      = {2021}')
+    expect(bib).toContain(`doi       = {${profile.publication.doi}}`)
+    expect(bib).toMatch(/^@inproceedings\{[a-z0-9]+,\n/)
+    expect(bib.endsWith('\n}')).toBe(true)
   })
 })

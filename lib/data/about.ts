@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — the About section (v3 S2 / P2), CONTENT_FINAL
+ * Content data — the About section (v3 S2 / P2), CONTENT_FINAL
  * 2026-09-23. The About copy used to live inline in About.tsx and the
  * retired SourcePane; it is data now so both editions and /cv draw from one
  * place. Every string here is either CONTENT_FINAL verbatim or an approved

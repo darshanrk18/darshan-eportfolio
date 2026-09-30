@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — skills (CONTENT_FINAL 2026-09-23; resume groups are
+ * Content data — skills (CONTENT_FINAL 2026-09-23; resume groups are
  * authoritative). v3 (V3_SPEC §3 Skills, director call (c)): the seven trays
  * of the S3/P3 frames (Frontend · Backend · Data · Monitoring · Testing ·
  * DevOps · Cloud) plus the Languages row are the taxonomy in BOTH editions.

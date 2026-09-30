@@ -10,13 +10,21 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { profile } from '@/lib/data/profile'
+import { shareMeta } from '@/lib/utils/share'
 import ArcadeConnectFour from '@/components/arcade/ArcadeConnectFour.client'
 import ArcadeSnakeIsland from '@/components/arcade/ArcadeSnakeIsland.client'
 
+const arcadeDescription = 'Two AI demos at full scale — Minimax Connect Four and A* autopilot snake.'
+
 export const metadata: Metadata = {
   title: 'Arcade',
-  description: 'Two AI demos at full scale — Minimax Connect Four and A* autopilot snake.',
+  description: arcadeDescription,
   robots: { index: false, follow: false },
+  /* Its own canonical — without it the root layout's '/' is inherited and a
+     noindex page would name the homepage as its canonical. */
+  alternates: { canonical: '/arcade' },
+  ...shareMeta('/arcade', `Arcade — ${profile.displayName}`, arcadeDescription),
 }
 
 function ArcadeWindow({

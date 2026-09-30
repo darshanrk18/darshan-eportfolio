@@ -1,7 +1,7 @@
 # Darshan Konnur — portfolio
 
 The personal site of Darshan Konnur, software engineer in Boston. Live at
-[darshan-eportfolio.vercel.app](https://darshan-eportfolio.vercel.app).
+[www.darshankonnur.com](https://www.darshankonnur.com).
 
 Version 3 ships the site as **two complete editions** of the same story:
 

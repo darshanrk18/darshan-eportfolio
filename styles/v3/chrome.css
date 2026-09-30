@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — chrome.css  (V3_SPEC §1.7, §1.8, §3 "Navbar" / "Footer", §6)
+   v3 — chrome.css  (V3_SPEC §1.7, §1.8, §3 "Navbar" / "Footer", §6)
    OWNER: C1 chrome — exclusively. Imported by components/chrome/Navbar.tsx
    (App Router global CSS from a component), so it loads on '/' only and
    never touches /cv.

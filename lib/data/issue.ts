@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — the PRINT edition's issue furniture (v3 P1 cover,
+ * Content data — the PRINT edition's issue furniture (v3 P1 cover,
  * P2–P6 chapter heads and folios). "Konnur Comics No. 1" is comic genre
  * furniture the clutter law allows (BRIEF-R2 §1); the chapter names and
  * decks are the approved PRINT copy from the round-2 frames. Facts stay in

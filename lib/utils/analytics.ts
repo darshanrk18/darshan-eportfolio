@@ -4,7 +4,7 @@
  * Extends the pre-rebuild util: same GA4 config pattern (reads the optional
  * NEXT_PUBLIC_GA4_MEASUREMENT_ID at build time; every function is safe to call
  * when GA4 is not configured or gtag has not loaded), now self-contained and
- * carrying the SIGNAL event taxonomy.
+ * carrying the site's event taxonomy.
  *
  * The <Script> tags that load gtag.js live in app/layout.tsx.
  *
@@ -58,7 +58,7 @@ export function trackPageView(pagePath: string, pageTitle?: string): void {
 }
 
 /* ----------------------------------------------------------------------------
-   SIGNAL event taxonomy (§7.3) — use these helpers, not ad-hoc names.
+   Event taxonomy (§7.3) — use these helpers, not ad-hoc names.
    -------------------------------------------------------------------------- */
 
 /** `palette_opened` */

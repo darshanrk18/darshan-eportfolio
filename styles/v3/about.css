@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — about.css  (V3_SPEC §3 About; frames S2-About / P2-About)
+   v3 — about.css  (V3_SPEC §3 About; frames S2-About / P2-About)
    OWNER: C2 hero + about — exclusively. Imported by components/about/About.tsx
    (App Router global CSS from a component: loads on '/' only).
    WHAT: the About section in BOTH editions, one DOM. Shared layout is

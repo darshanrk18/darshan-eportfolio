@@ -2,7 +2,7 @@
   "name": "portfolio",
   "version": "3.0.0",
   "private": true,
-  "description": "SIGNAL — the portfolio that compiles. Darshan Konnur.",
+  "description": "Darshan Konnur — portfolio, in two editions: SCREEN and PRINT.",
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/check-prepaint.mjs && node scripts/measure-bundle.mjs",
