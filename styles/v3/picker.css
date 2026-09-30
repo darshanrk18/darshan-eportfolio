@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — picker.css  (V3_SPEC §2.5, inventory X1-Picker, MOTION X1)
+   v3 — picker.css  (V3_SPEC §2.5, inventory X1-Picker, MOTION X1)
    "Choose your edition": the first screen a visitor meets. OWNER: C5.
    Imported by components/edition/EditionPicker.client.tsx (the gate), so it
    loads on '/' only. The markup is components/edition/PickerFace.tsx,

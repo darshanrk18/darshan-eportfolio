@@ -8,14 +8,19 @@
 
 import type { Metadata } from 'next'
 import { profile } from '@/lib/data/profile'
+import { publicationRecord } from '@/lib/data/publication'
+import { shareMeta } from '@/lib/utils/share'
 import { skillGroups } from '@/lib/data/skills'
 import { projects } from '@/lib/data/projects'
 import { commits } from '@/lib/data/experience'
 
+const cvDescription = `${profile.name} — ${profile.role}. ${profile.location}. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published.`
+
 export const metadata: Metadata = {
   title: 'CV',
-  description: `${profile.name} — ${profile.role}. ${profile.location}. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published.`,
+  description: cvDescription,
   alternates: { canonical: '/cv' },
+  ...shareMeta('/cv', `CV — ${profile.displayName}`, cvDescription),
 }
 
 /**
@@ -48,8 +53,10 @@ const scholarlyJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ScholarlyArticle',
   name: profile.publication.title,
-  author: { '@type': 'Person', name: profile.name },
-  publisher: profile.publication.venue,
+  author: publicationRecord.authors.map((name) => ({ '@type': 'Person', name })),
+  datePublished: String(publicationRecord.year),
+  isPartOf: publicationRecord.booktitle,
+  publisher: { '@type': 'Organization', name: profile.publication.venue },
   ...(profile.publication.doi ? { identifier: profile.publication.doi } : {}),
   ...(profile.publication.paperUrl ? { url: profile.publication.paperUrl } : {}),
 }

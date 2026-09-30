@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL — design tokens + base styles (spec §2, §3; v3 §2.2 / §2.2a / §2.3)
+   Design tokens + base styles (spec §2, §3; v3 §2.2 / §2.2a / §2.3)
    Single source of truth for every design value on the site.
    v3: two EDITIONS replace v2's dark/light theme. SCREEN (the cinema cut,
    design 41) is the default (:root); PRINT (the comic) lives under
@@ -696,7 +696,7 @@ html[data-motion='reduced'] body::after {
 }
 
 /* ============================================================================
-   SIGNAL v2 feature styles (V2_SPEC §3 index) — one file per feature area.
+   v2 feature styles (V2_SPEC §3 index) — one file per feature area.
 
    OWNERSHIP CONTRACT (v3): app/globals.css belongs to the foundation agent
    (Phase A). Every other rule goes in that feature's own file below — each

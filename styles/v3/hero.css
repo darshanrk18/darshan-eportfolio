@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — hero.css  (V3_SPEC §3 Hero, §4; frames S1-Hero / P1-Cover)
+   v3 — hero.css  (V3_SPEC §3 Hero, §4; frames S1-Hero / P1-Cover)
    OWNER: C2 hero + about — exclusively. Imported by components/hero/Hero.tsx
    (App Router global CSS from a component: loads on '/' only, never /cv).
    WHAT: the hero in BOTH editions, one DOM. Shared layout is unscoped;
