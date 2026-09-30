@@ -1213,16 +1213,28 @@ html[data-pick='1'] .pk-shell .pk-img {
     width: 37cqh;
     height: 37cqh;
   }
-  /* No. 1 rides on the title's corner: 6cqh over it (9cqh down the sheet
-     while the title sits at 15cqh), and a phone shorter than 692 px draws
-     it a little smaller, so it never slides under the title */
+  /* No. 1 rides on the title's corner, 9cqh down the sheet (6cqh over the
+     title at 15cqh), its lower part behind the title and its words clear
+     of it. When a short phone raises the title (--pk-p-top), the star
+     rises with it only as far as the photograph's cut (6.74cqh + 10 px
+     down the sheet) and the top mark (40 px) allow, 1 px clear of both,
+     and draws smaller to keep its words 2 px over the title's ink (which
+     starts 0.047 of the title's size under its box); where that leaves it
+     under 34 px, too small to read, it is left out. */
   .pk-burst {
+    --pk-bt-fs: clamp(12px, 2.03cqh, 14px);
+    --pk-bt-s0: clamp(48px, 9.25cqh, 64px);
+    /* the lowest the star's centre may sit (its words are 0.98em high) */
+    --pk-bt-c: calc(var(--pk-p-top) + 0.047 * var(--pk-hp) - 0.49 * var(--pk-bt-fs) - 2px);
+    --pk-bt-top: max(6.75cqh + 11px, 41px, min(9cqh, var(--pk-bt-c) - var(--pk-bt-s0) / 2));
+    --pk-bt-fit: min(var(--pk-bt-s0), 2 * (var(--pk-bt-c) - var(--pk-bt-top)));
+    --pk-burst: clamp(0px, (var(--pk-bt-fit) - 34px) * 1000, var(--pk-bt-fit));
     left: auto;
     right: 2cqh;
-    top: calc(var(--pk-p-top) - 6cqh);
-    width: clamp(48px, 9.25cqh, 64px);
-    height: clamp(48px, 9.25cqh, 64px);
-    font-size: clamp(12px, 2.03cqh, 14px);
+    top: var(--pk-bt-top);
+    width: var(--pk-burst);
+    height: var(--pk-burst);
+    font-size: var(--pk-bt-fs);
   }
   .pk-mast-rule {
     display: none;
