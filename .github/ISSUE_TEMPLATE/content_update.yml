@@ -1,0 +1,44 @@
+name: Content update
+description: A fact or a line of copy on the site needs to change.
+title: 'Content: '
+labels: ['content']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Facts live in `lib/data/`, so one change updates both editions and /cv together.
+        The site never shows a phone number, a GPA, compensation, or names of internal teams and colleagues; please don't ask to add them.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What should change
+      description: The fact or the line as it reads now.
+      placeholder: 'The Ticket-Forge case study names the award "Northeastern''s MLOps Project Expo".'
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where it appears
+      description: Page and section. List every place you have seen it.
+      placeholder: '/work/ticket-forge, and / → Projects'
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: The correct text
+      description: Exactly as it should read.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: Where the correct version comes from (the résumé, an offer or award letter, a publisher's page, a link).
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: The live site
+    url: https://www.darshankonnur.com
+    about: To get in touch with Darshan, use the contact details on the site.
+  - name: Report a security problem
+    url: https://github.com/darshanrk18/darshan-eportfolio/security/policy
+    about: Report it privately by email, as the security policy explains. Please don't open an issue.
