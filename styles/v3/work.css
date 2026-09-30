@@ -2331,14 +2331,18 @@ html[data-edition='print'] {
   .rk-award {
     display: none !important;
   }
-  /* P4: the burst is slapped on the plate's right edge and over the cover's
-     edge, its lower points just above the plate's bottom rule (the first
-     cover: 24 px band + 104 px plate), so it stays off the title row at
-     every cover width; the award sets on two lines ("3rd / place"). */
+  /* P4: the burst is slapped on the bottom of the plate, on its rule. The
+     plate's chart is the confidence-bar rail on the right, drawn cover-fit
+     into a 101 px tall plate, so the rail starts at max(73.33%, 50% +
+     37.7 px) of the cover; the burst's right point stops 4 px short of it
+     (right: min(26.67%, 50% - 37.7 px) + 4 px) at every cover width. top:
+     70 px puts its lowest point on the rule (24 px band + 104 px plate) and
+     4.5 px above the title's glyphs, and it never reaches the next cover.
+     The award sets on two lines ("3rd / place"). */
   .rk-burst {
     position: absolute;
-    right: -10px;
-    top: 64px;
+    right: calc(min(26.67%, 50% - 37.7px) + 4px);
+    top: 70px;
     z-index: 3;
     width: 62px;
     height: 62px;
