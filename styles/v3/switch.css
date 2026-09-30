@@ -1,0 +1,351 @@
+/* ============================================================================
+   SIGNAL v3 — switch.css  (V3_SPEC §2.4, inventory X2, MOTION-NOTES X2)
+   The edition-switch choreography on the View Transitions root snapshots.
+   OWNER: C5 (Phase A scaffolded it; the integrator signs the result).
+
+   CONTRACT: switchEdition() in lib/commands/context.ts sets
+     html[data-edition-switch]='press'      SCREEN → PRINT  ("The Press")
+     html[data-edition-switch]='projector'  PRINT  → SCREEN ("The Projector")
+   plus --switch-x / --switch-y (px, the pressed pill's centre) on <html>,
+   calls document.startViewTransition(() => applyEdition(...)) and removes
+   the attribute on `finished`. Everything below is inert outside that
+   window. Under html[data-motion='reduced'] both directions collapse to a
+   200 ms crossfade (the rules at the bottom out-specify the choreography).
+   Browsers without view transitions never see any of this — the JS applies
+   the edition instantly. Scroll position is never touched (root snapshots
+   are taken in place; the live DOM keeps its scroll offset). The toggle
+   itself locks for the 700 ms (EditionToggle.client `data-switching`).
+
+   Layers: ::view-transition-old(root) = the outgoing edition's snapshot,
+   ::view-transition-new(root) = the incoming one; the group behind them is
+   painted black so the press reveals paper through its dot wave and the
+   projector swallows the page into black. Masks are driven by registered
+   custom properties so the wave / dots / front / key light interpolate.
+   The mis-registered colour plates of the press are a real SVG filter
+   (data URI, `#plates`): the ink of the PRINT snapshot is lifted to alpha,
+   tinted red / blue / yellow, offset ~2.5 px in three directions and
+   multiplied over the page with its black plate lightened toward paper —
+   a discrete `filter` step, held for 160 ms, then the ink snaps in.
+
+   Timing (X2 rail, 700 ms):
+     PRESS      0–120 dim + lock · 120–380 dot wave · 380–540 plates off
+                register · 540–600 black plate lands · 600–700 rest
+     PROJECTOR  0–180 colour drains · 180–400 dots swell to black (from the
+                left) · 400–620 key light rises across the name · 620–700
+                grain settles (the page's own atmosphere takes over)
+   ========================================================================== */
+
+@property --ed-wipe {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --ed-dot {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --ed-front {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+@property --ed-key {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+html[data-edition-switch] {
+  /* Fallback origin: the top-right corner, where the toggle lives. */
+  --switch-x: calc(100% - 72px);
+  --switch-y: 24px;
+}
+
+/* Both snapshots: stack them ourselves (no plus-lighter), 700 ms, hold ends. */
+html[data-edition-switch]::view-transition-old(root),
+html[data-edition-switch]::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation-duration: 700ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+html[data-edition-switch]::view-transition-image-pair(root) {
+  isolation: auto;
+}
+/* Whatever a mask hides shows the black behind — the press reveals paper
+   through it, the projector swallows the page into it. */
+html[data-edition-switch]::view-transition-group(root) {
+  background: #050607;
+}
+
+/* ----------------------------------------------------------------------------
+   THE PRESS — SCREEN → PRINT (700 ms)
+   0–120    the old cut dims to 40 % (the key light and rim go down)
+   120–380  a dot wave grows from the pressed pill: the halftone dots
+            swell until they merge and the new paper shows through
+   380–540  colour prints first, a little out of line: the red / blue /
+            yellow plates ~2.5 px off register, the black plate not yet
+            down (the SVG filter), the whole page 2 px off
+   540–600  the black ink lands in register (filter off, translate → 0)
+   -------------------------------------------------------------------------- */
+html[data-edition-switch='press']::view-transition-old(root) {
+  z-index: 1;
+  animation-name: ed-press-old;
+}
+html[data-edition-switch='press']::view-transition-new(root) {
+  z-index: 2;
+  animation-name: ed-press-new;
+  -webkit-mask-image:
+    radial-gradient(circle var(--ed-wipe) at var(--switch-x) var(--switch-y), #000 62%, transparent 100%),
+    radial-gradient(circle, #000 var(--ed-dot), transparent calc(var(--ed-dot) + 0.6px));
+  mask-image:
+    radial-gradient(circle var(--ed-wipe) at var(--switch-x) var(--switch-y), #000 62%, transparent 100%),
+    radial-gradient(circle, #000 var(--ed-dot), transparent calc(var(--ed-dot) + 0.6px));
+  -webkit-mask-size:
+    100% 100%,
+    12px 12px;
+  mask-size:
+    100% 100%,
+    12px 12px;
+  -webkit-mask-repeat: no-repeat, repeat;
+  mask-repeat: no-repeat, repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+@keyframes ed-press-old {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  17% {
+    filter: brightness(0.4);
+  }
+  54% {
+    opacity: 1;
+    filter: brightness(0.4);
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(0.4);
+  }
+}
+@keyframes ed-press-new {
+  0% {
+    opacity: 0;
+    --ed-wipe: 0px;
+    --ed-dot: 0px;
+    translate: 2px -2px;
+    filter: none;
+  }
+  17% {
+    opacity: 1;
+    --ed-wipe: 0px;
+    --ed-dot: 0px;
+    translate: 2px -2px;
+    filter: none;
+  }
+  52% {
+    filter: none;
+  }
+  54% {
+    --ed-wipe: 170vmax;
+    --ed-dot: 9px;
+    translate: 2px -2px;
+    /* the colour plates land first, out of register; no black plate yet */
+    filter: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='plates' color-interpolation-filters='sRGB'><feColorMatrix in='SourceGraphic' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 -0.9 -0.9 0 2.2' result='ink'/><feFlood flood-color='%23d7262d' flood-opacity='.85' result='fr'/><feComposite in='fr' in2='ink' operator='in' result='ri'/><feOffset in='ri' dx='2.5' dy='-1' result='r'/><feFlood flood-color='%231e6fd6' flood-opacity='.8' result='fb'/><feComposite in='fb' in2='ink' operator='in' result='bi'/><feOffset in='bi' dx='-2.5' dy='1.5' result='b'/><feFlood flood-color='%23f6c21c' flood-opacity='.9' result='fy'/><feComposite in='fy' in2='ink' operator='in' result='yi'/><feOffset in='yi' dx='1' dy='2.5' result='y'/><feComponentTransfer in='SourceGraphic' result='lite'><feFuncR type='linear' slope='.35' intercept='.62'/><feFuncG type='linear' slope='.35' intercept='.6'/><feFuncB type='linear' slope='.35' intercept='.54'/></feComponentTransfer><feBlend in='y' in2='lite' mode='multiply' result='m1'/><feBlend in='b' in2='m1' mode='multiply' result='m2'/><feBlend in='r' in2='m2' mode='multiply'/></filter></svg>#plates");
+  }
+  77% {
+    translate: 2px -2px;
+    filter: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='plates' color-interpolation-filters='sRGB'><feColorMatrix in='SourceGraphic' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 -0.9 -0.9 0 2.2' result='ink'/><feFlood flood-color='%23d7262d' flood-opacity='.85' result='fr'/><feComposite in='fr' in2='ink' operator='in' result='ri'/><feOffset in='ri' dx='2.5' dy='-1' result='r'/><feFlood flood-color='%231e6fd6' flood-opacity='.8' result='fb'/><feComposite in='fb' in2='ink' operator='in' result='bi'/><feOffset in='bi' dx='-2.5' dy='1.5' result='b'/><feFlood flood-color='%23f6c21c' flood-opacity='.9' result='fy'/><feComposite in='fy' in2='ink' operator='in' result='yi'/><feOffset in='yi' dx='1' dy='2.5' result='y'/><feComponentTransfer in='SourceGraphic' result='lite'><feFuncR type='linear' slope='.35' intercept='.62'/><feFuncG type='linear' slope='.35' intercept='.6'/><feFuncB type='linear' slope='.35' intercept='.54'/></feComponentTransfer><feBlend in='y' in2='lite' mode='multiply' result='m1'/><feBlend in='b' in2='m1' mode='multiply' result='m2'/><feBlend in='r' in2='m2' mode='multiply'/></filter></svg>#plates");
+  }
+  /* the black plate snaps into register */
+  78% {
+    translate: 2px -2px;
+    filter: none;
+  }
+  86% {
+    translate: 0 0;
+    filter: none;
+  }
+  100% {
+    opacity: 1;
+    --ed-wipe: 170vmax;
+    --ed-dot: 9px;
+    translate: 0 0;
+    filter: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   THE PROJECTOR — PRINT → SCREEN (700 ms)
+   0–180    colour drains from the old page: saturate → 0, a silver-grey
+   180–400  black halftone dots swell from the left until the page is
+            black (the old layer's dot mask shrinks to nothing behind a
+            front that runs left → right over the black group)
+   400–620  a key light comes up across the name: the new cut rises from
+            brightness .6 with only the top-centre ellipse fully lit, then
+            the whole frame catches up
+   620–700  grain settles (the page's own .ed-grain / light take over)
+   -------------------------------------------------------------------------- */
+html[data-edition-switch='projector']::view-transition-old(root) {
+  z-index: 2;
+  animation-name: ed-projector-old;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent var(--ed-front), #000 calc(var(--ed-front) + 18%)),
+    radial-gradient(circle, #000 var(--ed-dot), transparent calc(var(--ed-dot) + 0.6px));
+  mask-image:
+    linear-gradient(90deg, transparent var(--ed-front), #000 calc(var(--ed-front) + 18%)),
+    radial-gradient(circle, #000 var(--ed-dot), transparent calc(var(--ed-dot) + 0.6px));
+  -webkit-mask-size:
+    100% 100%,
+    12px 12px;
+  mask-size:
+    100% 100%,
+    12px 12px;
+  -webkit-mask-repeat: no-repeat, repeat;
+  mask-repeat: no-repeat, repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+html[data-edition-switch='projector']::view-transition-new(root) {
+  z-index: 1;
+  animation-name: ed-projector-new;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 0%, #000 0%, rgba(0, 0, 0, var(--ed-key)) 100%);
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 0%, #000 0%, rgba(0, 0, 0, var(--ed-key)) 100%);
+}
+
+@keyframes ed-projector-old {
+  0% {
+    opacity: 1;
+    --ed-dot: 9px;
+    --ed-front: -18%;
+    filter: saturate(1) brightness(1);
+  }
+  26% {
+    --ed-dot: 9px;
+    --ed-front: -18%;
+    filter: saturate(0) brightness(1.04);
+  }
+  57% {
+    opacity: 1;
+    --ed-dot: 0px;
+    --ed-front: 100%;
+    filter: saturate(0) brightness(1.04);
+  }
+  58% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    --ed-dot: 0px;
+    --ed-front: 100%;
+    filter: saturate(0) brightness(1.04);
+  }
+}
+@keyframes ed-projector-new {
+  0% {
+    opacity: 0;
+    filter: brightness(0.6);
+    --ed-key: 0.45;
+  }
+  57% {
+    opacity: 0;
+    filter: brightness(0.6);
+    --ed-key: 0.45;
+  }
+  60% {
+    opacity: 1;
+  }
+  89% {
+    filter: brightness(1);
+    --ed-key: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    --ed-key: 1;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced motion — 200 ms crossfade, no masks, no filters (the compound
+   selector out-specifies both choreographies above).
+   -------------------------------------------------------------------------- */
+@keyframes ed-xfade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes ed-xfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+html[data-motion='reduced'][data-edition-switch]::view-transition-old(root) {
+  z-index: auto;
+  animation: ed-xfade-out 200ms linear both;
+  -webkit-mask-image: none;
+  mask-image: none;
+  filter: none;
+  translate: none;
+}
+html[data-motion='reduced'][data-edition-switch]::view-transition-new(root) {
+  z-index: auto;
+  animation: ed-xfade-in 200ms linear both;
+  -webkit-mask-image: none;
+  mask-image: none;
+  filter: none;
+  translate: none;
+}
+
+/* ----------------------------------------------------------------------------
+   The toggle while a switch is in flight (EditionToggle.client
+   `data-switching`): locked, no hover, the pressed look held, and the X2
+   padlock on the pill's corner in the edition's live colour (champagne
+   arriving on SCREEN, red arriving on PRINT) — it unlocks on `finished`.
+   -------------------------------------------------------------------------- */
+.ed-toggle[data-switching] {
+  position: relative;
+}
+.ed-toggle[data-switching] > button {
+  cursor: progress;
+  pointer-events: none;
+}
+.ed-toggle[data-switching]::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: -8px;
+  width: 12px;
+  height: 16px;
+  background-color: var(--accent-signal);
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 19'><path d='M4 8.5V5.5a3 3 0 0 1 6 0v3' fill='none' stroke='%23000' stroke-width='2.2'/><rect x='1' y='8' width='12' height='10' rx='1.5' fill='%23000'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 19'><path d='M4 8.5V5.5a3 3 0 0 1 6 0v3' fill='none' stroke='%23000' stroke-width='2.2'/><rect x='1' y='8' width='12' height='10' rx='1.5' fill='%23000'/></svg>") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  animation: ed-lock-in 120ms var(--ease-swift, ease) both;
+}
+@keyframes ed-lock-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+html[data-motion='reduced'] .ed-toggle[data-switching]::after {
+  animation: none;
+}
