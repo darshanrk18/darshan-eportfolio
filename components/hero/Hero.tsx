@@ -136,14 +136,16 @@ export default function Hero() {
               <div className="hero-pt-z">
                 <div className="hero-pt-y">
                   {/* The LCP image: eager, high priority, sized (§7). Phones get the
-                      440 / 660 px encodes (the pane is the viewport width there);
-                      desktop draws it at 600 px from the 880 px master. */}
+                      440 / 660 px encodes: `sizes` understates the phone width a
+                      little (66vw) so 2× and 3× screens take the 660 px file — still
+                      ~2× the drawn width for this soft-masked portrait — instead of
+                      the 880 px master; desktop draws the master at 600 px. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     className="hero-pt-img"
                     src={portrait.screen}
                     srcSet={portraitSrcSet('screen')}
-                    sizes="(max-width: 767px) 100vw, 600px"
+                    sizes="(max-width: 767px) 66vw, 600px"
                     alt={hero.portraitAlt}
                     width={600}
                     height={600}
