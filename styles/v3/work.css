@@ -1233,6 +1233,11 @@ html[data-edition='screen'] {
       white-space: normal;
       width: 100%;
     }
+    /* The words take the free width, so the dismiss stays at the right end
+       even when the line is short (the touch wording fits on one line). */
+    .c4-coach-text {
+      flex: 1 1 auto;
+    }
   }
 
   /* ---- the rack (posters) ------------------------------------------------ */
