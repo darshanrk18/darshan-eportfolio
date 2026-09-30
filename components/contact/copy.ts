@@ -22,7 +22,7 @@ export const contactCopy = {
     railLabel: 'Click one — or type your own',
   },
   print: {
-    chapter: 'Ch. V',
+    chapter: 'CH. V',
     title: 'The Letters Page',
     lede: 'The inbox is open — for roles, questions, or just to say hello.',
     airmail: 'By air mail',

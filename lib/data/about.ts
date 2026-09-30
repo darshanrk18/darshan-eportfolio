@@ -103,7 +103,7 @@ export const about = {
 
   /* ---- PRINT (P2): Ch. I — the eight comic panels ----------------------- */
   print: {
-    chapter: { numeral: 'Ch. I', title: 'The Origin Story' },
+    chapter: { numeral: 'CH. I', title: 'The Origin Story' },
     panels: {
       portrait: {
         label: 'Darshan Konnur, portrait',
