@@ -20,8 +20,9 @@ import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { SIGNAL_EVENTS } from '@/lib/commands/context'
 import type { DiagramRequest } from './guide'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const SystemDiagram = dynamic(() => import('./SystemDiagram.client'))
+const SystemDiagram = dynamic(() => import('./SystemDiagram.client').catch(islandUnavailable<typeof import('./SystemDiagram.client')>))
 
 export default function SystemDiagramIsland() {
   const [request, setRequest] = useState<DiagramRequest | null>(null)

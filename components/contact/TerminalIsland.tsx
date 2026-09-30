@@ -9,7 +9,8 @@
  */
 
 import dynamic from 'next/dynamic'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const TerminalIsland = dynamic(() => import('@/components/contact/Terminal'))
+const TerminalIsland = dynamic(() => import('@/components/contact/Terminal').catch(islandUnavailable<typeof import('@/components/contact/Terminal')>))
 
 export default TerminalIsland

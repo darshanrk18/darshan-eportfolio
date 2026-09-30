@@ -34,8 +34,9 @@ import {
 } from '@/lib/guide/core'
 import { useSignalStore } from '@/lib/state/store'
 import { trackEvent } from '@/lib/utils/analytics'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const GuideCoach = dynamic(() => import('./GuideCoach.client'), { ssr: false })
+const GuideCoach = dynamic(() => import('./GuideCoach.client').catch(islandUnavailable<typeof import('./GuideCoach.client')>), { ssr: false })
 
 function safeSession(): Storage | null {
   try {

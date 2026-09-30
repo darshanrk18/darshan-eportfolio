@@ -46,6 +46,7 @@ import { trackEvent, trackProjectOpened, trackProjectRun } from '@/lib/utils/ana
 import CaseFile from './CaseFile'
 import EdText from './EdText'
 import GenerativePlate from './GenerativePlate'
+import { islandUnavailable } from '@/lib/utils/island'
 
 import '@/styles/v3/work.css'
 
@@ -60,31 +61,31 @@ interface DemoProps {
  * mount) the generative-plate poster beneath stays visible.
  */
 const DEMOS: Partial<Record<ProjectSlug, ComponentType<DemoProps>>> = {
-  'ticket-forge': nextDynamic(() => import('./demos/TicketForgeViz'), {
+  'ticket-forge': nextDynamic(() => import('./demos/TicketForgeViz').catch(islandUnavailable<typeof import('./demos/TicketForgeViz')>), {
     ssr: false,
     loading: () => null,
   }),
-  trackfolio: nextDynamic(() => import('./demos/TrackfolioViz'), {
+  trackfolio: nextDynamic(() => import('./demos/TrackfolioViz').catch(islandUnavailable<typeof import('./demos/TrackfolioViz')>), {
     ssr: false,
     loading: () => null,
   }),
-  'triplay-ai': nextDynamic(() => import('./demos/ConnectFour'), {
+  'triplay-ai': nextDynamic(() => import('./demos/ConnectFour').catch(islandUnavailable<typeof import('./demos/ConnectFour')>), {
     ssr: false,
     loading: () => null,
   }),
-  'box-archive': nextDynamic(() => import('./demos/BoxArchViz'), {
+  'box-archive': nextDynamic(() => import('./demos/BoxArchViz').catch(islandUnavailable<typeof import('./demos/BoxArchViz')>), {
     ssr: false,
     loading: () => null,
   }),
-  'expense-share': nextDynamic(() => import('./demos/ExpenseViz'), {
+  'expense-share': nextDynamic(() => import('./demos/ExpenseViz').catch(islandUnavailable<typeof import('./demos/ExpenseViz')>), {
     ssr: false,
     loading: () => null,
   }),
-  'calendar-java': nextDynamic(() => import('./demos/UmlViz'), {
+  'calendar-java': nextDynamic(() => import('./demos/UmlViz').catch(islandUnavailable<typeof import('./demos/UmlViz')>), {
     ssr: false,
     loading: () => null,
   }),
-  'ieee-mip-optimizer': nextDynamic(() => import('./demos/MipViz'), {
+  'ieee-mip-optimizer': nextDynamic(() => import('./demos/MipViz').catch(islandUnavailable<typeof import('./demos/MipViz')>), {
     ssr: false,
     loading: () => null,
   }),

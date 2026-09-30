@@ -8,7 +8,8 @@
  */
 
 import dynamic from 'next/dynamic'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const ProjectRackIsland = dynamic(() => import('./ProjectRack'))
+const ProjectRackIsland = dynamic(() => import('./ProjectRack').catch(islandUnavailable<typeof import('./ProjectRack')>))
 
 export default ProjectRackIsland
