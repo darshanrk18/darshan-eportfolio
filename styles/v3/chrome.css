@@ -1,0 +1,993 @@
+/* ============================================================================
+   SIGNAL v3 — chrome.css  (V3_SPEC §1.7, §1.8, §3 "Navbar" / "Footer", §6)
+   OWNER: C1 chrome — exclusively. Imported by components/chrome/Navbar.tsx
+   (App Router global CSS from a component), so it loads on '/' only and
+   never touches /cv.
+   WHAT: the top bar, the mobile menu, the footer and the Build info panel
+   in BOTH editions. One DOM, two skins: SCREEN rules are nested under
+   html[data-edition='screen'], PRINT rules under html[data-edition='print'];
+   shared layout is unscoped. Tokens + the .ed-* recipes: styles/v3/README.md.
+   FRAMES: r3/polish3/S1-Hero (SCREEN top bar), S6-Contact (SCREEN footer),
+   r2/frames/P1-Cover (PRINT masthead + imprint), P6-Contact.
+   CONTRACTS this file exposes:
+     --nav-h            the bar's height (56 phone / 64 ≥ 768) — the hero
+                        clears it; ReducedMotionBanner is offset by it below.
+     #guide-slot        the empty span in the right cluster the Guide island
+                        portals its chip into (styled here, filled by C5).
+   ========================================================================== */
+
+:root {
+  --nav-h: 56px;
+}
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 64px;
+  }
+}
+
+/* The reduced-motion banner (components/chrome/ReducedMotionBanner.tsx, not
+   C1's file) hard-codes top-12 from the v2 48px bar; sit it under the v3 bar. */
+[data-component='ReducedMotionBanner'] {
+  top: var(--nav-h);
+}
+
+/* ---- scroll-to-top sentinel (app/page.tsx) ------------------------------ */
+.sig-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+  outline: none;
+}
+
+/* ============================================================================
+   TOP BAR — shared layout
+   ========================================================================== */
+.sig-nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: var(--nav-h);
+  z-index: var(--z-nav);
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 200ms var(--ease-swift),
+    border-color 200ms var(--ease-swift),
+    box-shadow 200ms var(--ease-swift);
+}
+.sig-nav-bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 0;
+}
+
+/* ident (home) */
+.sig-nav-ident {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  height: 44px;
+  text-decoration: none;
+  flex: none;
+}
+.sig-nav-ident .dk-seal {
+  display: block;
+  flex: none;
+}
+.sig-nav-word {
+  display: block;
+  white-space: nowrap;
+}
+
+/* the vertical rule (SCREEN) */
+.sig-nav-vr {
+  display: block;
+  width: 1px;
+  height: 18px;
+  flex: none;
+}
+
+/* section links */
+.sig-nav-links {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sig-nav-links li {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sig-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sig-nav-underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+/* right cluster */
+.sig-nav-tools {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex: none;
+}
+/* #guide-slot — one always-present span; the Guide island (C5) portals its
+   chip here. Empty on the server and until the island mounts. */
+.sig-nav-guide-slot {
+  display: inline-flex;
+  align-items: center;
+}
+.sig-nav-guide-slot:empty {
+  display: none;
+}
+.sig-nav-ic,
+.sig-nav-cv,
+.sig-nav-kbd,
+.sig-nav-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+/* ≥ 44 px touch targets without inflating the drawn pill (§6). */
+.sig-nav-ic::after,
+.sig-nav-cv::after,
+.sig-nav-kbd::after,
+.sig-nav-menu::after,
+.sig-nav .ed-toggle > button::after {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+/* the 26 px toggle pills need a hair more to reach 44 */
+.sig-nav .ed-toggle > button::after {
+  inset: -9px 0;
+}
+.sig-nav .ed-toggle > button,
+.sig-nav-menu {
+  position: relative;
+}
+.sig-nav-ic img {
+  display: block;
+}
+.sig-nav-kbd kbd {
+  font: inherit;
+}
+.sig-nav-menu {
+  min-height: 44px;
+  padding: 0 10px;
+}
+/* ⌘K keycap: the chip is a keyboard shortcut — hidden on touch (no keyboard). */
+@media (hover: none) and (pointer: coarse) {
+  .sig-nav-kbd {
+    display: none;
+  }
+}
+
+/* phone / desktop halves of the bar */
+.sig-nav-phone {
+  display: none;
+}
+@media (max-width: 767.98px) {
+  .sig-nav-links,
+  .sig-nav-desk,
+  .sig-nav-vr,
+  .sig-nav-issue {
+    display: none !important;
+  }
+  .sig-nav-phone {
+    display: inline-flex;
+  }
+  .sig-nav-tools {
+    gap: 10px;
+  }
+}
+
+/* ============================================================================
+   TOP BAR — SCREEN (S1: ident · rule · Cinzel caps · guide · toggle · rule ·
+   GitHub · LinkedIn · CV · ⌘K; glass when scrolled)
+   ========================================================================== */
+html[data-edition='screen'] {
+  .sig-nav[data-scrolled='1'] {
+    background: var(--ed-glass-fill);
+    -webkit-backdrop-filter: var(--ed-glass-blur);
+    backdrop-filter: var(--ed-glass-blur);
+    border-bottom-color: var(--ed-glass-edge);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  }
+  .sig-nav-ident {
+    color: #e9ecf2;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+    transition: color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-ident:hover {
+    color: #f5f7fa;
+  }
+  /* the champagne glint on the K edge — the ident's one live cue */
+  .sig-nav-ident .dk-seal [data-part='glint'],
+  .sig-foot-sig .dk-seal [data-part='glint'] {
+    stroke: var(--ed-champ);
+    stroke-opacity: 1;
+    transition: stroke-width 400ms var(--ease-out-expo);
+  }
+  .sig-nav-ident:hover .dk-seal [data-part='glint'] {
+    stroke-width: 1.6;
+  }
+  .sig-nav-vr {
+    background: var(--border-strong);
+    margin: 0 28px 0 24px;
+  }
+  .sig-nav-links {
+    gap: 30px;
+  }
+  .sig-nav-links a {
+    font: 500 11px/1 var(--font-display);
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    transition: color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-links a:hover,
+  .sig-nav-links a[aria-current] {
+    color: var(--text-primary);
+  }
+  .sig-nav-underline {
+    bottom: 9px;
+    height: 1px;
+    background: rgba(217, 221, 228, 0.55);
+  }
+  .sig-nav-tools {
+    gap: 14px;
+  }
+  .sig-nav-tools .sig-nav-vr {
+    margin: 0 2px;
+  }
+  .sig-nav-ic {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: background-color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-ic:hover {
+    background: rgba(200, 212, 228, 0.06);
+  }
+  .sig-nav-ic img {
+    width: 17px;
+    height: 17px;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+  }
+  /* LinkedIn only exists as the colour mark (blue tile, white "in"); the
+     frames' mono grade keeps the "in" readable instead of a solid square. */
+  .sig-nav-ic .ed-logo[data-logo='linkedin'] img,
+  .sig-menu-row .ed-logo[data-logo='linkedin'] img {
+    filter: grayscale(1) invert(1) brightness(1.5);
+  }
+  .sig-nav-cv {
+    font: 500 11px/1 var(--font-display);
+    letter-spacing: 0.2em;
+    color: var(--text-secondary);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-strong);
+    transition: color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-cv:hover {
+    color: var(--text-primary);
+  }
+  /* S6 motion note: the letter carries GitHub · LinkedIn · CV itself, so the
+     bar's copies fade out (160 ms) while Contact is in view and come back
+     when it scrolls away — each link shows once per screen. */
+  .sig-nav-ic,
+  .sig-nav-cv {
+    transition:
+      opacity 160ms var(--ease-swift),
+      color var(--dur-micro) var(--ease-swift),
+      background-color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav[data-section='contact'] .sig-nav-ic,
+  .sig-nav[data-section='contact'] .sig-nav-cv {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sig-nav[data-section='contact'] .sig-nav-ic:focus-visible,
+  .sig-nav[data-section='contact'] .sig-nav-cv:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sig-nav-kbd .ed-kbd {
+    padding: 5px 8px;
+    transition: border-color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-kbd:hover .ed-kbd {
+    border-color: var(--ed-glass-edge-top);
+    color: var(--text-primary);
+  }
+  .sig-nav-jump {
+    display: none;
+  }
+  .sig-nav-menu {
+    font: 500 11px/1 var(--font-display);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .sig-nav-menu:hover {
+    color: var(--text-primary);
+  }
+}
+
+/* ============================================================================
+   TOP BAR — PRINT (P1 masthead: seal bug · KONNUR COMICS · No. 1 / 10¢ ·
+   ink pills · toggle · guide chip · ⌘K JUMP; paper + ink rule when scrolled)
+   ========================================================================== */
+html[data-edition='print'] {
+  .sig-nav[data-scrolled='1'] {
+    background: var(--bg-page);
+    border-bottom: 3px solid var(--text-primary);
+  }
+  .sig-nav-ident {
+    color: var(--text-primary);
+    gap: 12px;
+  }
+  .sig-nav-word {
+    font: 400 21px/0.9 var(--font-slab);
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+    text-shadow: 1.5px 1.5px 0 var(--accent-signal);
+    transition: text-shadow var(--dur-micro) var(--ease-swift);
+  }
+  /* the red plate slips one step out of register on hover (P1 motion note) */
+  .sig-nav-ident:hover .sig-nav-word {
+    text-shadow: 2.5px 2.5px 0 var(--accent-signal);
+  }
+  .sig-nav-issue {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 14px;
+    padding: 4px 9px 4px 10px;
+    border: 2.5px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    transform: rotate(-2deg);
+    font-family: var(--font-slab);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .sig-nav-issue b {
+    font-weight: 400;
+    font-size: 17px;
+    color: var(--accent-signal);
+  }
+  .sig-nav-issue i {
+    display: block;
+    width: 2px;
+    height: 20px;
+    background: var(--text-primary);
+  }
+  .sig-nav-issue span {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+  @media (max-width: 1023.98px) {
+    .sig-nav-issue {
+      display: none;
+    }
+  }
+  .sig-nav-links {
+    margin-left: auto;
+    gap: 6px;
+  }
+  .sig-nav-links a {
+    min-height: 32px;
+    padding: 0 9px;
+    border: 2.5px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    font: 400 15px/1 var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    transform: rotate(-1.2deg);
+    transition:
+      transform var(--dur-micro) var(--ease-swift),
+      box-shadow var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-links li:nth-child(even) a {
+    transform: rotate(1.2deg);
+  }
+  .sig-nav-links li:nth-child(2) a {
+    background: var(--accent-amber);
+  }
+  .sig-nav-links li:nth-child(3) a {
+    background: var(--accent-electron);
+    color: var(--ed-white);
+  }
+  .sig-nav-links li:nth-child(5) a {
+    background: var(--accent-signal);
+    color: var(--ed-white);
+  }
+  .sig-nav-links a:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 var(--text-primary);
+  }
+  .sig-nav-links a[aria-current] {
+    background: var(--text-primary);
+    color: var(--ed-white);
+    transform: none;
+  }
+  .sig-nav-underline {
+    display: none;
+  }
+  .sig-nav-tools {
+    margin-left: 32px;
+    gap: 8px;
+  }
+  /* P1 order: toggle · 8 THINGS TO TRY · ⌘K JUMP */
+  .sig-nav-tools > * {
+    order: 2;
+  }
+  .sig-nav-tools .ed-toggle {
+    order: 0;
+  }
+  .sig-nav-guide-slot {
+    order: 1;
+  }
+  .sig-nav-tools .sig-nav-vr {
+    display: none;
+  }
+  .sig-nav-ic,
+  .sig-nav-cv,
+  .sig-nav-kbd,
+  .sig-nav-menu {
+    min-height: 32px;
+    border: 2.5px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    color: var(--text-primary);
+    font: 400 15px/1 var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+      transform var(--dur-micro) var(--ease-swift),
+      box-shadow var(--dur-micro) var(--ease-swift);
+  }
+  .sig-nav-ic:hover,
+  .sig-nav-cv:hover,
+  .sig-nav-kbd:hover,
+  .sig-nav-menu:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 var(--text-primary);
+  }
+  .sig-nav-ic {
+    width: 32px;
+  }
+  .sig-nav-ic img {
+    width: 17px;
+    height: 17px;
+    filter: brightness(0);
+  }
+  /* PRINT stickers carry the official colour mark (§2.8): LinkedIn's blue
+     tile stays blue on the white ink box. */
+  .sig-nav-ic .ed-logo[data-logo='linkedin'] img,
+  .sig-menu-row .ed-logo[data-logo='linkedin'] img {
+    filter: none;
+  }
+  .sig-nav-cv {
+    padding: 0 9px;
+  }
+  .sig-nav-kbd {
+    gap: 7px;
+    padding: 0 10px 0 5px;
+  }
+  .sig-nav-kbd .ed-kbd {
+    height: 20px;
+    padding: 0 5px;
+    border: 2px solid var(--text-primary);
+    border-bottom-width: 2px;
+    border-radius: 0;
+    background: var(--accent-amber);
+    color: var(--text-primary);
+    font: 600 11px/1 var(--font-mono);
+    letter-spacing: 0;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .sig-nav-jump {
+    display: inline;
+  }
+  .sig-nav-menu {
+    padding: 0 10px;
+  }
+  @media (max-width: 767.98px) {
+    .sig-nav-word {
+      font-size: 15px;
+    }
+    .sig-nav-ident .dk-seal[data-seal='bug'] {
+      width: 34px;
+      height: 34px;
+    }
+    .sig-nav-tools {
+      margin-left: 12px;
+    }
+  }
+  /* Phones: bug · toggle · chip · MENU must fit 375 — the wordmark goes
+     (the seal bug stays the ident), the tools sit closer together. */
+  @media (max-width: 479.98px) {
+    .sig-nav-word {
+      display: none;
+    }
+    .sig-nav-tools {
+      gap: 6px;
+    }
+  }
+}
+
+/* ============================================================================
+   MOBILE MENU (components/chrome/MobileMenu.tsx) — full-screen sheet
+   ========================================================================== */
+.sig-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-nav);
+}
+.sig-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-h);
+  padding: 0 20px;
+  flex: none;
+}
+.sig-menu-ident {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.sig-menu-close {
+  min-height: 44px;
+  padding: 0 10px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.sig-menu-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 16px 0;
+}
+.sig-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 20px;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.sig-menu-row .ed-logo img {
+  width: 18px;
+  height: 18px;
+}
+.sig-menu-rule {
+  display: block;
+  margin: 12px 20px;
+}
+.sig-menu-foot {
+  flex: none;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+html[data-edition='screen'] {
+  .sig-menu {
+    background: rgba(5, 6, 7, 0.96);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    color: var(--text-primary);
+  }
+  .sig-menu-head {
+    border-bottom: 1px solid var(--border-hairline);
+    color: #e9ecf2;
+  }
+  .sig-menu-close,
+  .sig-menu-hint {
+    font: 500 11px/1 var(--font-display);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .sig-menu-row {
+    font: 400 17px/1 var(--font-body);
+    color: var(--text-secondary);
+  }
+  .sig-menu-row.is-section {
+    font: 500 14px/1 var(--font-display);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .sig-menu-row:hover {
+    color: var(--text-primary);
+    background: rgba(200, 212, 228, 0.04);
+  }
+  .sig-menu-row .ed-logo img {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+  }
+  .sig-menu-row .is-live {
+    color: var(--ed-champ);
+  }
+  .sig-menu-rule {
+    border-top: 1px solid var(--border-hairline);
+  }
+  .sig-menu-foot {
+    border-top: 1px solid var(--border-hairline);
+  }
+}
+
+html[data-edition='print'] {
+  .sig-menu {
+    background: var(--bg-page);
+    color: var(--text-primary);
+  }
+  .sig-menu-head {
+    border-bottom: 3px solid var(--text-primary);
+  }
+  .sig-menu-close,
+  .sig-menu-hint {
+    font: 400 15px/1 var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sig-menu-close {
+    border: 2.5px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    min-height: 32px;
+  }
+  .sig-menu-row {
+    font: 600 15px/1.2 var(--font-body);
+    color: var(--text-primary);
+  }
+  .sig-menu-row.is-section {
+    font: 400 24px/1 var(--font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .sig-menu-row:hover {
+    background: var(--ed-white);
+  }
+  .sig-menu-row .ed-logo img {
+    filter: brightness(0);
+  }
+  .sig-menu-row .is-live {
+    color: var(--accent-signal);
+  }
+  .sig-menu-rule {
+    border-top: 2px solid var(--text-primary);
+  }
+  .sig-menu-foot {
+    border-top: 3px solid var(--text-primary);
+  }
+}
+
+/* ============================================================================
+   FOOTER (components/footer/Footer.tsx)
+   SCREEN: seal · "Darshan Konnur · Boston, MA" | "Back to top ↑"
+   PRINT:  seal · "KONNUR COMICS · FIRST PRINTING · 2026" | "Back to top" · CMYK
+   ========================================================================== */
+.sig-foot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 72px;
+}
+.sig-foot-sig {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+.sig-foot-sig .dk-seal {
+  display: block;
+  flex: none;
+}
+.sig-foot-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+.sig-foot-up {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+html[data-edition='screen'] {
+  .sig-foot {
+    border-top: 1px solid var(--border-hairline);
+  }
+  .sig-foot-sig {
+    font: 400 12.5px/1 var(--font-body);
+    color: var(--ed-steel2);
+  }
+  .sig-foot-sig .dk-seal {
+    color: #e9ecf2;
+    opacity: 0.82;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+  }
+  .sig-foot-up {
+    font: 400 13.5px/1 var(--font-body);
+    color: var(--text-primary);
+    transition: color var(--dur-micro) var(--ease-swift);
+  }
+  .sig-foot-up:hover {
+    color: var(--ed-link-hi);
+  }
+  .sig-foot .ed-cmyk {
+    display: none;
+  }
+}
+
+html[data-edition='print'] {
+  .sig-foot {
+    border-top: 3px solid var(--text-primary);
+  }
+  .sig-foot-sig {
+    font: 500 12px/1 var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--ed-ink2);
+  }
+  .sig-foot-sig .dk-seal {
+    color: var(--text-primary);
+  }
+  .sig-foot-up {
+    font: 600 12px/1 var(--font-body);
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    padding-bottom: 2px;
+    border-bottom: 2px solid var(--accent-signal);
+    min-height: 0;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .sig-foot-up:hover {
+    border-bottom-color: var(--text-primary);
+  }
+  .sig-foot .ed-cmyk i:nth-child(1) {
+    background: var(--accent-electron);
+  }
+  .sig-foot .ed-cmyk i:nth-child(2) {
+    background: var(--accent-signal);
+  }
+  .sig-foot .ed-cmyk i:nth-child(3) {
+    background: var(--accent-amber);
+  }
+  .sig-foot .ed-cmyk i:nth-child(4) {
+    background: var(--text-primary);
+  }
+}
+
+/* ============================================================================
+   BUILD INFO (components/palette/BuildInfoPanel.client.tsx) — the ONE place
+   build evidence is drawn (§1.8). Opened by the palette `build-info` item.
+   ========================================================================== */
+.sig-bi-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-palette);
+  background: var(--bg-overlay);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+}
+/* (0,3,0) outranks the edition sheets' `html[data-edition] .ed-panel
+   { position: relative }` (0,2,1) — the dialog must stay fixed. */
+.sig-bi.ed-panel[role='dialog'] {
+  position: fixed;
+  left: 50%;
+  top: 12vh;
+  transform: translateX(-50%);
+  width: min(600px, calc(100vw - 32px));
+  max-height: 76vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: var(--z-palette);
+  padding: 22px 24px 20px;
+  animation: sig-bi-pop 150ms var(--ease-swift);
+}
+@keyframes sig-bi-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+.sig-bi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.sig-bi-title {
+  margin: 0;
+}
+.sig-bi-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  font: 400 14px/1 var(--font-mono);
+  color: var(--text-secondary);
+}
+.sig-bi-list {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px 18px;
+  margin: 0;
+}
+.sig-bi-list dt {
+  align-self: baseline;
+}
+.sig-bi-list dd {
+  margin: 0;
+  align-self: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.sig-bi-routes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 16px;
+  row-gap: 4px;
+}
+.sig-bi-routes li {
+  display: contents;
+}
+.sig-bi-routes li span:last-child {
+  text-align: right;
+}
+.sig-bi-spark {
+  display: block;
+  margin-top: 6px;
+}
+.sig-bi-foot {
+  margin: 18px 0 0;
+}
+.sig-bi-foot a {
+  color: inherit;
+}
+@media (max-width: 479.98px) {
+  .sig-bi-list {
+    grid-template-columns: 1fr;
+    gap: 4px 0;
+  }
+  .sig-bi-list dd {
+    margin-bottom: 8px;
+  }
+}
+
+html[data-edition='screen'] {
+  .sig-bi-scrim {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+  .sig-bi {
+    border-radius: 8px;
+    color: var(--text-primary);
+  }
+  .sig-bi-list dd,
+  .sig-bi-foot {
+    font: 400 14px/1.5 var(--font-body);
+    color: var(--text-secondary);
+  }
+  .sig-bi-list dd strong {
+    font-weight: 400;
+    color: var(--text-primary);
+  }
+  .sig-bi-close:hover {
+    color: var(--text-primary);
+    border-color: var(--ed-glass-edge-top);
+  }
+  .sig-bi-spark path {
+    stroke: var(--ed-champ);
+  }
+  .sig-bi-foot a:hover {
+    color: var(--ed-link-hi);
+  }
+}
+
+html[data-edition='print'] {
+  .sig-bi {
+    color: var(--text-primary);
+  }
+  .sig-bi-list dd,
+  .sig-bi-foot {
+    font: 500 14px/1.5 var(--font-body);
+    color: var(--ed-ink2);
+  }
+  .sig-bi-list dd strong {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sig-bi-close {
+    border: 2px solid var(--text-primary);
+    border-radius: 0;
+    background: var(--ed-white);
+    box-shadow: 2px 2px 0 var(--text-primary);
+    color: var(--text-primary);
+  }
+  .sig-bi-spark path {
+    stroke: var(--accent-signal);
+  }
+  .sig-bi-foot a {
+    border-bottom: 2px solid var(--accent-signal);
+    text-decoration: none;
+  }
+}
+
+/* ---- reduced motion: the bar and panel simply appear ---------------------- */
+html[data-motion='reduced'] .sig-bi.ed-panel[role='dialog'] {
+  animation: none;
+}
