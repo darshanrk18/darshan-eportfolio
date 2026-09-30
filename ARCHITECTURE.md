@@ -102,6 +102,10 @@ Every fact a visitor reads is data in `lib/data/`: `profile`, `projects`,
 usage map and the skills-per-job highlight), `photos`, `logos`, `hero`,
 `about`, `issue`, `introAssets`, `photoAscii`. Tests assert the content rules
 (no placeholders, no internals in visible strings, verified skill claims).
+`resume` is the owner's résumé text for /cv (and `publication` the paper's
+full record); both are server-only — only server code may import them, so
+none of it reaches the client bundle (`tests/cv.test.ts` enforces it for
+`resume`).
 Section chrome copy lives in the per-area copy modules listed in `README.md`.
 
 ## Build guards
