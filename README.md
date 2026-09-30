@@ -25,13 +25,14 @@ transition, a crossfade under reduced motion).
 - A working console with a small command set (`whoami`, `whoami --face`,
   `sudo hire darshan`, `snake --autopilot`, `help`, …).
 - Playable Connect Four against a Minimax engine in a web worker, plus Snake
-  (A* autopilot) and a camera-driven Rock-Paper-Scissors demo.
+  (A* autopilot) and a replay of the Rock-Paper-Scissors hand tracking (it
+  never opens the camera).
 - A skills system diagram with official logos, a skill inspector, "Light up
   the toolkit", and a map of where each tool was used.
 - A career graph with a "Next" marker, and a "See which skills each job used"
   cross-highlight.
 - A portrait that resolves from characters to the photograph.
-- `/cv`, a zero-JavaScript résumé page; `/work/<slug>` pages per project; a
+- `/cv`, a résumé page with no JavaScript of its own; `/work/<slug>` pages per project; a
   hidden `/arcade`.
 
 ## Running it
@@ -64,12 +65,13 @@ typecheck, lint, tests and the build on every pull request.
 |---|---|
 | `app/` | App Router pages: `/`, `/cv`, `/work/[slug]`, `/arcade`, metadata, OG image |
 | `components/` | Sections (`hero`, `about`, `skills`, `projects`, `experience`, `contact`), chrome, palette, guide, edition picker, intro, terminal |
-| `lib/data/` | Every visitor-facing fact and string: profile, projects, experience, skills, photos, logos, guide copy |
+| `lib/data/` | Every visitor-facing fact: profile, projects, experience, skills, photos, logos |
 | `lib/edition/` | The edition attribute, storage keys and the pre-paint script |
 | `lib/commands/` | Command registry, command context, section anchors |
 | `lib/guide/` | The guide's items, storage and actions |
 | `lib/intro/` | The intro timeline and events |
 | `styles/v3/` | The two skins (`screen.css`, `print.css`), the switch, and per-section stylesheets; see `styles/v3/README.md` |
+| `styles/v2/` | v2 rules still imported by `app/globals.css`: the About character portrait, magnetic buttons, CRT mode, scroll, project window, experience |
 | `public/` | Photos (both grades), logos, brand marks, intro plates, résumé PDF |
 | `scripts/` | Bundle budget, pre-paint guard, headless QA driver (`scripts/qa`) |
 | `tests/` | Vitest suites for data, commands, editions, guide, intro, skills, work, contact |
@@ -79,8 +81,10 @@ islands talk to each other.
 
 ## Content and quality rules
 
-- Every string a visitor sees comes from `lib/data/`; nothing is hard-coded
-  in components.
+- Every fact a visitor reads comes from `lib/data/`; section chrome copy
+  lives in one copy module per area (`components/{contact,skills,experience}/copy.ts`,
+  `components/projects/demos/c4Copy.ts`, `components/edition/picker.shared.ts`,
+  `lib/guide/guide.ts`), never inline in JSX.
 - No build or pipeline internals are drawn at rest (file names, sizes, frame
   rates, hashes, command syntax outside the console). Build evidence lives
   behind the palette's "Build info".
