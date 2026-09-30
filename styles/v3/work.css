@@ -2103,6 +2103,34 @@ html[data-edition='print'] {
       --c4-pad: min(10px, (100cqi - 8px) * 10 / 300);
     }
   }
+  /* A game narrower than 410 px beside the balloon column (the two-column
+     window at 900-985, the /arcade window at 1024-1063) would squeeze the
+     board under 32 px cells and run the 26 px drop keys together: it takes
+     the phone reflow instead, one column with the board at up to 40 px
+     cells. The query reads the .c4 itself, so it applies to its children;
+     the variables are set on them for the same reason. */
+  @container (width < 410px) {
+    .c4-board-wrap,
+    .c4-keys,
+    .c4-evals,
+    .c4-say,
+    .c4-coach,
+    .c4-status,
+    :not(.pw-live) > .c4 > .c4-status {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      --c4-cell: min(40px, (100cqi - 8px) * 40 / 300);
+      --c4-pad: min(10px, (100cqi - 8px) * 10 / 300);
+    }
+    .c4-status,
+    :not(.pw-live) > .c4 > .c4-status {
+      order: 10;
+      justify-self: end;
+    }
+    .c4-say::after {
+      display: none;
+    }
+  }
 
   /* ---- the rack (covers) ------------------------------------------------- */
   .rk {
