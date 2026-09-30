@@ -72,7 +72,7 @@ Fonts (§2.3), switched by the attribute:
 | var | SCREEN | PRINT |
 |---|---|---|
 | `--font-display` | Cinzel (`--font-cinzel`) | Bangers (`--font-bangers`) |
-| `--font-body` | Marcellus (`--font-marcellus`) | Archivo (`--font-archivo`) |
+| `--font-body` | Marcellus (`--font-marcellus`), digits 0–9 from Tenor Sans (`'Screen Digits'`, via `--font-screen-body`) | Archivo (`--font-archivo`) |
 | `--font-slab` | Marcellus | Alfa Slab One (`--font-alfa`) |
 | `--font-mono` | IBM Plex Mono (`--font-plexmono`) | same |
 
