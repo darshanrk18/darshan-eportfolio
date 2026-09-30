@@ -1,34 +1,53 @@
 'use client'
 
 /**
- * Navbar — editor chrome (spec §4.2).
+ * Navbar — the top bar in both editions (V3_SPEC §1.7, §3 "Navbar", §6).
  *
- * Fixed 48px bar, transparent over the hero, gaining --bg-overlay + blur +
- * a bottom hairline after 24px of scroll. Breadcrumb + branch chip (links to
- * the site repo), filename nav tabs with a sliding layoutId underline driven
- * by scrollspy, a `/cv` chip (recruiter escape hatch), the theme toggle, the
- * ⌘K keycap chip and the 2px build-progress bar + `compiled NN%` readout.
+ * One DOM, two skins (styles/v3/chrome.css, imported here):
+ *   SCREEN (S1/S6 frames): Studio Seal ident (silver, champagne glint) · thin
+ *   rule · section names in Cinzel caps · right cluster.
+ *   PRINT (P1 masthead): the seal bug + "KONNUR COMICS" wordmark · "No. 1 ·
+ *   10¢" issue box · ink-box nav pills · the same right cluster.
+ * Right cluster (both): `#guide-slot` (an EMPTY span the Guide island (C5)
+ * portals its "8 things to try" chip into — rendered once, present in the
+ * desktop and the phone bar) · EditionToggle · rule · GitHub · LinkedIn ·
+ * CV · ⌘K keycap (hidden on touch). Phone (< 768): ident · guide slot ·
+ * toggle · Menu (→ MobileMenu).
  *
- * This is a client component, but its SSR output is the same JS-free bar of
- * anchor links the T0 experience relies on — links work without JS.
+ * v3 removed at rest (clutter law): the `~/darshan-konnur` breadcrumb, the
+ * `main ✓` branch chip, the file-name tabs and the `compiled NN%` readout.
+ * ScrollProgress stays as the bare 2px bar.
+ *
+ * Scrolled state (> 24px): `data-scrolled="1"` → glass (SCREEN) / paper +
+ * ink rule (PRINT). Scrollspy: the section crossing the 40–45% viewport
+ * band is active (aria-current + the steel underline in SCREEN, the ink
+ * pill in PRINT) and is written to the store (activeSection, sectionsSeen)
+ * for the palette narrator and Build info's honest "sections seen" count.
+ * The active section is also mirrored as `data-section="about|…|contact"`
+ * on the header: S6's motion note fades GitHub · LinkedIn · CV out of the
+ * SCREEN bar while the Contact letter (which carries the same links) is in
+ * view, so each link shows once per screen (chrome.css).
+ *
+ * SSR output is the same JS-free bar of anchor links — links work without JS.
+ * Bundle: Navbar delta ≤ 1 KB (§7) — no new deps beyond DkSeal and Logo.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { LazyMotion, domAnimation, m } from 'motion/react'
-import { profile } from '@/lib/data/profile'
-import { SECTION_ANCHORS, sectionTabs, type SectionAnchor } from '@/lib/commands/sections'
+import { SECTION_ANCHORS, type SectionAnchor } from '@/lib/commands/sections'
 import { scrollToAnchor } from '@/lib/commands/context'
 import { useMagnetic } from '@/lib/motion/useMagnetic'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { SPRING_UI } from '@/lib/motion/tokens'
 import { useSignalStore } from '@/lib/state/store'
 import { trackCvViewed } from '@/lib/utils/analytics'
-import ThemeToggle from './ThemeToggle'
+import EditionToggle from '@/components/edition/EditionToggle.client'
+import DkSeal from '@/components/chrome/DkSeal'
+import Logo from '@/components/skills/Logo'
 import MobileMenu from './MobileMenu'
-import ScrollProgress, { CompiledReadout } from './ScrollProgress'
-
-const chipClass =
-  'type-label-sm rounded-chip border border-hairline px-2 py-1 text-secondary transition-colors hover:border-hairline-strong hover:text-primary'
+import ScrollProgress from './ScrollProgress'
+import { NAV_ITEMS, SOCIAL_LINKS, TOP_ANCHOR } from './navItems'
+import '@/styles/v3/chrome.css'
 
 export default function Navbar() {
   const reduced = usePrefersReducedMotion()
@@ -71,7 +90,7 @@ export default function Navbar() {
       (entries) => {
         for (const entry of entries) {
           visibleSections.current.set(entry.target.id, entry.isIntersecting)
-          // v2 §10.3 — honest seen-count for the footer payoff (idempotent write).
+          // v2 §10.3 — honest seen-count for Build info (idempotent write).
           if (entry.isIntersecting) useSignalStore.getState().markSectionSeen(entry.target.id)
         }
         let current: SectionAnchor | null = null
@@ -91,77 +110,63 @@ export default function Navbar() {
     return () => io.disconnect()
   }, [])
 
-  const paletteChip = (
-    <button
-      ref={kbdChipRef}
-      type="button"
-      onClick={() => setPaletteOpen(true)}
-      /* Name contains the visible keycap (WCAG 2.5.3); data-palette-trigger
-         keeps the CommandPalette hover-prefetch selector matching. */
-      aria-label={`${kbdLabel} — open command palette`}
-      data-palette-trigger
-      className={`${chipClass} bg-raised`}
-    >
-      <span data-mag-label>{kbdLabel}</span>
-    </button>
-  )
+  const goTo = (anchor: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    scrollToAnchor(anchor)
+  }
 
   return (
     <LazyMotion features={domAnimation} strict>
       <header
         data-component="Navbar"
         data-island="client"
-        className={`fixed inset-x-0 top-0 h-12 transition-colors duration-200 ${
-          scrolled
-            ? 'border-b border-hairline bg-overlay backdrop-blur-md'
-            : 'border-b border-transparent'
-        }`}
-        style={{ zIndex: 'var(--z-nav)' }}
+        data-scrolled={scrolled ? '1' : '0'}
+        data-section={active ? active.slice(1) : undefined}
+        className="sig-nav"
       >
         <ScrollProgress />
-        <nav
-          aria-label="Primary"
-          className="container-site flex h-full items-center justify-between gap-4"
-        >
-          {/* Breadcrumb + branch chip */}
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="type-label-sm truncate text-secondary">~/darshan-konnur</span>
-            <a
-              href={profile.siteRepoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="main ✓ — view this site's repository on GitHub"
-              className="type-label-sm rounded-chip border border-hairline px-1.5 py-0.5 text-signal transition-colors hover:border-hairline-strong"
-            >
-              main ✓
-            </a>
-          </div>
+        <nav aria-label="Primary" className="container-site sig-nav-bar">
+          {/* Ident — the Studio Seal (SCREEN mark / PRINT bug + wordmark). */}
+          <a href={TOP_ANCHOR} onClick={goTo(TOP_ANCHOR)} className="sig-nav-ident">
+            <DkSeal variant="mark" size={28} className="ed-screen-only" />
+            <DkSeal variant="bug" size={40} className="ed-print-only" />
+            <span className="sig-nav-word ed-print-only" aria-hidden="true">
+              KONNUR
+              <br />
+              COMICS
+            </span>
+            {/* The accessible name per edition (P6 inventory): the other
+                edition's span is display:none, so only one is ever read. */}
+            <span className="sr-only ed-screen-only">Darshan Konnur, home</span>
+            <span className="sr-only ed-print-only">Konnur Comics, back to the cover</span>
+          </a>
+          {/* PRINT issue box — comic furniture (decorative). */}
+          <span className="sig-nav-issue ed-print-only" aria-hidden="true">
+            <b>No. 1</b>
+            <i />
+            <span>10¢</span>
+          </span>
+          <span className="sig-nav-vr ed-screen-only" aria-hidden="true" />
 
-          {/* Editor tabs (desktop/tablet) */}
-          <ul className="hidden h-full items-center md:flex">
-            {sectionTabs.map((tab) => {
-              const isActive = active === tab.anchor
+          {/* Section links (desktop/tablet) */}
+          <ul className="sig-nav-links">
+            {NAV_ITEMS.map((item) => {
+              const isActive = active === item.anchor
               return (
-                <li key={tab.anchor} className="relative h-full">
+                <li key={item.anchor}>
                   <a
-                    href={tab.anchor}
+                    href={item.anchor}
                     aria-current={isActive ? 'true' : undefined}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      scrollToAnchor(tab.anchor)
-                    }}
-                    className={`flex h-full items-center px-2.5 type-label-sm transition-colors ${
-                      isActive ? 'text-primary' : 'text-secondary hover:text-primary'
-                    }`}
+                    onClick={goTo(item.anchor)}
                   >
-                    {tab.tab}
+                    {item.label}
                   </a>
                   {isActive ? (
                     <m.span
                       layoutId="tab-underline"
                       aria-hidden="true"
                       transition={reduced ? { duration: 0 } : SPRING_UI}
-                      className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-signal"
+                      className="sig-nav-underline"
                     />
                   ) : null}
                 </li>
@@ -170,23 +175,58 @@ export default function Navbar() {
           </ul>
 
           {/* Right cluster */}
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-3 md:flex">
-              <CompiledReadout />
-              <a ref={cvChipRef} href="/cv" onClick={() => trackCvViewed()} className={chipClass}>
-                <span data-mag-label>cv ↗</span>
+          <div className="sig-nav-tools">
+            {/* The Guide island (C5) portals its chip here — keep this span
+                EMPTY on the server; it collapses (display:none) while empty. */}
+            <span id="guide-slot" className="sig-nav-guide-slot" />
+            <EditionToggle />
+            <span className="sig-nav-vr ed-screen-only sig-nav-desk" aria-hidden="true" />
+            {SOCIAL_LINKS.map((link) => (
+              <a
+                key={link.id}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                className="sig-nav-ic sig-nav-desk"
+              >
+                <Logo id={link.id} mono size={17} />
               </a>
-              <ThemeToggle />
-            </div>
-            {paletteChip}
+            ))}
+            <a
+              ref={cvChipRef}
+              href="/cv"
+              onClick={() => trackCvViewed()}
+              className="sig-nav-cv sig-nav-desk"
+            >
+              <span data-mag-label>CV</span>
+            </a>
+            <button
+              ref={kbdChipRef}
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              /* Name contains the visible keycap (WCAG 2.5.3); data-palette-trigger
+                 keeps the CommandPalette hover-prefetch selector matching. */
+              aria-label={`${kbdLabel} — open the command palette`}
+              aria-keyshortcuts="Meta+K Control+K"
+              data-palette-trigger
+              className="sig-nav-kbd sig-nav-desk"
+            >
+              <kbd className="ed-kbd" data-mag-label>
+                {kbdLabel}
+              </kbd>
+              <span className="sig-nav-jump ed-print-only" aria-hidden="true">
+                Jump
+              </span>
+            </button>
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={menuOpen}
-              className="type-label-sm min-h-11 px-2 text-secondary hover:text-primary md:hidden"
+              className="sig-nav-menu sig-nav-phone"
             >
-              menu
+              Menu
             </button>
           </div>
         </nav>
