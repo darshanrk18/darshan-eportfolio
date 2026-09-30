@@ -9,7 +9,8 @@ the TypeScript side is `lib/commands/context.ts` (edition API) and
 `html[data-edition="screen" | "print"]` is the ONE switch. It is written
 pre-paint by the inline script (`lib/edition/prepaint.ts` → `app/layout.tsx`),
 so the first paint already has the stored edition, and rewritten only by
-`applyEdition()` / `switchEdition()` in `lib/commands/context.ts`.
+`applyEdition()` / `switchEdition()` in `lib/commands/context.ts` — or, before
+hydration, by the picker shell's fallback (see `data-picker-failed` below).
 
 Related html attributes (all written by the same modules, never by hand):
 
@@ -19,7 +20,8 @@ Related html attributes (all written by the same modules, never by hand):
 | `data-pick="1"` | pre-paint (nothing stored), `requestEditionPick()` (palette `choose-edition`) | the EditionPicker island (C5) should render; the picker clears it on a choice |
 | `data-picker-live="1"` | the picker surface (EditionPickerSurface.client.tsx), while mounted | the hydrated surface has replaced the server-rendered shell (`PickerShell.tsx`, shown by picker.css under `data-pick='1'` from the first paint); the shell is display:none |
 | `data-pick-queued="screen" \| "print"` | the shell's inline script (`PickerShell.tsx`), on a tap / Enter / 1 / 2 before the surface is live | a choice made on the shell; the surface reads and clears it the moment it goes live and chooses at once |
-| `data-intro="1"` | pre-paint only | stored PRINT + full motion + `sessionStorage['signal.intro']` absent → the intro host (C6) runs the intro |
+| `data-picker-failed="1"` | the gate (`EditionPicker.client.tsx`) when the surface chunk fails to load | the shell's script applies a tap at once instead of after 6 s |
+| `data-intro="1"` | pre-paint; the picker shell's fallback on a PRINT choice | stored PRINT + full motion + `sessionStorage['signal.intro']` absent → the intro host (C6) runs the intro |
 | `data-edition-switch="press" \| "projector"` | `switchEdition()` for the life of one view transition | keys `switch.css` |
 | `data-motion="reduced" \| "full"` | pre-paint, `setMotionPreference()` | unchanged from v2 |
 
@@ -90,8 +92,8 @@ is nested entirely under `html[data-edition='screen']`, `print.css` under
 
 | class | SCREEN | PRINT |
 |---|---|---|
-| `.ed-stage` | the big glass block (14px blur, inner glow) | 4px ink frame + 6px hard shadow, paper white |
-| `.ed-card` / `.ed-panel` | smoked frosted glass (§2.2a) — `.ed-card` adds 22×24 padding | 2px ink box + `--ed-shadow`, paper white |
+| `.ed-stage` | the big glass block (blur 24px + saturate 1.5, 14px radius, rim + sheen) | 4px ink frame + 6px hard shadow, paper white |
+| `.ed-card` / `.ed-panel` | highly transparent macOS frosted glass (§2.2a; fill .34, blur 28px + saturate 1.6, 12px radius) — `.ed-card` adds 22×24 padding | 2px ink box + `--ed-shadow`, paper white |
 | `.ed-chip` | thin tint, edge only (NOT glass) | 2px ink, 3px shadow |
 | `.ed-kbd` | glass keycap | ink keycap |
 | `.ed-console-area` | darker `rgba(5,6,7,.55)` (NOT glass, code stays readable) | paper white |
@@ -171,8 +173,9 @@ and terminal go through `ctx.setEdition(edition | 'toggle', via)`.
 
 `applyEdition(edition, via)` = attribute + localStorage + store mirror
 (`useSignalStore.edition`) + `<meta name="theme-color">` + analytics
-`edition_switched { edition, via }`. The picker calls it directly with
-`via: 'picker'`; nothing else should.
+`edition_switched { edition, via }`. The picker surface calls it directly
+with `via: 'picker'`; the only other writer is the shell's no-JS fallback
+(6 s after a tap, or at once under `data-picker-failed`).
 
 ## 6. JS-side reads
 
