@@ -60,7 +60,11 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@types/react-dom'
         update-types: ['version-update:semver-major']
-      # The Node types match the Node version in .nvmrc (24); raise both together.
+      # Vite 8's native bindings are left out of package-lock.json by an npm bug
+      # (npm/cli#4828), which breaks the tests; moving to it is its own change (#13).
+      - dependency-name: vite
+        update-types: ['version-update:semver-major']
+      # The Node types stay within the Node version in .nvmrc (24); raise both together.
       - dependency-name: '@types/node'
         versions: ['>=25']
 
