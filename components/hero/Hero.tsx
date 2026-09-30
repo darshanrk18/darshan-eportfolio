@@ -381,7 +381,8 @@ export default function Hero() {
         </div>
 
         <div className="hero-foot hero-in" style={d(900)}>
-          <div className="hero-foot-l ed-screen-only">
+          {/* Holds only the ⌘K hint, so it hides whole on touch screens (no keys). */}
+          <div className="hero-foot-l ed-screen-only mouse-only">
             <PalettePill />
           </div>
           <a className="hero-next ed-screen-only" href="#about">

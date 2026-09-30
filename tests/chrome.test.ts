@@ -17,6 +17,7 @@ import {
   routeWeights,
 } from '@/components/palette/buildInfoRoutes'
 import { SECTION_ANCHORS } from '@/lib/commands/sections'
+import { NOT_TOUCH_MEDIA, TOUCH_MEDIA } from '@/lib/utils/input'
 import { profile } from '@/lib/data/profile'
 
 const root = path.resolve(__dirname, '..')
@@ -208,5 +209,75 @@ describe('share card and web manifest take the SCREEN look (§2.8, §3)', () => 
     expect(m.background_color).toBe('#050607')
     expect(m.theme_color).toBe('#050607')
     expect(m.icons?.map((i) => i.src)).toEqual(['/favicon.svg', '/favicon-32.png', '/favicon-16.png'])
+  })
+})
+
+/**
+ * Mouse or touch words (styles/v3/README.md §4a): both wordings render and
+ * two unlayered !important rules show one — under complementary queries, so
+ * exactly one shows on every device, and no component's own display rule
+ * can bring the hidden one back (the SCREEN hero pill's inline-flex did).
+ */
+describe('mouse or touch words (§4a)', () => {
+  const css = (rel: string) => read(rel).replace(/\s+/g, ' ')
+  const media = (q: string) => q.replace(/\s+/g, ' ').trim()
+
+  it('globals.css hides .touch-only off touch and .mouse-only on touch, !important', () => {
+    const g = css('app/globals.css')
+    expect(g).toContain(
+      `@media ${media(NOT_TOUCH_MEDIA)} { .touch-only { display: none !important; } }`
+    )
+    expect(g).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .mouse-only { display: none !important; } }`
+    )
+    // unlayered (a layered rule would lose to any unlayered display rule):
+    // the hides sit after the last @layer block has closed
+    let i = g.indexOf('{', g.lastIndexOf('@layer'))
+    for (let depth = 0; ; i++) {
+      if (g[i] === '{') depth++
+      else if (g[i] === '}' && --depth === 0) break
+    }
+    expect(g.indexOf('.touch-only')).toBeGreaterThan(i)
+    expect(g.indexOf('.mouse-only')).toBeGreaterThan(i)
+  })
+
+  it('the two queries are exact complements (hover: none|hover × pointer: none|coarse|fine)', () => {
+    const touch = (hover: string, pointer: string) => hover === 'none' && pointer === 'coarse'
+    const notTouch = (hover: string, pointer: string) =>
+      hover === 'hover' || pointer === 'fine' || pointer === 'none'
+    for (const hover of ['none', 'hover'])
+      for (const pointer of ['none', 'coarse', 'fine'])
+        expect(touch(hover, pointer) !== notTouch(hover, pointer), `${hover}/${pointer}`).toBe(true)
+    expect(NOT_TOUCH_MEDIA).toBe('(hover: hover), (pointer: fine), (pointer: none)')
+  })
+
+  it('touch means what the top bar means: its ⌘K chip hides under the same query', () => {
+    expect(css('styles/v3/chrome.css')).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .sig-nav-kbd { display: none; } }`
+    )
+  })
+
+  it('the hero ⌘K hint is mouse-only, with no losing touch rule left behind', () => {
+    // the wrapper holds only the hint, so no empty flex item is left on touch
+    expect(read('components/hero/Hero.tsx')).toMatch(
+      /<div className="hero-foot-l ed-screen-only mouse-only">\s*<PalettePill \/>\s*<\/div>/
+    )
+    expect(css('styles/v3/hero.css')).not.toMatch(/@media \(hover: none\) \{ \.hero-pill/)
+  })
+
+  it('InputWords renders both wordings (server markup too) and a shared wording once', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement } = await import('react')
+    const { default: InputWords } = await import('@/components/chrome/InputWords')
+    expect(
+      renderToStaticMarkup(
+        createElement(InputWords, { mouse: 'Hover a job.', touch: 'Tap a job.' })
+      )
+    ).toBe('<span class="mouse-only">Hover a job.</span><span class="touch-only">Tap a job.</span>')
+    expect(
+      renderToStaticMarkup(
+        createElement(InputWords, { mouse: 'Pick a job.', touch: 'Pick a job.' })
+      )
+    ).toBe('Pick a job.')
   })
 })

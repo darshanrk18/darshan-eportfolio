@@ -708,6 +708,27 @@ html[data-motion='reduced'] body::after {
 }
 
 /* ----------------------------------------------------------------------------
+   Mouse or touch words (styles/v3/README.md §4a). An instruction that names
+   a key or a hover renders both wordings (components/chrome/InputWords.tsx)
+   and these two rules show one. Touch = no hover and a coarse pointer, the
+   test that hides the top bar's ⌘K chip (styles/v3/chrome.css); the first
+   query is its exact complement, so exactly one wording shows. display:none,
+   never visually hidden, so the other wording is never read out. Unlayered
+   and !important like .ed-screen-only: a component's own display rule (the
+   SCREEN .hero-pill's inline-flex once did) cannot bring a hidden one back.
+   -------------------------------------------------------------------------- */
+@media (hover: hover), (pointer: fine), (pointer: none) {
+  .touch-only {
+    display: none !important;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .mouse-only {
+    display: none !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    Print — /cv carries its own print rules; global default just drops chrome.
    -------------------------------------------------------------------------- */
 @media print {

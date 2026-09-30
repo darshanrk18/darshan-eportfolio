@@ -160,6 +160,27 @@ every width query is `@media screen and (…)` (Chrome lays a Letter page out
 on the named page `cv` (`.cv { page: cv }`), so they never apply to a print
 of '/' made after a client-side visit to /cv left the stylesheet loaded.
 
+## 4a. Mouse or touch words — `.mouse-only` / `.touch-only`
+
+An instruction that names a key or a hover ("Press ⌘K", "hover a job",
+"press its number") is wrong on a touch screen. Give it a touch wording
+and render BOTH — `components/chrome/InputWords.tsx` does it (the copy
+modules take an `InputKind`, `lib/utils/input.ts`):
+
+```tsx
+<InputWords mouse={coachLine(edition, status)} touch={coachLine(edition, status, 'touch')} />
+```
+
+`app/globals.css` shows one: `.mouse-only` hides under `(hover: none) and
+(pointer: coarse)` — touch, the same test that hides the bar's ⌘K chip —
+and `.touch-only` under its exact complement `(hover: hover), (pointer:
+fine), (pointer: none)`. Both rules are unlayered and `display: none
+!important` (like `.ed-screen-only`), so a component's own display rule
+cannot bring a hidden wording back, and the hidden one is never read out.
+Put the class on the element itself when the whole control is keyboard-only
+(the hero's ⌘K hint: its wrapper is `.hero-foot-l mouse-only`). Server and
+client render the same markup, so there is no hydration mismatch and no JS.
+
 ## 5. Switching (switch.css)
 
 `switchEdition(next, { originEl, via })` (lib/commands/context.ts):
