@@ -1,0 +1,134 @@
+[
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "console": true
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "sweep": true,
+  "pause": 300
+ },
+ {
+  "wait": 800
+ },
+ {
+  "scroll": "#experience",
+  "settle": 1200
+ },
+ {
+  "click": ".xp-switch",
+  "settle": 800
+ },
+ {
+  "eval": "(()=>{const q=s=>Array.from(document.querySelectorAll(s)).filter(e=>e.getClientRects().length);const h=s=>{const els=q(s);return s+': n='+els.length+' minH='+(els.length?Math.min(...els.map(e=>Math.round(e.getBoundingClientRect().height))):'-')};return [h('.sk-uchip'),h('.xp-switch'),h('.xp-tab'),h('.xp-tile'),h('.xp-lnk'),h('.ed-toggle > button'),h('.sig-nav-menu'),h('.gd-chip'),h('.sk-tile'),h('.pw-btn-max'),h('.gd-row'),h('.gd-more')].join(' | ')})()",
+  "label": "targets-screen"
+ },
+ {
+  "scrollTo": 0,
+  "settle": 600
+ },
+ {
+  "click": ".gd-chip",
+  "settle": 1200
+ },
+ {
+  "eval": "(()=>{const q=s=>Array.from(document.querySelectorAll(s)).filter(e=>e.getClientRects().length);const h=s=>{const els=q(s);return s+': n='+els.length+' minH='+(els.length?Math.min(...els.map(e=>Math.round(e.getBoundingClientRect().height))):'-')};return [h('.sk-uchip'),h('.xp-switch'),h('.xp-tab'),h('.xp-tile'),h('.xp-lnk'),h('.ed-toggle > button'),h('.sig-nav-menu'),h('.gd-chip'),h('.sk-tile'),h('.pw-btn-max'),h('.gd-row'),h('.gd-more')].join(' | ')})()",
+  "label": "targets-screen-guide-open"
+ },
+ {
+  "shot": "design-workshop/v3/qa/X3-sheet-375-screen.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "eval": "(()=>{const m=document.querySelector('.sig-nav-menu');if(!m)return 'no menu';const r=m.getBoundingClientRect();return 'menu '+JSON.stringify({x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height),vis:getComputedStyle(m).display})})()",
+  "label": "menu-screen"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-screen"
+ },
+ {
+  "console": "design-workshop/v3/qa/probe-375-screen-console.txt"
+ },
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "console": true
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "sweep": true,
+  "pause": 300
+ },
+ {
+  "wait": 800
+ },
+ {
+  "scroll": "#experience",
+  "settle": 1200
+ },
+ {
+  "click": ".xp-switch",
+  "settle": 800
+ },
+ {
+  "eval": "(()=>{const q=s=>Array.from(document.querySelectorAll(s)).filter(e=>e.getClientRects().length);const h=s=>{const els=q(s);return s+': n='+els.length+' minH='+(els.length?Math.min(...els.map(e=>Math.round(e.getBoundingClientRect().height))):'-')};return [h('.sk-uchip'),h('.xp-switch'),h('.xp-tab'),h('.xp-tile'),h('.xp-lnk'),h('.ed-toggle > button'),h('.sig-nav-menu'),h('.gd-chip'),h('.sk-tile'),h('.pw-btn-max'),h('.gd-row'),h('.gd-more')].join(' | ')})()",
+  "label": "targets-print"
+ },
+ {
+  "scrollTo": 0,
+  "settle": 600
+ },
+ {
+  "click": ".gd-chip",
+  "settle": 1200
+ },
+ {
+  "eval": "(()=>{const q=s=>Array.from(document.querySelectorAll(s)).filter(e=>e.getClientRects().length);const h=s=>{const els=q(s);return s+': n='+els.length+' minH='+(els.length?Math.min(...els.map(e=>Math.round(e.getBoundingClientRect().height))):'-')};return [h('.sk-uchip'),h('.xp-switch'),h('.xp-tab'),h('.xp-tile'),h('.xp-lnk'),h('.ed-toggle > button'),h('.sig-nav-menu'),h('.gd-chip'),h('.sk-tile'),h('.pw-btn-max'),h('.gd-row'),h('.gd-more')].join(' | ')})()",
+  "label": "targets-print-guide-open"
+ },
+ {
+  "shot": "design-workshop/v3/qa/X3-sheet-375-print.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "eval": "(()=>{const m=document.querySelector('.sig-nav-menu');if(!m)return 'no menu';const r=m.getBoundingClientRect();return 'menu '+JSON.stringify({x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height),vis:getComputedStyle(m).display})})()",
+  "label": "menu-print"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-print"
+ },
+ {
+  "console": "design-workshop/v3/qa/probe-375-print-console.txt"
+ }
+]

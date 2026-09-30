@@ -1,0 +1,90 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "guide": [
+    "go-anywhere"
+   ]
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1200
+ },
+ {
+  "eval": "!!document.querySelector('[cmdk-root]')",
+  "label": "palette-open"
+ },
+ {
+  "type": "choose",
+  "settle": 700
+ },
+ {
+  "eval": "(()=>{const sel=document.querySelector('[cmdk-item][aria-selected=true]');const all=Array.from(document.querySelectorAll('[cmdk-item]')).map(e=>e.textContent.trim());return 'selected='+(sel&&sel.textContent.trim())+' | visible='+all.join(' ; ')})()",
+  "label": "choose"
+ },
+ {
+  "shot": "design-workshop/v3/qa/PALETTE-choose-screen.png"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1000
+ },
+ {
+  "type": "cont",
+  "settle": 600
+ },
+ {
+  "eval": "(()=>{const sel=document.querySelector('[cmdk-item][aria-selected=true]');return 'selected='+(sel&&sel.textContent.trim())})()",
+  "label": "cont"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1000
+ },
+ {
+  "type": "work",
+  "settle": 600
+ },
+ {
+  "eval": "(()=>{const all=Array.from(document.querySelectorAll('[cmdk-item]')).map(e=>e.textContent.trim());return all.join(' ; ')})()",
+  "label": "work"
+ },
+ {
+  "key": "Escape",
+  "settle": 500
+ },
+ {
+  "click": ".sig-nav-kbd",
+  "settle": 1000
+ },
+ {
+  "shot": "design-workshop/v3/qa/PALETTE-open-screen.png"
+ },
+ {
+  "eval": "(()=>{const all=Array.from(document.querySelectorAll('[cmdk-item]')).map(e=>e.textContent.trim());return all.join(' ; ')})()",
+  "label": "all-rows"
+ }
+]

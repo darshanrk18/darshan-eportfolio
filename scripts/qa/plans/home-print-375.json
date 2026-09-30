@@ -1,0 +1,79 @@
+[
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true,
+   "console": true
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "wait": 1200
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-top.png"
+ },
+ {
+  "scroll": "#about",
+  "settle": 1600
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-about.png"
+ },
+ {
+  "scroll": "#skills",
+  "settle": 1600
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-skills.png"
+ },
+ {
+  "scroll": "#projects",
+  "settle": 1600
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-projects.png"
+ },
+ {
+  "scroll": "#experience",
+  "settle": 1600
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-experience.png"
+ },
+ {
+  "scroll": "#contact",
+  "settle": 1600
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-contact.png"
+ },
+ {
+  "scroll": "[data-component=Footer]",
+  "block": "end",
+  "settle": 1200
+ },
+ {
+  "shot": "design-workshop/v3/qa/P-375-footer.png"
+ },
+ {
+  "probe": "body",
+  "label": "scrollWidth"
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll"
+ },
+ {
+  "console": "design-workshop/v3/qa/P-375-console.txt"
+ }
+]
