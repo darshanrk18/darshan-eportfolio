@@ -25,7 +25,7 @@
 import type { CSSProperties } from 'react'
 import { profile } from '@/lib/data/profile'
 import { hero } from '@/lib/data/hero'
-import { PHOTOS } from '@/lib/data/photos'
+import { PHOTOS, portraitSrcSet } from '@/lib/data/photos'
 import { resolveLogo } from '@/lib/data/logos'
 import Logo from '@/components/skills/Logo'
 import GlyphField from './GlyphField'
@@ -135,11 +135,15 @@ export default function Hero() {
             <div className="hero-pt-x">
               <div className="hero-pt-z">
                 <div className="hero-pt-y">
-                  {/* The LCP image: eager, high priority, sized (§7). */}
+                  {/* The LCP image: eager, high priority, sized (§7). Phones get the
+                      440 / 660 px encodes (the pane is the viewport width there);
+                      desktop draws it at 600 px from the 880 px master. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     className="hero-pt-img"
                     src={portrait.screen}
+                    srcSet={portraitSrcSet('screen')}
+                    sizes="(max-width: 767px) 100vw, 600px"
                     alt={hero.portraitAlt}
                     width={600}
                     height={600}
