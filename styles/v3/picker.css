@@ -974,15 +974,19 @@ html[data-pick='1'] .pk-shell .pk-img {
     text-wrap: balance;
   }
 }
-/* Under 768 px wide and 836 px high the face comes up beside the SCREEN
-   call to action (a phone held sideways, below; a stacked phone, whose hair
-   starts under the button from 836 px up): the button tightens its tracking
-   so it stays clear of the face. */
-@media (max-width: 767.98px) and (max-height: 835.98px) {
+/* Under 768 px wide the SCREEN call to action keeps its approved tracking
+   (0.26em: 246 px wide) wherever it fits, and tightens (0.16em: 207 px)
+   only where that button would meet the face or the seal. --pk-cta-fit is
+   its room in px, set per layout below (negative: it would not fit). The
+   clamps make a step, not a slope: the room × 1000 lies far past one bound
+   or the other, so the button is always one of the two, never between. */
+@media (max-width: 767.98px) {
   .pk-cta-s {
-    gap: 10px;
-    padding: 0 14px 0 16px;
-    letter-spacing: 0.16em;
+    --pk-cta-step: calc(var(--pk-cta-fit, 1px) * 1000);
+    gap: clamp(10px, 16px + var(--pk-cta-step), 16px);
+    padding: 0 clamp(14px, 20px + var(--pk-cta-step), 20px) 0
+      clamp(16px, 24px + var(--pk-cta-step), 24px);
+    letter-spacing: clamp(0.16em, 0.26em + var(--pk-cta-step), 0.26em);
     white-space: nowrap;
   }
 }
@@ -998,6 +1002,19 @@ html[data-pick='1'] .pk-shell .pk-img {
   }
   .pk-cta-p {
     white-space: nowrap;
+  }
+  /* the SCREEN button fits its block (which stops 8 px short of the face) */
+  .pk-cta-s {
+    --pk-cta-fit: calc(
+      min(
+          440px,
+          max(
+            calc(var(--pk-seam) - var(--pk-gutter) - 120px),
+            calc(var(--pk-seam) - 14.5cqh - var(--pk-gutter) - 8px)
+          )
+        ) -
+        246.2px
+    );
   }
   .pk-reg {
     display: none;
@@ -1023,8 +1040,27 @@ html[data-pick='1'] .pk-shell .pk-img {
        seam, the chin clears the seal, and the seal lands on the collar */
     --pk-fig: 33cqh;
     --pk-fig-top: 24cqh;
-    --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh);
+    --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh + var(--pk-fig-shift));
     --pk-gutter: 20px;
+    /* The hair: --pk-cta-hair is the figure's x at which the crown meets
+       the approved SCREEN button's lower corner (246 px wide), measured
+       from the silhouette at every height (the button's foot and the
+       figure both follow the height) and drawn as four lines at most
+       1.5 px past the measure (from 806 px up, below). Where even the
+       tighter button (40 px narrower) would meet the crown, the figure
+       moves 3cqh further right, its ear still in view — a step (× 1000),
+       as for the button. */
+    --pk-cta-hair: min(
+      266.57px - 9.346cqh,
+      381.8px - 25.167cqh,
+      453.3px - 34.694cqh,
+      514.53px - 42.613cqh
+    );
+    --pk-fig-shift: clamp(
+      0px,
+      (var(--pk-cta-hair) - 39.6px - 100cqw + 28cqh) * 1000,
+      3cqh
+    );
     /* A phone shorter than 692 px (where the PRINT button would meet the
        imprint) tightens the column by its height — every value here is the
        phone's own from 692 px up: the seal, the PRINT title, the gaps over
@@ -1113,6 +1149,19 @@ html[data-pick='1'] .pk-shell .pk-img {
     font-size: 16px;
   }
   .pk-cta-s {
+    /* its room: to the hair (--pk-cta-hair, above), and to the seal — the
+       button's box clears the disc's, across or above */
+    --pk-cta-fit: min(
+      var(--pk-fig-x) - var(--pk-cta-hair),
+      max(
+        50cqw - 0.4584 * var(--pk-seal) - 267.2px,
+        50cqh - 0.4584 * var(--pk-seal) - 1px -
+          (
+            clamp(68px, 12.14cqh, 84px) + 0.95 * clamp(40px, 7.52cqh, 52px) +
+              clamp(8px, 2.03cqh, 14px) + 24px + var(--pk-cm) + var(--pk-cta-h)
+          )
+      )
+    );
     height: var(--pk-cta-h);
     margin-top: var(--pk-cm);
   }
@@ -1291,18 +1340,24 @@ html[data-pick='1'] .pk-shell .pk-img {
     bottom: calc(var(--pk-mast-b) + 6px);
   }
 }
+/* The crown's edge turns at 806 px high (the button's corner meets it past
+   the notch over the brow), and from 836 px the crown sits under the
+   button: the hair leaves the SCREEN button room of its own. */
+@media (max-width: 767.98px) and (min-height: 806px) {
+  .pk {
+    --pk-cta-hair: max(4512.78px - 538.939cqh, 1296.96px - 140.448cqh, 652.8px - 61.386cqh);
+  }
+}
+@media (max-width: 767.98px) and (min-height: 836px) {
+  .pk {
+    --pk-cta-hair: -1000px;
+  }
+}
 /* A phone wide enough for a one-line caption (352 px) closes the imprint
-   down onto it as the phone gets shorter (60 px from 692 px up). A narrower
-   one, with the caption on two lines, moves the figure 3cqh further right,
-   so the face stays clear of the call to action. */
+   down onto it as the phone gets shorter (60 px from 692 px up). */
 @media (min-width: 352px) and (max-width: 767.98px) {
   .pk {
     --pk-mast-b: clamp(42px, 12cqh - 23px, 60px);
-  }
-}
-@media (max-width: 351.98px) {
-  .pk {
-    --pk-fig-x: calc(100cqw - var(--pk-fig) + 8cqh);
   }
 }
 /* On a phone under 692 px high the PRINT block rises only as far as a
