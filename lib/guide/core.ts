@@ -184,7 +184,18 @@ export function progressLabel(tried: readonly GuideId[]): string {
 
 /** The chip's accessible name: "8 things to try, n tried. Open the guide". */
 export function chipAriaLabel(tried: readonly GuideId[], open: boolean): string {
-  return `${GUIDE_CHIP_LABEL}, ${triedCount(tried)} tried. ${open ? 'Close' : 'Open'} the guide`
+  return `${GUIDE_CHIP_LABEL}${chipNameSuffix(tried, open)}`
+}
+
+/**
+ * What the chip adds, visually hidden, after its visible label: the chip's
+ * accessible name is computed from its content (the label the visitor sees,
+ * then this), never an aria-label that replaces the visible words
+ * (WCAG 2.5.3, label in name). The visible "n/8" count is aria-hidden; this
+ * says it in words.
+ */
+export function chipNameSuffix(tried: readonly GuideId[], open: boolean): string {
+  return `, ${triedCount(tried)} tried. ${open ? 'Close' : 'Open'} the guide`
 }
 
 /* --------------------------------------------------------------- coach marks */

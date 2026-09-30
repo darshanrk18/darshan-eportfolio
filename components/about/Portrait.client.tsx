@@ -58,6 +58,59 @@ import {
 
 type Phase = 'finished' | 'armed' | 'sweep'
 
+/**
+ * The character rows, drawn on a canvas. Decorative art, not reading text:
+ * as canvas pixels it stays out of the page's text (find-in-page, copy, the
+ * legible-font-size audit) as it is out of the a11y tree. Same geometry as
+ * the v2 <pre> it replaces: characters at 2.594 % of the frame width
+ * (64 columns fill it), line height 1, the block centred; the face, colour
+ * and opacity come from CSS (.pf-chars canvas), so the edition's mono face
+ * and steel tone apply. Redrawn on resize and once the fonts are ready.
+ */
+function CharacterRows({ rows }: { rows: readonly string[] }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const canvas = ref.current
+    const box = canvas?.parentElement
+    if (!canvas || !box) return
+    let frame = 0
+    const draw = () => {
+      frame = 0
+      const w = box.clientWidth
+      const h = box.clientHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx || w === 0 || h === 0) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, w, h)
+      const style = getComputedStyle(canvas)
+      const size = w * 0.02594
+      ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`
+      ctx.fillStyle = style.color
+      ctx.textBaseline = 'top'
+      const advance = ctx.measureText('M').width
+      const longest = rows.reduce((n, row) => Math.max(n, row.length), 0)
+      const x = (w - longest * advance) / 2
+      const y = (h - rows.length * size) / 2
+      rows.forEach((row, i) => ctx.fillText(row, x, y + i * size))
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(draw)
+    }
+    schedule()
+    void document.fonts?.ready.then(schedule)
+    const observer = new ResizeObserver(schedule)
+    observer.observe(box)
+    return () => {
+      observer.disconnect()
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [rows])
+  return <canvas ref={ref} />
+}
+
 /** Once per page load, whichever edition completes a reveal first. */
 let guideReported = false
 function reportTried(): void {
@@ -227,9 +280,10 @@ export default function Portrait({
     >
       <i aria-hidden="true" className="pf-rim ed-screen-only" />
       <div className="pf-body">
-        {/* SCREEN: the character rows the photograph resolves from. */}
+        {/* SCREEN: the character rows the photograph resolves from (a canvas —
+            see CharacterRows). */}
         <div className="pf-chars ed-screen-only" aria-hidden="true">
-          <pre>{PHOTO_ASCII.join('\n')}</pre>
+          <CharacterRows rows={PHOTO_ASCII} />
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -239,6 +293,7 @@ export default function Portrait({
           width={portrait.width}
           height={portrait.height}
           loading="lazy"
+          fetchPriority="low"
           decoding="async"
         />
         <i aria-hidden="true" className="pf-g pf-g-room ed-screen-only" />
@@ -258,13 +313,14 @@ export default function Portrait({
           width={portrait.width}
           height={portrait.height}
           loading="lazy"
+          fetchPriority="low"
           decoding="async"
         />
         <div className="ed-ht pf-ht ed-print-only" aria-hidden="true">
           <div className="ed-ht-in">
             <i className="pf-ht-bg" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={portrait.print} alt="" width={portrait.width} height={portrait.height} loading="lazy" decoding="async" />
+            <img src={portrait.print} alt="" width={portrait.width} height={portrait.height} loading="lazy" fetchPriority="low" decoding="async" />
             <i className="ed-ht-scr" />
           </div>
         </div>

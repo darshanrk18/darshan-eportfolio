@@ -86,14 +86,16 @@ html[data-edition='screen'] {
     transition: opacity 150ms var(--ease-swift);
     container-type: inline-size;
   }
-  .pf-chars pre {
-    margin: 0;
+  /* The character rows are drawn on this canvas (Portrait.client.tsx
+     CharacterRows): it reads its face, weight and colour from here and
+     sizes the characters to 2.594 % of the frame width (64 columns). */
+  .pf-chars canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     font-family: var(--font-mono);
-    /* 64 columns fill the frame width: char-width ≈ 0.6em ⇒ size = w/64 × 1.66 */
-    font-size: 11px;
-    font-size: 2.594cqw;
-    line-height: 1;
-    white-space: pre;
+    font-weight: 400;
     color: var(--ed-steel2);
     opacity: 0.55;
   }
