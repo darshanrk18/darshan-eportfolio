@@ -23,6 +23,8 @@
  * On a touch screen (no keys, no ⌘K / Jump chip) the "how" and the footer
  * use their touch wording — both render, CSS shows one (InputWords); off
  * Apple platforms the keycap reads "Ctrl K", like the top bar's chip.
+ * PRINT's footer also uses the touch wording beside the compact bar, which
+ * draws no Jump chip either (a narrow window with a mouse).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
@@ -257,9 +259,23 @@ export default function GuideSurface({ anchor, onClose }: GuideSurfaceProps) {
           {/* Siblings, not one wrapper: the button's flex gap stays between
               the words and the keycap. */}
           <button type="button" className="gd-more" onClick={more}>
-            <span className="mouse-only">{GUIDE_MORE_LABEL[edition]}</span>
-            {edition === 'screen' ? <kbd className="ed-kbd mouse-only">{paletteKey}</kbd> : null}
-            <span className="touch-only">{GUIDE_MORE_TOUCH_LABEL}</span>
+            {edition === 'screen' ? (
+              <>
+                <span className="mouse-only">{GUIDE_MORE_LABEL.screen}</span>
+                <kbd className="ed-kbd mouse-only">{paletteKey}</kbd>
+                <span className="touch-only">{GUIDE_MORE_TOUCH_LABEL}</span>
+              </>
+            ) : (
+              <>
+                {/* "Jump" names the masthead's Jump chip, so these words
+                    carry the chip's own hides: touch (.mouse-only) and the
+                    compact bar (.sig-nav-desk, chrome.css). The plain words
+                    show where the chip is not drawn: with the compact bar's
+                    Menu (.sig-nav-phone) and on touch (guide.css). */}
+                <span className="mouse-only sig-nav-desk">{GUIDE_MORE_LABEL.print}</span>
+                <span className="sig-nav-phone gd-more-plain">{GUIDE_MORE_TOUCH_LABEL}</span>
+              </>
+            )}
           </button>
         </footer>
       </section>

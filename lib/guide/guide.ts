@@ -48,7 +48,10 @@ export const GUIDE_MORE_LABEL: Record<Edition, string> = {
   screen: 'More in',
   print: 'More under Jump',
 }
-/** The footer on a touch screen: no keycap, and no "Jump" (the chip is hidden on touch). */
+/**
+ * The footer on a touch screen: no keycap, and no "Jump" (the chip is hidden
+ * on touch). PRINT uses it beside the compact bar too, which has no Jump chip.
+ */
 export const GUIDE_MORE_TOUCH_LABEL = 'More things to try'
 /** The palette's Next row prefix: "Try: Light up the toolkit". */
 export const GUIDE_PALETTE_PREFIX = 'Try: '

@@ -181,6 +181,13 @@ Put the class on the element itself when the whole control is keyboard-only
 (the hero's ⌘K hint: its wrapper is `.hero-foot-l mouse-only`). Server and
 client render the same markup, so there is no hydration mismatch and no JS.
 
+Words that name a control on screen carry that control's own hides, so
+they can never point at something that is not drawn. PRINT's guide footer
+"More under Jump" names the masthead's Jump chip: its span is `.mouse-only
+sig-nav-desk`, like the chip, and the plain "More things to try" is
+`.sig-nav-phone gd-more-plain` (with the compact bar's Menu, and on touch
+by `styles/v3/guide.css`).
+
 ## 5. Switching (switch.css)
 
 `switchEdition(next, { originEl, via })` (lib/commands/context.ts):

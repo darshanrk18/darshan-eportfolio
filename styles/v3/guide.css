@@ -283,6 +283,15 @@ html[data-edition='print'] {
   color: inherit;
   cursor: pointer;
 }
+/* PRINT's footer names the Jump chip only where the bar draws it: its
+   words carry the chip's hides (.mouse-only, .sig-nav-desk), and the plain
+   words (.sig-nav-phone: shown with the compact bar's Menu, chrome.css)
+   also show on touch, where the chip never is. Exactly one shows. */
+@media (hover: none) and (pointer: coarse) {
+  .gd-more .gd-more-plain {
+    display: inline;
+  }
+}
 
 /* phone: a bottom sheet with a handle, no notch */
 .gd[data-sheet] {

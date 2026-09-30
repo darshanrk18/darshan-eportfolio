@@ -265,6 +265,27 @@ describe('mouse or touch words (§4a)', () => {
     expect(css('styles/v3/hero.css')).not.toMatch(/@media \(hover: none\) \{ \.hero-pill/)
   })
 
+  it("PRINT's guide footer says Jump only where the bar draws the Jump chip", () => {
+    // the words carry the chip's own hides: touch, and the compact bar's .sig-nav-desk
+    expect(read('components/chrome/Navbar.tsx')).toContain('className="sig-nav-kbd sig-nav-desk"')
+    const surface = read('components/guide/GuideSurface.client.tsx')
+    expect(surface).toContain(
+      '<span className="mouse-only sig-nav-desk">{GUIDE_MORE_LABEL.print}</span>'
+    )
+    // the plain words show with the compact bar's Menu, and on touch
+    expect(surface).toContain(
+      '<span className="sig-nav-phone gd-more-plain">{GUIDE_MORE_TOUCH_LABEL}</span>'
+    )
+    const nav = css('styles/v3/chrome.css')
+    expect(nav).toContain('.sig-nav-phone { display: none; }')
+    expect(nav).toMatch(
+      /@media \(max-width: [\d.]+px\) \{ [^}]*\.sig-nav-desk,[^}]*\{ display: none !important; \} \.sig-nav-phone \{ display: inline-flex; \}/
+    )
+    expect(css('styles/v3/guide.css')).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .gd-more .gd-more-plain { display: inline; } }`
+    )
+  })
+
   it('InputWords renders both wordings (server markup too) and a shared wording once', async () => {
     const { renderToStaticMarkup } = await import('react-dom/server')
     const { createElement } = await import('react')
