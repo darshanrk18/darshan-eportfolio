@@ -37,8 +37,14 @@ export const profile = {
   githubUrl: 'https://github.com/darshanrk18',
   linkedinUrl: 'https://linkedin.com/in/darshankonnur',
   resumePdf: '/resume/darshan-konnur.pdf',
-  /** Verified git remote of this site (navbar branch chip + footer view-source). */
+  /** Git remote of this site (palette "Open repository", Build info). */
   siteRepoUrl: 'https://github.com/darshanrk18/darshan-eportfolio',
+  /**
+   * The repo is private, so a visitor following either link gets GitHub's
+   * 404: both stay hidden until it is public. Make the repo public, then set
+   * this to true.
+   */
+  siteRepoPublic: false,
   siteUrl,
   /**
    * Incoming full-time role (owner-confirmed). Render as FUTURE only —

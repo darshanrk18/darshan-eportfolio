@@ -94,7 +94,7 @@ const skillCommands: Command[] = allSkillNodes.map((node) => ({
   },
 }))
 
-export const commands: readonly Command[] = [
+const allCommands: Command[] = [
   ...navigateCommands,
   {
     id: 'go-cv',
@@ -364,6 +364,11 @@ export const commands: readonly Command[] = [
     },
   },
 ]
+
+/** Every command; the repo link only while the repo is public (profile.siteRepoPublic). */
+export const commands: readonly Command[] = allCommands.filter(
+  (c) => c.id !== 'view-source' || profile.siteRepoPublic
+)
 
 /** Resolve a command by exact id. */
 export function getCommand(id: string): Command | undefined {
