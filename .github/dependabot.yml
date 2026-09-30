@@ -1,0 +1,82 @@
+# Dependabot version updates: a weekly npm run and a monthly Actions run.
+# Security updates are switched on in the repository settings; they open when
+# an advisory is published, not on this schedule.
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: America/New_York
+    # A release has to be out this long before it is proposed, so a
+    # compromised or quickly pulled version rarely reaches a pull request.
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
+    labels:
+      - dependencies
+    groups:
+      # The framework moves as one: these versions are released together.
+      next-and-react:
+        patterns:
+          - next
+          - react
+          - react-dom
+          - '@next/*'
+          - eslint-config-next
+      types:
+        patterns:
+          - '@types/*'
+      # Every other devDependency, minor and patch only.
+      dev-tooling:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Major versions of the framework and the CSS engine are manual
+      # migrations (codemods, config changes, the bundle budget re-checked).
+      - dependency-name: next
+        update-types: ['version-update:semver-major']
+      - dependency-name: react
+        update-types: ['version-update:semver-major']
+      - dependency-name: react-dom
+        update-types: ['version-update:semver-major']
+      - dependency-name: tailwindcss
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@tailwindcss/*'
+        update-types: ['version-update:semver-major']
+      # These follow the majors above; bumping them alone would split a pair.
+      - dependency-name: eslint-config-next
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
+      # The Node types match the Node version in .nvmrc (24); raise both together.
+      - dependency-name: '@types/node'
+        versions: ['>=25']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      time: '09:00'
+      timezone: America/New_York
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: chore(ci)
+    labels:
+      - dependencies
+    groups:
+      github-actions:
+        patterns:
+          - '*'
