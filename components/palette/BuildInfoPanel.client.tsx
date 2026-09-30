@@ -222,10 +222,15 @@ export default function BuildInfoPanel({ onClose }: BuildInfoPanelProps) {
         </dl>
 
         <p className="sig-bi-foot">
-          Every figure here is measured, not typed.{' '}
-          <a href={profile.siteRepoUrl} target="_blank" rel="noopener noreferrer">
-            Source on GitHub ↗
-          </a>
+          Every figure here is measured, not typed.
+          {profile.siteRepoPublic ? (
+            <>
+              {' '}
+              <a href={profile.siteRepoUrl} target="_blank" rel="noopener noreferrer">
+                Source on GitHub ↗
+              </a>
+            </>
+          ) : null}
         </p>
       </div>
     </>

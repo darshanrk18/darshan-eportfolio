@@ -9,6 +9,7 @@ import {
   getCommand,
   sectionTabs,
 } from '@/lib/commands/registry'
+import { profile } from '@/lib/data/profile'
 import { projectSlugs } from '@/lib/data/projects'
 import { allSkillNodes } from '@/lib/data/skills'
 
@@ -81,8 +82,19 @@ describe('v2 command pack (V2_SPEC §7, §10, §11.2)', () => {
   })
 
   it('retitled view-source so the repo link and source-mode never collide (§0.3)', () => {
-    expect(getCommand('view-source')?.title).toBe('Open repository ↗')
+    if (profile.siteRepoPublic) expect(getCommand('view-source')?.title).toBe('Open repository ↗')
     expect(getCommand('source-mode')?.title).toBe('View source mode — annotate this page')
+  })
+
+  it('offers the repo link only while the repo is public (no link to a 404)', () => {
+    if (profile.siteRepoPublic) {
+      expect(findByAlias('repo')?.id).toBe('view-source')
+      expect(findByAlias('github')?.id).toBe('view-source')
+    } else {
+      expect(getCommand('view-source')).toBeUndefined()
+      expect(findByAlias('repo')).toBeUndefined()
+      expect(commands.some((c) => c.title.includes('repository'))).toBe(false)
+    }
   })
 
   it('resolves the v2 terminal/palette-facing aliases (§11.2 bridges)', () => {
@@ -92,9 +104,6 @@ describe('v2 command pack (V2_SPEC §7, §10, §11.2)', () => {
     expect(findByAlias('arcade')?.id).toBe('go-arcade')
     expect(findByAlias('crt')?.id).toBe('crt-mode')
     expect(findByAlias('source mode')?.id).toBe('source-mode')
-    // the old repo-opening aliases stay on view-source, uncollided
-    expect(findByAlias('repo')?.id).toBe('view-source')
-    expect(findByAlias('github')?.id).toBe('view-source')
   })
 
   it('every command id the §10.4 demo script drives resolves in the registry', () => {
