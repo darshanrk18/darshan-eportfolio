@@ -767,12 +767,12 @@ export default function GenerativePlate({ variant, seed, animate = false }: Gene
     draw()
   }, [draw])
 
-  // Re-render the static frame when the theme flips (canvas colors are live tokens).
+  // Re-render the static frame when the edition flips (canvas colours are live tokens).
   useEffect(() => {
     const observer = new MutationObserver(() => drawRef.current())
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme'],
+      attributeFilter: ['data-edition'],
     })
     return () => observer.disconnect()
   }, [])

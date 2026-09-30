@@ -42,7 +42,7 @@ const ROW_Y0 = 58
 const ROW_H = 28
 const BAR_X = 96
 const BAR_W = 216
-const MONO = 'var(--font-jbmono), monospace'
+const MONO = 'var(--font-mono), monospace'
 
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
@@ -150,7 +150,7 @@ export default function TicketForgeViz() {
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        demo data — six engineers scored against an incoming ticket; the top-ranked pick is
+        Demo data: six engineers scored against an incoming ticket; the top-ranked one is
         assigned
       </figcaption>
     </figure>

@@ -7,7 +7,7 @@
  * to convergence. Loops on the shared ticker; reduced motion = final frame.
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import { useDemoTicker } from './useDemoTicker'
 
 const LOOP_MS = 8200
@@ -75,6 +75,8 @@ export default function MipViz() {
     setT((prev) => (prev + dtMs) % LOOP_MS)
   }, [])
   const { ref, reduced } = useDemoTicker(onTick)
+  // The clip id must be unique per mount (the plot can be on screen twice).
+  const clipId = `mip-plot-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`
   const now = reduced ? REDUCED_T : t
 
   const baseIn = clamp01(now / T_BASE)
@@ -99,7 +101,7 @@ export default function MipViz() {
         className="w-full rounded-card border border-hairline bg-panel"
       >
         <defs>
-          <clipPath id="mip-plot">
+          <clipPath id={clipId}>
             <rect x={px(0)} y={py(8)} width={10 * SX} height={8 * SY} />
           </clipPath>
         </defs>
@@ -145,7 +147,7 @@ export default function MipViz() {
                   y={py((av + bv) / 2) - 4}
                   fill="var(--text-secondary)"
                   fontSize="8"
-                  fontFamily="var(--font-jbmono), monospace"
+                  fontFamily="var(--font-mono), monospace"
                 >
                   {cut.label}
                 </text>
@@ -156,7 +158,7 @@ export default function MipViz() {
 
         {/* objective line sweeping to the optimum */}
         {sweepT > 0 && (
-          <g clipPath="url(#mip-plot)">
+          <g clipPath={`url(#${clipId})`}>
             <line
               x1={px(objA[0])}
               y1={py(objA[1])}
@@ -192,7 +194,7 @@ export default function MipViz() {
           textAnchor="end"
           fill={converged ? 'var(--accent-signal)' : 'var(--text-primary)'}
           fontSize="12"
-          fontFamily="var(--font-jbmono), monospace"
+          fontFamily="var(--font-mono), monospace"
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           {`z = ${z.toFixed(1)}${converged ? ' ✓' : ''}`}
@@ -203,15 +205,15 @@ export default function MipViz() {
           textAnchor="end"
           fill="var(--text-secondary)"
           fontSize="9"
-          fontFamily="var(--font-jbmono), monospace"
+          fontFamily="var(--font-mono), monospace"
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           {`cuts ${cutsLanded}/3`}
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        illustration — a feasible region tightened by constraint cuts while the objective line
-        sweeps to the optimum vertex and the readout converges
+        Illustration: each constraint trims the feasible region until the objective lands on
+        the best allocation
       </figcaption>
     </figure>
   )
