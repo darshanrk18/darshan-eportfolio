@@ -15,7 +15,7 @@ const LOOP_MS = 9000
 const STEP_MS = 480
 const GROW_MS = 360
 const START = 300
-const MONO = 'var(--font-jbmono), monospace'
+const MONO = 'var(--font-mono), monospace'
 
 const MAIN_Y = 120
 const BRANCH_A_Y = 64
@@ -186,8 +186,7 @@ export default function TrackfolioViz() {
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        demo data — resume versions branch per role; each submission freezes an immutable
-        snapshot
+        Demo data: resume versions branch per role; each submission freezes a snapshot
       </figcaption>
     </figure>
   )

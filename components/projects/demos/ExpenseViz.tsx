@@ -79,7 +79,7 @@ function Edge({ debt, amount, color, opacity }: { debt: Debt; amount: number; co
         textAnchor="middle"
         fill={color}
         fontSize="10"
-        fontFamily="var(--font-jbmono), monospace"
+        fontFamily="var(--font-mono), monospace"
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         ${amount}
@@ -144,7 +144,7 @@ export default function ExpenseViz() {
                 textAnchor="middle"
                 fill="var(--text-primary)"
                 fontSize="13"
-                fontFamily="var(--font-jbmono), monospace"
+                fontFamily="var(--font-mono), monospace"
               >
                 {id}
               </text>
@@ -158,13 +158,13 @@ export default function ExpenseViz() {
           textAnchor="middle"
           fill={settled ? 'var(--accent-signal)' : 'var(--text-secondary)'}
           fontSize="10"
-          fontFamily="var(--font-jbmono), monospace"
+          fontFamily="var(--font-mono), monospace"
         >
           {settled ? '5 IOUs settled with 2 transfers ✓' : 'simplifying debts…'}
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        demo data — five IOUs between four people reduce to two settlement transfers
+        Demo data: five IOUs between four people settle with two transfers
       </figcaption>
     </figure>
   )
