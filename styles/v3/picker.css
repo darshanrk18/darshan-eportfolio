@@ -2,8 +2,10 @@
    SIGNAL v3 — picker.css  (V3_SPEC §2.5, inventory X1-Picker, MOTION X1)
    "Choose your edition": the first screen a visitor meets. OWNER: C5.
    Imported by components/edition/EditionPicker.client.tsx (the gate), so it
-   loads on '/' only; the surface markup is the lazy
-   EditionPickerSurface.client.tsx chunk.
+   loads on '/' only. The markup is components/edition/PickerFace.tsx,
+   rendered twice: the server SHELL (PickerShell.tsx, in the page HTML, shown
+   under html[data-pick='1'] from the first paint) and the lazy SURFACE
+   (EditionPickerSurface.client.tsx) that replaces it once hydrated.
 
    The picker is EDITION-INDEPENDENT: its SCREEN half is always design 41
    and its PRINT half is always the comic, whatever html[data-edition] says
@@ -22,9 +24,10 @@
    figure right-aligned with its shoulders on the seam (never the face).
    ========================================================================== */
 
-/* Pre-paint cover: while the picker is eligible, hide the page from the
-   first paint until the surface chunk arrives (the SCREEN field colour,
-   which the picker's left half continues). Cleared with the attribute. */
+/* Pre-paint cover: while the picker is eligible, a base under the picker
+   from the first paint (the SCREEN field colour, which the picker's left
+   half continues) — nothing of the page can show through a seam while the
+   shell and the surface trade places. Cleared with the attribute. */
 html[data-pick='1'] body::before {
   content: '';
   position: fixed;
@@ -32,6 +35,51 @@ html[data-pick='1'] body::before {
   z-index: 89;
   background: #050607;
   pointer-events: none;
+}
+/* The page under the picker does not scroll — from the first paint, before
+   any JS (the surface sets the same inline style once it is live; both go
+   with the attribute at the choice). */
+html[data-pick='1'] body {
+  overflow: hidden;
+}
+
+/* ---- the SHELL and the SURFACE (components/edition/PickerShell.tsx,
+   EditionPickerSurface.client.tsx): one face, rendered twice -------------
+   The shell is server HTML in every page: shown ONLY while html[data-pick='1']
+   (written pre-paint → a first visit paints the whole picker at first paint,
+   no JS), display:none otherwise, and gone again the moment the surface has
+   taken over (html[data-picker-live='1']). Its portraits are backgrounds
+   gated by the same attribute, so a return visit fetches nothing. The
+   surface mounts invisible and shows itself (data-live) in the same frame
+   the shell leaves — no fade, no restart. The shell is live to the hand
+   from the first paint: its inline script (PickerShell.tsx) queues a tap
+   on html[data-pick-queued] and marks the half `.is-queued` (the pressed
+   look below); hover on the shell is the same as on the surface (every
+   data-hover rule has a `.pk-shell:has(:hover)` twin). */
+.pk-shell {
+  display: none;
+}
+html[data-pick='1'] .pk-shell {
+  display: block;
+}
+html[data-picker-live='1'] .pk-shell {
+  display: none;
+}
+.pk-live:not([data-live]) {
+  visibility: hidden;
+}
+.pk-fig .pk-img {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 50% 0;
+}
+html[data-pick='1'] .pk-shell .pk-img {
+  background-image: var(--pk-src);
+}
+@media (max-width: 767.98px) {
+  html[data-pick='1'] .pk-shell .pk-img {
+    background-image: var(--pk-src-sm);
+  }
 }
 
 .pk {
@@ -105,12 +153,33 @@ html[data-pick='1'] body::before {
 .pk-half:focus {
   outline: none;
 }
+/* The focus ring. The surface's initial focus is programmatic and lands in
+   the swap frame: `data-quiet` (lifted ~300 ms later, or on the first key)
+   holds the ring's colour back for that frame, then it eases in — the swap
+   changes no pixel and the focused control is still visibly focused. */
 .pk-half:focus-visible {
-  outline: 2px solid var(--pk-champ);
+  outline: 2px solid transparent;
   outline-offset: -4px;
+  transition: outline-color 200ms var(--ease-swift, ease);
 }
-.pk-half-p:focus-visible {
+.pk:not([data-quiet]) .pk-half:focus-visible {
+  outline-color: var(--pk-champ);
+}
+.pk:not([data-quiet]) .pk-half-p:focus-visible {
   outline-color: var(--pk-ink);
+}
+/* A choice made on the shell before the surface is live: pressed, pending. */
+.pk-shell .pk-half.is-queued {
+  cursor: progress;
+}
+.pk-half.is-queued .pk-cta-s {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 18px rgba(198, 183, 143, 0.22);
+}
+.pk-half.is-queued .pk-cta-p {
+  background: #b11e25;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--pk-ink);
 }
 
 /* ============================================================================
@@ -189,7 +258,8 @@ html[data-pick='1'] body::before {
   );
   transition: opacity 400ms var(--ease-swift, ease);
 }
-.pk[data-hover='screen'] .pk-halo {
+.pk[data-hover='screen'] .pk-halo,
+.pk-shell:has(.pk-half-s:hover) .pk-halo {
   opacity: 1.15;
 }
 .pk-gate {
@@ -241,10 +311,10 @@ html[data-pick='1'] body::before {
   left: var(--pk-fig-x);
   width: var(--pk-fig);
   height: var(--pk-fig);
-  clip-path: url(#pk-sil);
+  /* clip-path: the silhouette, set inline (its id is namespaced per copy) */
   pointer-events: none;
 }
-.pk-fig img,
+.pk-fig .pk-img,
 .pk-fig .pk-ov {
   position: absolute;
   inset: 0;
@@ -254,7 +324,7 @@ html[data-pick='1'] body::before {
 }
 /* The photograph keeps its own proportions inside the square figure box:
    a replacement portrait covers it from the top instead of stretching. */
-.pk-fig img {
+.pk-fig img.pk-img {
   object-fit: cover;
   object-position: 50% 0;
 }
@@ -281,7 +351,8 @@ html[data-pick='1'] body::before {
   mix-blend-mode: screen;
   transition: opacity 400ms var(--ease-swift, ease);
 }
-.pk[data-hover='screen'] .pk-rim {
+.pk[data-hover='screen'] .pk-rim,
+.pk-shell:has(.pk-half-s:hover) .pk-rim {
   opacity: 1.15;
 }
 
@@ -348,8 +419,9 @@ html[data-pick='1'] body::before {
 .pk-cta-s svg {
   display: block;
 }
-.pk-half-s:hover .pk-cta-s,
-.pk-half-s:focus-visible .pk-cta-s {
+.pk[data-hover='screen'] .pk-cta-s,
+.pk-shell:has(.pk-half-s:hover) .pk-cta-s,
+.pk:not([data-quiet]) .pk-half-s:focus-visible .pk-cta-s {
   filter: brightness(1.06);
   box-shadow: 0 12px 34px rgba(198, 183, 143, 0.28);
 }
@@ -415,10 +487,10 @@ html[data-pick='1'] body::before {
   animation: pk-seal-in 400ms var(--ease-out-expo, ease-out) both;
 }
 .pk-seal .pk-seal-l {
-  clip-path: url(#pk-cl);
+  clip-path: var(--pk-clip-l);
 }
 .pk-seal .pk-seal-r {
-  clip-path: url(#pk-cr);
+  clip-path: var(--pk-clip-r);
 }
 .pk-seal .pk-spec {
   animation: pk-spec 600ms ease-out 250ms both;
@@ -438,10 +510,12 @@ html[data-pick='1'] body::before {
   animation: pk-sheet-in 300ms var(--ease-out-expo, ease-out) 500ms both;
   transition: transform 320ms var(--ease-swift, ease);
 }
-.pk[data-hover='screen'] .pk-sheet-wrap {
+.pk[data-hover='screen'] .pk-sheet-wrap,
+.pk-shell:has(.pk-half-s:hover) .pk-sheet-wrap {
   transform: translateX(4px);
 }
-.pk[data-hover='print'] .pk-sheet-wrap {
+.pk[data-hover='print'] .pk-sheet-wrap,
+.pk-shell:has(.pk-half-p:hover) .pk-sheet-wrap {
   transform: translateX(-6px);
 }
 .pk-fiber {
@@ -517,7 +591,8 @@ html[data-pick='1'] body::before {
   transition: transform 400ms var(--ease-swift, ease);
   pointer-events: none;
 }
-.pk[data-hover='print'] .pk-sun {
+.pk[data-hover='print'] .pk-sun,
+.pk-shell:has(.pk-half-p:hover) .pk-sun {
   transform: rotate(3deg);
 }
 .pk-sun-dots {
@@ -548,7 +623,7 @@ html[data-pick='1'] body::before {
   mix-blend-mode: multiply;
   opacity: 0.6;
 }
-.pk-fig-p .pk-ht img {
+.pk-fig-p .pk-ht .pk-ht-img {
   filter: grayscale(1) brightness(1.27) contrast(1.1) blur(0.3px);
 }
 .pk-fig-p .pk-scr {
@@ -597,7 +672,8 @@ html[data-pick='1'] body::before {
   transition: transform 220ms var(--ease-swift, ease);
   pointer-events: none;
 }
-.pk[data-hover='print'] .pk-burst {
+.pk[data-hover='print'] .pk-burst,
+.pk-shell:has(.pk-half-p:hover) .pk-burst {
   animation: pk-pop 360ms var(--ease-swift, ease);
 }
 /* masthead, on the same axis as the screen's */
@@ -673,8 +749,9 @@ html[data-pick='1'] body::before {
     box-shadow 160ms var(--ease-swift, ease),
     background-color 160ms var(--ease-swift, ease);
 }
-.pk-half-p:hover .pk-cta-p,
-.pk-half-p:focus-visible .pk-cta-p {
+.pk[data-hover='print'] .pk-cta-p,
+.pk-shell:has(.pk-half-p:hover) .pk-cta-p,
+.pk:not([data-quiet]) .pk-half-p:focus-visible .pk-cta-p {
   background: #b11e25;
 }
 .pk-half-p:active .pk-cta-p {
@@ -896,10 +973,10 @@ html[data-pick='1'] body::before {
     height: 96px;
   }
   .pk-seal .pk-seal-l {
-    clip-path: url(#pk-ct);
+    clip-path: var(--pk-clip-t);
   }
   .pk-seal .pk-seal-r {
-    clip-path: url(#pk-cb);
+    clip-path: var(--pk-clip-b);
   }
   .pk-sheet-wrap {
     left: 0;
@@ -909,10 +986,12 @@ html[data-pick='1'] body::before {
     filter: drop-shadow(0 -4px 7px rgba(0, 0, 0, 0.42)) drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.5));
     animation: none;
   }
-  .pk[data-hover='screen'] .pk-sheet-wrap {
+  .pk[data-hover='screen'] .pk-sheet-wrap,
+  .pk-shell:has(.pk-half-s:hover) .pk-sheet-wrap {
     transform: translateY(4px);
   }
-  .pk[data-hover='print'] .pk-sheet-wrap {
+  .pk[data-hover='print'] .pk-sheet-wrap,
+  .pk-shell:has(.pk-half-p:hover) .pk-sheet-wrap {
     transform: translateY(-6px);
   }
   .pk-fiber {

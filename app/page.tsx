@@ -1,6 +1,6 @@
 /**
  * Home — composes the v3 page order (V3_SPEC §3):
- *   EditionPicker · IntroGate · LenisProvider · Navbar · ReducedMotionBanner
+ *   PickerShell · EditionPicker · IntroGate · LenisProvider · Navbar · ReducedMotionBanner
  *   · main [Hero About Skills Projects Experience Contact] · Footer
  *   · CommandPalette · Guide · BuildInfo · CursorHalo
  * RSC shell; every island is a client component that hydrates on its own
@@ -14,6 +14,7 @@
  * palette's Build info (§1.8).
  */
 
+import PickerShell from '@/components/edition/PickerShell'
 import EditionPicker from '@/components/edition/EditionPicker.client'
 import IntroGate from '@/components/intro/IntroGate.client'
 import LenisProvider from '@/components/chrome/LenisProvider'
@@ -36,6 +37,10 @@ export default function HomePage() {
     <>
       {/* Scroll-to-top sentinel (styles/v3/chrome.css .sig-top). */}
       <div id="top" className="sig-top" />
+      {/* The picker's face as server HTML (shown only under html[data-pick='1'],
+          so a first visit paints it at first paint); the gate's lazy surface
+          replaces it once hydrated (§2.5, §7). */}
+      <PickerShell />
       <EditionPicker />
       <IntroGate />
       {/* v2 §5.1 — Lenis mounts on '/' ONLY (never layout: /cv stays zero-JS). */}

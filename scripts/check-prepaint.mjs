@@ -23,7 +23,10 @@ if (!file) {
 }
 const html = readFileSync(file, 'utf8')
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1])
-const script = scripts.find((s) => s.includes('signal.edition'))
+// The pre-paint script is the one that reads the stored edition AND the
+// reduced-motion preference (the picker shell's inline script also names the
+// storage key, for its fallback, but never the media query).
+const script = scripts.find((s) => s.includes('signal.edition') && s.includes('prefers-reduced-motion'))
 if (!script) {
   console.error('[check-prepaint] the pre-paint inline script is missing from', path.relative(root, file))
   process.exit(1)
