@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — the hero (v3 S1 stage + chapter cards, P1 cover).
+ * Content data — the hero (v3 S1 stage + chapter cards, P1 cover).
  * Every visitor-facing string here is either read from profile / projects /
  * experience / photos or is the approved round-2/3 frame copy for the hero
  * (S1-Hero.md §3 + §9, P1-Cover.md §3 + §9): the cards abbreviate, the

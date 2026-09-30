@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — profile (CONTENT_FINAL 2026-09-23, owner-confirmed).
+ * Content data — profile (CONTENT_FINAL 2026-09-23, owner-confirmed).
  * Nothing outside lib/data/* may appear as a factual claim on the site.
  * Positioning is "Incoming SDE @ AWS — Jan 2027" everywhere; grade-point
  * figures are excluded from the site entirely.
@@ -7,7 +7,7 @@
 
 /** Canonical site origin — used by metadataBase, sitemap, robots, JSON-LD. */
 export const siteUrl: string =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://darshan-eportfolio.vercel.app'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.darshankonnur.com'
 
 export const profile = {
   name: 'Darshan Ravindra Konnur',
@@ -86,7 +86,9 @@ export const profile = {
     title: 'Allocation Optimization of Medical Samples For Distributed Testing',
     summary:
       'IEEE-published research applying Mixed Integer Programming to optimal medical sample allocation.',
-    doi: undefined as string | undefined,
+    /* Authors, proceedings, year, pages: lib/data/publication.ts (server-only,
+       so the client bundle that imports this file doesn't carry them). */
+    doi: '10.1109/ICEECCOT52851.2021.9707992' as string | undefined,
     paperUrl: 'https://ieeexplore.ieee.org/document/9707992' as string | undefined,
   },
   /** Terminal copy (CONTENT_FINAL "Terminal / palette / SEO"). */

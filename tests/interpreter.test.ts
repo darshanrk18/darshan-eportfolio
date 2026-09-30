@@ -63,7 +63,7 @@ function makeIO(): TerminalIO & {
 
 describe('terminal interpreter', () => {
   it('exports the banner', () => {
-    expect(BANNER).toBe("SIGNAL v1.0 — type 'help'")
+    expect(BANNER).toBe("Darshan Konnur — type 'help'")
   })
 
   it('unknown command prints the error line in error tone', async () => {

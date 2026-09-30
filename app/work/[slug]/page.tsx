@@ -17,7 +17,8 @@ import CaseFile from '@/components/projects/CaseFile'
 import DkSeal from '@/components/chrome/DkSeal'
 import WorkStage from '@/components/work/WorkStage'
 import { getProject, projectSlugs, workCopy } from '@/lib/data/projects'
-import { profile } from '@/lib/data/profile'
+import { profile, siteUrl } from '@/lib/data/profile'
+import { shareMeta } from '@/lib/utils/share'
 
 import '@/styles/v3/work.css'
 
@@ -39,6 +40,11 @@ export async function generateMetadata({ params }: WorkPageProps): Promise<Metad
     title: project.name,
     description: project.oneLiner,
     alternates: { canonical: `/work/${project.slug}` },
+    ...shareMeta(
+      `/work/${project.slug}`,
+      `${project.name} — ${profile.displayName}`,
+      project.oneLiner
+    ),
   }
 }
 
@@ -52,9 +58,8 @@ export default async function WorkPage({ params }: WorkPageProps) {
     '@type': 'SoftwareSourceCode',
     name: project.name,
     description: project.oneLiner,
-    ...(project.stack.length > 0 ? { programmingLanguage: project.stack[0] } : {}),
     author: { '@type': 'Person', name: profile.name },
-    url: `/work/${project.slug}`,
+    url: `${siteUrl}/work/${project.slug}`,
     ...(project.repoUrl ? { codeRepository: project.repoUrl } : {}),
   }
 

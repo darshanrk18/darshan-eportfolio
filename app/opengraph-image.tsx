@@ -126,11 +126,19 @@ export default async function OpengraphImage() {
           >
             {name}
           </div>
-          {/* The champagne rule under the name (an SVG line: Satori collapses
-              an empty sized div inside a column). */}
-          <svg width="220" height="2" viewBox="0 0 220 2" style={{ marginTop: 28 }}>
-            <rect width="220" height="1" fill={CHAMPAGNE} fillOpacity="0.7" />
-          </svg>
+          {/* The champagne rule under the name. Satori collapses a sized
+              element that sits directly in a column (an <svg> there drew a
+              2 px dot), so the rule sits in a row, like the live dot above. */}
+          <div style={{ display: 'flex', marginTop: 28 }}>
+            <div
+              style={{
+                display: 'flex',
+                width: 220,
+                height: 1,
+                backgroundColor: 'rgba(216,196,154,0.7)',
+              }}
+            />
+          </div>
         </div>
 
         <div

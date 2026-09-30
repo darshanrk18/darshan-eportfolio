@@ -43,7 +43,7 @@ export interface TerminalIO {
 }
 
 /** The 2-line window banner (§4.8) — also server-rendered in Contact.tsx. */
-export const BANNER = "SIGNAL v1.0 — type 'help'"
+export const BANNER = "Darshan Konnur — type 'help'"
 
 const line = (text: string, tone?: TermTone): TermLine => (tone ? { text, tone } : { text })
 

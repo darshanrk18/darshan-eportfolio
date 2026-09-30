@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — experience.css (C3: the Experience section, both editions)
+   v3 — experience.css (C3: the Experience section, both editions)
    Imported by components/experience/Experience.tsx. ONE DOM, TWO SKINS:
    shared layout under .xp-root; SCREEN under html[data-edition='screen'],
    PRINT under html[data-edition='print'] (styles/v3/README.md).

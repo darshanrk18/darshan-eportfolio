@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — experience (CONTENT_FINAL 2026-09-23, newest first).
+ * Content data — experience (CONTENT_FINAL 2026-09-23, newest first).
  * Exactly these entries exist; do not add roles.
  * AWS internship = exactly its three bullets + the allowed outcome line —
  * never team names, mentors, compensation, or internal system details.

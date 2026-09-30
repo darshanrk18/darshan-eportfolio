@@ -14,6 +14,8 @@
  * palette's Build info (§1.8).
  */
 
+import type { Metadata } from 'next'
+import { shareMeta, siteDescription, siteTitle } from '@/lib/utils/share'
 import PickerShell from '@/components/edition/PickerShell'
 import EditionPicker from '@/components/edition/EditionPicker.client'
 import IntroGate from '@/components/intro/IntroGate.client'
@@ -31,6 +33,11 @@ import Footer from '@/components/footer/Footer'
 import CommandPalette from '@/components/palette/CommandPalette'
 import Guide from '@/components/guide/Guide.client'
 import BuildInfo from '@/components/palette/BuildInfo.client'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+  ...shareMeta('/', siteTitle, siteDescription),
+}
 
 export default function HomePage() {
   return (
