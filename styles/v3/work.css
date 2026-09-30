@@ -2355,8 +2355,9 @@ html[data-motion='reduced'] .c4-bar {
 /* ============================================================================
    /work/[slug] — the permalink page's own furniture (app/work/[slug]/page.tsx)
    ========================================================================== */
+/* Block padding only: the side gutter comes from .container-site. */
 .wk-page {
-  padding: 40px 0 96px;
+  padding-block: 40px 96px;
 }
 .wk-page-nav-row {
   display: flex;
