@@ -131,7 +131,7 @@ The console's commands:
 - **Rock, paper, scissors**: a 21-point hand skeleton cycling through the three poses, standing in for the project's hand tracking. It never opens the camera.
 - **A skills system diagram** with each tool's official logo. Tap a skill to see where it was used.
 - **A career graph**, newest first, that draws in one node at a time from the "Next" marker (the AWS role that starts in January 2027) down.
-- **`/cv`**: the résumé as a page, with no JavaScript of its own.
+- **`/cv`**: the résumé as a page, with no JavaScript of its own and a print layout of its own.
 - **`/arcade`**: both games at full size. It is not in the navigation and not indexed.
 
 </details>
@@ -251,11 +251,11 @@ Lighthouse 12.8.2 in headless Chrome with the default mobile settings: simulated
 
 | Budget | Limit | Measured | Checked by |
 |---|:---:|:---:|---|
-| First-load JavaScript for `/`, gzipped | 178 KB | 177.7 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
-| `/cv`'s own JavaScript, gzipped | 0.5 KB | 0.1 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
+| First-load JavaScript for `/`, gzipped | 178 KB | 178.0 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
+| `/cv`'s own JavaScript, gzipped | 0.5 KB | 0.2 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
 | The inline pre-paint script, after minification | must parse | 457 B | [`check-prepaint.mjs`](scripts/check-prepaint.mjs) |
 
-The 178 KB limit was set for 2.0.0 and has not moved since: 1.0.0's measured 166.1 KB plus an itemized list of what 2.0.0 added, smooth scrolling (9 KB) being the largest. 3.0.0 had to fit under the same limit, which is why the headroom is small.
+The 178 KB limit was set for 2.0.0 and has not moved since: 1.0.0's measured 166.1 KB plus an itemized list of what 2.0.0 added, smooth scrolling (9 KB) being the largest. 3.0.0 had to fit under the same limit, and the latest build of `main` measures 178.0 KB, so there is no headroom left.
 
 `npm run build` measures every route and writes the numbers to [`lib/build/manifest.json`](lib/build/manifest.json), which the palette's **Build info** panel shows. The pre-paint check fails any build, anywhere, unless the prerendered script parses and writes every attribute. The bundle budget fails the build in GitHub Actions and only warns elsewhere, so a Vercel deploy never fails on a measurement.
 
@@ -267,7 +267,7 @@ The 178 KB limit was set for 2.0.0 and has not moved since: 1.0.0's measured 166
 |---|---|
 | Typecheck | `npm run typecheck`: the whole project, in strict mode. |
 | Lint | `npm run lint`: the `next/core-web-vitals` and `next/typescript` rules. |
-| Unit tests | `npm test`: 290 tests in 20 files. Pre-paint parity over every input, the edition API and both switch choreographies, the picker shell, the island guard, the Connect Four engine, A*, the console interpreter, the command registry, the guide, the intro timeline (under 14 s) and the content rules. |
+| Unit tests | `npm test`: 329 tests in 21 files. Pre-paint parity over every input, the edition API and both switch choreographies, the picker shell, the island guard, the Connect Four engine, A*, the console interpreter, the command registry, the guide, the intro timeline (under 14 s), `/cv` (its content, no JavaScript of its own, the print layout) and the content rules. |
 | Build | `npm run build`: `next build`, the pre-paint check and the bundle budgets above. The budgets are written to the job summary. |
 | Browser smoke test | [`scripts/qa/smoke.mjs`](scripts/qa/smoke.mjs) drives Chrome through that build, served with `npm start`: a first visit through the picker, the switch both ways, the PRINT intro and its Skip, a return visit, `/cv`, a case study, `/arcade` and the 404 page, then checks for sideways scrolling at 375 px. Any console error fails it. On a failure, its screenshots and the server and build logs are attached to the run. |
 
@@ -276,7 +276,7 @@ The CI token is read-only, every action in both workflows is pinned to a full co
 **Also:**
 
 - **Live link check**, every Monday ([`.github/workflows/links.yml`](.github/workflows/links.yml)): lychee follows every link on the live site's pages (the sitemap, plus `/cv` and `/arcade`). A broken link opens an issue labeled `broken-links`, or updates the one already open.
-- **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)): npm updates weekly and GitHub Actions updates monthly, grouped. Major versions of Next.js, React and Tailwind are left for a manual migration. Security alerts and security-fix pull requests are on.
+- **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)): npm updates weekly and GitHub Actions updates monthly, grouped. Major versions of Next.js, React, Tailwind and Vite are left for a manual migration. Security alerts and security-fix pull requests are on.
 - **Vercel** builds every pull request as a preview deployment.
 
 > [!NOTE]
@@ -398,10 +398,10 @@ docs/readme/         Images for this README
 
 <br>
 
-- **Facts** live in [`lib/data/`](lib/data): `profile`, `projects`, `experience`, `skills` (with the verified map of where each skill was used), `publication`, `photos`, `logos`, `logoNotes`, `hero`, `about`, `issue`, `introAssets`, `photoAscii`.
+- **Facts** live in [`lib/data/`](lib/data): `profile`, `projects`, `experience`, `skills` (with the verified map of where each skill was used), `publication`, `resume` (the text of `/cv`; server-only, so none of it reaches the browser's JavaScript), `photos`, `logos`, `logoNotes`, `hero`, `about`, `issue`, `introAssets`, `photoAscii`.
 - **Section copy** lives in one module per area: `components/{contact,skills,experience}/copy.ts`, `components/projects/demos/c4Copy.ts`, `components/edition/picker.shared.ts`, `lib/guide/guide.ts`.
 - **Rules the tests enforce**: no placeholders, no build or pipeline internals in visible text, and no skill claimed where the usage map does not verify it.
-- **Photographs**: each section photograph ships in two grades, one per edition (`public/photo/<name>-41*.webp` for SCREEN, `<name>-paper*.webp` for PRINT). `/cv` uses `public/photo/darshan-440.webp`, and the intro's photo plates are in `public/intro/`. The résumé PDF is `public/resume/darshan-konnur.pdf`.
+- **Photographs**: each section photograph ships in two grades, one per edition (`public/photo/<name>-41*.webp` for SCREEN, `<name>-paper*.webp` for PRINT). `/cv` shows the portrait in the edition's grade as a CSS background, so only one grade is fetched, and the intro's photo plates are in `public/intro/`. The résumé PDF is `public/resume/darshan-konnur.pdf`.
 - **The share card** is [`app/opengraph-image.jpg`](app/opengraph-image.jpg) (1200 × 630): SCREEN on the left and PRINT on the right, split down the torn seam, with its alt text beside it. Each route sets its own share tags through `shareMeta()` in [`lib/utils/share.ts`](lib/utils/share.ts). The card's words are part of the picture, so it has to be re-rendered when the headline changes.
 
 To change something: edit the data or the copy module, run `npm test`, open a pull request, and check the preview deployment in both editions.
@@ -416,7 +416,7 @@ To change something: edit the data or the copy module, run `npm test`, open a pu
 | **2.0.0** | Sep&nbsp;24,&nbsp;2026 | The elevation: the decompiled portrait, smooth scroll, the kinetic hero name, the theme wipe, the boot sequence, project windows, CRT mode, the hidden `/arcade`, the palette narrator ([#2](https://github.com/darshanrk18/darshan-eportfolio/pull/2)) |
 | **1.0.0** | Sep&nbsp;23,&nbsp;2026 | The terminal-styled rebuild: `/cv` and `/work` case files, the command palette, the contact terminal ([#1](https://github.com/darshanrk18/darshan-eportfolio/pull/1)) |
 
-Since 3.0.0, on `main`: the site's own domain, share tags per page, the IEEE citation listing all six authors, a plain-language 404 page and new icons ([#4](https://github.com/darshanrk18/darshan-eportfolio/pull/4)); the split SCREEN | PRINT share card ([#5](https://github.com/darshanrk18/darshan-eportfolio/pull/5)); a longer description for link previews ([#6](https://github.com/darshanrk18/darshan-eportfolio/pull/6)); SCREEN numerals that read as numbers ([#7](https://github.com/darshanrk18/darshan-eportfolio/pull/7)). The full list is in [CHANGELOG.md](CHANGELOG.md).
+Since 3.0.0, on `main`: the site's own domain, share tags per page, the IEEE citation listing all six authors, a plain-language 404 page and new icons ([#4](https://github.com/darshanrk18/darshan-eportfolio/pull/4)); the split SCREEN | PRINT share card ([#5](https://github.com/darshanrk18/darshan-eportfolio/pull/5)); a longer description for link previews ([#6](https://github.com/darshanrk18/darshan-eportfolio/pull/6)); SCREEN numerals that read as numbers ([#7](https://github.com/darshanrk18/darshan-eportfolio/pull/7)); `/cv` rebuilt from the résumé, with its own print layout ([#12](https://github.com/darshanrk18/darshan-eportfolio/pull/12)); every open Dependabot alert fixed without moving to Next.js 16 ([#13](https://github.com/darshanrk18/darshan-eportfolio/pull/13)). The full list is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
