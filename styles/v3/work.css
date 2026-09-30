@@ -394,10 +394,16 @@ html[data-edition='print'] {
 }
 
 /* ---- Connect Four ------------------------------------------------------- */
+/* The board is sized to the room it actually gets: the cell, gap and padding
+   keep the frame's proportions and shrink together when the game's width
+   (the query container, 100cqi) is narrower than the drawn board, so the
+   seventh column never runs past the frame. The full sizes still apply
+   wherever they fit. */
 .c4 {
-  --c4-cell: 50px;
-  --c4-gap: 9px;
-  --c4-pad: 16px;
+  container-type: inline-size;
+  --c4-cell: min(50px, (100cqi - 2px) * 50 / 436);
+  --c4-gap: min(9px, (100cqi - 2px) * 9 / 436);
+  --c4-pad: min(16px, (100cqi - 2px) * 16 / 436);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -475,6 +481,7 @@ html[data-edition='print'] {
   z-index: 2;
 }
 .c4-col {
+  position: relative;
   display: grid;
   grid-template-rows: repeat(6, var(--c4-cell));
   gap: var(--c4-gap);
@@ -482,7 +489,13 @@ html[data-edition='print'] {
   border: 0;
   background: transparent;
   cursor: pointer;
-  min-width: 44px;
+}
+/* Each column's target reaches halfway across the gaps beside it, so the
+   seven targets meet edge to edge without overlapping. */
+.c4-col::after {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--c4-gap) / -2);
 }
 .c4-col:disabled {
   cursor: default;
@@ -619,12 +632,13 @@ html[data-edition='print'] {
   margin: 12px 0 0;
   max-width: 52ch;
 }
-/* Phone board (S4 §2 reflow): 36 px cells, 6 gap, 12 padding → 312 wide. */
+/* Phone board (S4 §2 reflow): 36 px cells, 6 gap, 12 padding → 312 wide,
+   scaled down together when the game is narrower than that. */
 @media (max-width: 420px) {
   .c4 {
-    --c4-cell: 36px;
-    --c4-gap: 6px;
-    --c4-pad: 12px;
+    --c4-cell: min(36px, (100cqi - 2px) * 36 / 312);
+    --c4-gap: min(6px, (100cqi - 2px) * 6 / 312);
+    --c4-pad: min(12px, (100cqi - 2px) * 12 / 312);
   }
 }
 
@@ -1730,10 +1744,13 @@ html[data-edition='print'] {
   }
 
   /* ---- Connect Four ------------------------------------------------------ */
+  /* 42 px cells + 10 padding + the 4 px ink frame, in the first column (the
+     game's width less the 140 px balloon column and the 22 px gap); scaled
+     down together when that column is narrower than the 322 px board. */
   .c4 {
-    --c4-cell: 42px;
+    --c4-cell: min(42px, (100cqi - 170px) * 42 / 314);
     --c4-gap: 0px;
-    --c4-pad: 10px;
+    --c4-pad: min(10px, (100cqi - 170px) * 10 / 314);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 140px;
     grid-template-rows: auto auto auto;
@@ -2050,8 +2067,10 @@ html[data-edition='print'] {
     .c4-say::after {
       display: none;
     }
+    /* One column: the board may use the game's full width (308 px drawn). */
     .c4 {
-      --c4-cell: 40px;
+      --c4-cell: min(40px, (100cqi - 8px) * 40 / 300);
+      --c4-pad: min(10px, (100cqi - 8px) * 10 / 300);
     }
   }
 

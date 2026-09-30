@@ -8,7 +8,8 @@
  * comic board. The disc colours are the `--ed-disc-you` / `--ed-disc-engine`
  * tokens; the colour WORDS in the copy follow the edition (c4Copy.ts).
  * - The engine runs in a Web Worker (synchronous main-thread fallback).
- * - Board = 7 column buttons (≥ 44 px targets) + number keys 1–7 while the
+ * - Board = 7 full-height column buttons (each target spans its cell pitch,
+ *   gap included; the board scales to fit its pane) + number keys 1–7 while the
  *   board has focus; ONE aria-live narration line carries the game state.
  * - "Show thinking" (a real switch) lights per-column beams (SCREEN) /
  *   ink-hatched bars (PRINT) from the engine's column scores — no depth, no
