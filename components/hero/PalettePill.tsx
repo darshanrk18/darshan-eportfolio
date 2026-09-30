@@ -1,14 +1,16 @@
 'use client'
 
 /**
- * The ⌘K invitation (spec §4.3): a keyboard-keycap-styled pill, bottom-center
- * of the hero, breathing a low-intensity signal glow on a 4s cycle (CSS in
- * Hero's scoped styles). Click opens the command palette via the store.
- * v2 §6.5: one of the ~10 named magnetic elements (label parallax on the
- * inner span; inert on coarse pointers / reduced motion via the hook).
+ * The ⌘K hint (v3 S1: "Press ⌘K to go anywhere") — a keycap in a quiet
+ * line under the hero. Click opens the command palette via the store.
+ * The `.hero-pill` class keeps it inside CommandPalette's hover-prefetch
+ * TRIGGER_SELECTOR. Hidden on touch devices by CSS (no keyboard — a dead
+ * shortcut would be clutter); the palette stays reachable from the top bar.
+ * v2 §6.5: one of the ~10 named magnetic elements (inert on coarse pointers
+ * / reduced motion via the hook).
  */
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMagnetic } from '@/lib/motion/useMagnetic'
 import { useSignalStore } from '@/lib/state/store'
 
@@ -16,19 +18,24 @@ export default function PalettePill() {
   const setPaletteOpen = useSignalStore((s) => s.setPaletteOpen)
   const ref = useRef<HTMLButtonElement>(null)
   useMagnetic(ref, { strength: 0.25, radius: 80 })
+  // Server renders ⌘K; corrected to Ctrl K after mount on non-Apple platforms.
+  const [kbd, setKbd] = useState('⌘K')
+  useEffect(() => {
+    if (!/Mac|iPhone|iPad|iPod/.test(navigator.platform)) setKbd('Ctrl K')
+  }, [])
 
   return (
     <button
       ref={ref}
       type="button"
       onClick={() => setPaletteOpen(true)}
-      className="hero-pill type-label-sm bg-raised hairline rounded-btn text-secondary hover:text-primary relative px-4 py-2 transition-colors"
+      className="hero-pill"
+      aria-label={`Open the command palette (${kbd === '⌘K' ? 'Command K' : 'Control K'})`}
       data-component="PalettePill"
       data-island="client"
     >
-      <span className="hero-pill-glow" aria-hidden="true" />
       <span data-mag-label>
-        <kbd className="font-mono text-primary">⌘K</kbd> — do anything
+        Press <kbd className="ed-kbd">{kbd}</kbd> to go anywhere
       </span>
     </button>
   )
