@@ -1,5 +1,5 @@
 /**
- * SIGNAL content data — projects (CONTENT_FINAL 2026-09-23, order as listed;
+ * Content data — projects (CONTENT_FINAL 2026-09-23, order as listed;
  * slugs stable). Copy is verbatim; optional fields (repoUrl, paperUrl, doi,
  * demoUrl, award, live) render only when filled.
  *

@@ -1,5 +1,5 @@
 /* ============================================================================
-   SIGNAL v3 — intro.css  (V3_SPEC §2.7, X4 option A)
+   v3 — intro.css  (V3_SPEC §2.7, X4 option A)
    THE PRINT INTRO + HAND-OFF. Imported by components/intro/Intro.client.tsx
    ONLY, so it rides the intro chunk and never the first-load CSS of a
    SCREEN visit. Every rule is nested under .intro-root (the overlay) or

@@ -216,7 +216,7 @@ export const INTRO_COPY = {
     a2: { cap: 'SCHNEIDER SHIFT', pods: 'binding…', ledger: 'THROUGHPUT LEDGER', no: '002' },
     a3: {
       cap: 'TTY',
-      lines: ['npm test', 'suite ▸ signal-core', '✓ decode   ✓ replay', '✓ flip-engine'],
+      lines: ['npm test', 'suite ▸ konnur-core', '✓ decode   ✓ replay', '✓ flip-engine'],
       pass: '✓ all passing',
       ship: 'ship it',
       status: 'all green · ship it',

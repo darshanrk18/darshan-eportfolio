@@ -5,7 +5,7 @@ import { commits } from '@/lib/data/experience'
 
 describe('seeded utilities (spec §5.8/§4.7)', () => {
   it('sha1Hex matches node:crypto', () => {
-    for (const s of ['', 'abc', 'SIGNAL — the portfolio that compiles ✓', 'x'.repeat(150)]) {
+    for (const s of ['', 'abc', 'Darshan Konnur — two editions ✓', 'x'.repeat(150)]) {
       expect(sha1Hex(s)).toBe(createHash('sha1').update(s, 'utf8').digest('hex'))
     }
   })
