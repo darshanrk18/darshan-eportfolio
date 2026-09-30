@@ -1,0 +1,242 @@
+{
+ "react": {
+  "label": "React",
+  "color": "logo-react.svg",
+  "variant": "original",
+  "mono": "logo-react-mono.svg"
+ },
+ "redux": {
+  "label": "Redux",
+  "color": "logo-redux.svg",
+  "variant": "original",
+  "mono": "logo-redux-mono.svg"
+ },
+ "nextjs": {
+  "label": "Next.js",
+  "color": "logo-nextjs.svg",
+  "variant": "original",
+  "mono": "logo-nextjs-mono.svg"
+ },
+ "nodejs": {
+  "label": "Node.js",
+  "color": "logo-nodejs.svg",
+  "variant": "original",
+  "mono": "logo-nodejs-mono.svg"
+ },
+ "express": {
+  "label": "Express.js",
+  "color": "logo-express.svg",
+  "variant": "original",
+  "mono": "logo-express-mono.svg"
+ },
+ "fastapi": {
+  "label": "FastAPI",
+  "color": "logo-fastapi.svg",
+  "variant": "original",
+  "mono": "logo-fastapi-mono.svg"
+ },
+ "flask": {
+  "label": "Flask",
+  "color": "logo-flask.svg",
+  "variant": "original",
+  "mono": "logo-flask-mono.svg"
+ },
+ "django": {
+  "label": "Django",
+  "color": "logo-django.svg",
+  "variant": "plain",
+  "mono": "logo-django-mono.svg"
+ },
+ "spring-boot": {
+  "label": "Spring Boot",
+  "color": "logo-spring-boot.svg",
+  "variant": "original",
+  "mono": "logo-spring-boot-mono.svg"
+ },
+ "kafka": {
+  "label": "Kafka",
+  "color": "logo-kafka.svg",
+  "variant": "original",
+  "mono": "logo-kafka-mono.svg"
+ },
+ "postgresql": {
+  "label": "PostgreSQL",
+  "color": "logo-postgresql.svg",
+  "variant": "original",
+  "mono": "logo-postgresql-mono.svg"
+ },
+ "mysql": {
+  "label": "MySQL",
+  "color": "logo-mysql.svg",
+  "variant": "original",
+  "mono": "logo-mysql-mono.svg"
+ },
+ "mongodb": {
+  "label": "MongoDB",
+  "color": "logo-mongodb.svg",
+  "variant": "original",
+  "mono": "logo-mongodb-mono.svg"
+ },
+ "redis": {
+  "label": "Redis",
+  "color": "logo-redis.svg",
+  "variant": "original",
+  "mono": "logo-redis-mono.svg"
+ },
+ "aws": {
+  "label": "AWS",
+  "color": "logo-aws.svg",
+  "variant": "original-wordmark",
+  "mono": "logo-aws-mono.svg"
+ },
+ "azure": {
+  "label": "Azure",
+  "color": "logo-azure.svg",
+  "variant": "original",
+  "mono": null
+ },
+ "gcp": {
+  "label": "GCP",
+  "color": "logo-gcp.svg",
+  "variant": "original",
+  "mono": "logo-gcp-mono.svg"
+ },
+ "docker": {
+  "label": "Docker",
+  "color": "logo-docker.svg",
+  "variant": "original",
+  "mono": "logo-docker-mono.svg"
+ },
+ "kubernetes": {
+  "label": "Kubernetes",
+  "color": "logo-kubernetes.svg",
+  "variant": "original",
+  "mono": "logo-kubernetes-mono.svg"
+ },
+ "terraform": {
+  "label": "Terraform",
+  "color": "logo-terraform.svg",
+  "variant": "original",
+  "mono": "logo-terraform-mono.svg"
+ },
+ "jenkins": {
+  "label": "Jenkins",
+  "color": "logo-jenkins.svg",
+  "variant": "original",
+  "mono": "logo-jenkins-mono.svg"
+ },
+ "github-actions": {
+  "label": "GitHub Actions",
+  "color": "logo-github-actions.svg",
+  "variant": "original",
+  "mono": "logo-github-actions-mono.svg"
+ },
+ "prometheus": {
+  "label": "Prometheus",
+  "color": "logo-prometheus.svg",
+  "variant": "original",
+  "mono": "logo-prometheus-mono.svg"
+ },
+ "grafana": {
+  "label": "Grafana",
+  "color": "logo-grafana.svg",
+  "variant": "original",
+  "mono": "logo-grafana-mono.svg"
+ },
+ "cloudwatch": {
+  "label": "CloudWatch",
+  "color": null,
+  "variant": null,
+  "mono": "logo-cloudwatch-mono.svg"
+ },
+ "junit": {
+  "label": "JUnit",
+  "color": "logo-junit.svg",
+  "variant": "original",
+  "mono": "logo-junit-mono.svg"
+ },
+ "mockito": {
+  "label": "Mockito",
+  "color": null,
+  "variant": null,
+  "mono": null
+ },
+ "pytest": {
+  "label": "PyTest",
+  "color": "logo-pytest.svg",
+  "variant": "original",
+  "mono": "logo-pytest-mono.svg"
+ },
+ "playwright": {
+  "label": "Playwright",
+  "color": "logo-playwright.svg",
+  "variant": "original",
+  "mono": null
+ },
+ "python": {
+  "label": "Python",
+  "color": "logo-python.svg",
+  "variant": "original",
+  "mono": "logo-python-mono.svg"
+ },
+ "java": {
+  "label": "Java",
+  "color": "logo-java.svg",
+  "variant": "original",
+  "mono": "logo-java-mono.svg"
+ },
+ "go": {
+  "label": "Go",
+  "color": "logo-go.svg",
+  "variant": "original-wordmark",
+  "mono": "logo-go-mono.svg"
+ },
+ "javascript": {
+  "label": "JavaScript",
+  "color": "logo-javascript.svg",
+  "variant": "original",
+  "mono": "logo-javascript-mono.svg"
+ },
+ "typescript": {
+  "label": "TypeScript",
+  "color": "logo-typescript.svg",
+  "variant": "original",
+  "mono": "logo-typescript-mono.svg"
+ },
+ "c": {
+  "label": "C",
+  "color": "logo-c.svg",
+  "variant": "original",
+  "mono": "logo-c-mono.svg"
+ },
+ "cpp": {
+  "label": "C++",
+  "color": "logo-cpp.svg",
+  "variant": "original",
+  "mono": "logo-cpp-mono.svg"
+ },
+ "git": {
+  "label": "Git",
+  "color": "logo-git.svg",
+  "variant": "original",
+  "mono": "logo-git-mono.svg"
+ },
+ "linux": {
+  "label": "Linux",
+  "color": "logo-linux.svg",
+  "variant": "original",
+  "mono": "logo-linux-mono.svg"
+ },
+ "github": {
+  "label": "GitHub",
+  "color": "logo-github.svg",
+  "variant": "original",
+  "mono": "logo-github-mono.svg"
+ },
+ "linkedin": {
+  "label": "LinkedIn",
+  "color": "logo-linkedin.svg",
+  "variant": "original",
+  "mono": null
+ }
+}
