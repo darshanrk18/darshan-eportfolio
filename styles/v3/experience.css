@@ -537,9 +537,11 @@ html[data-edition='screen'] {
     border-bottom: 1px solid var(--ed-champ);
     color: var(--ed-champ);
   }
+  /* the dash sits on the first line's middle (0.7em of a 1.4 line), so a
+     wrapped outcome keeps it on its first line */
   .xp-out {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 11px;
     margin-top: 16px;
     font: 400 14.5px/1.4 var(--font-body);
@@ -551,6 +553,7 @@ html[data-edition='screen'] {
     flex: none;
     width: 8px;
     height: 1px;
+    margin-top: calc(0.7em - 0.5px);
     margin-left: 1px;
     background: var(--ed-champ2);
   }
