@@ -1,0 +1,22 @@
+# Text files are stored and checked out with LF line endings.
+* text=auto eol=lf
+
+# Binary files: never normalized, never diffed as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.mp4   binary
+*.webm  binary
+
+# Generated files: collapsed in pull request diffs.
+package-lock.json       linguist-generated=true
+lib/build/manifest.json linguist-generated=true

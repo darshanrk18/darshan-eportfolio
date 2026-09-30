@@ -1,0 +1,80 @@
+name: Bug report
+description: Something on the site looks wrong or does not work.
+title: 'Bug: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One problem per report, please. For a security problem, email konnur.d@northeastern.edu instead (see SECURITY.md).
+
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The address, or the route and section.
+      placeholder: 'https://www.darshankonnur.com/cv, or / → Skills'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      description: SCREEN is the dark edition, PRINT the comic. The top bar shows which one is on.
+      options:
+        - SCREEN
+        - PRINT
+        - Both
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: With versions if you know them.
+      placeholder: 'iPhone 16, Safari 19 / MacBook Air, Chrome 154'
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: settings
+    attributes:
+      label: Settings that change the site's behavior
+      options:
+        - label: Reduce motion is switched on in this device's settings
+        - label: The browser window was narrower than 768 px (a phone, or a narrow window)
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the home page for the first time
+        2. Choose PRINT
+        3. Press Skip
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Include any error text shown on the page or in the browser console.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or a recording
+      description: Drag images or a short video into this box.
