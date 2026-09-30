@@ -11,7 +11,10 @@ interactive.
   pre-paint script (`lib/edition/prepaint.ts`, injected by `app/layout.tsx`)
   reads `localStorage['signal.edition']` and writes the attribute before the
   first paint, so there is no flash. With nothing stored it also sets
-  `data-pick="1"`, which mounts the edition picker on `/`.
+  `data-pick="1"`; the picker's face is server-rendered
+  (`components/edition/PickerShell.tsx`, shown by CSS only under that
+  attribute, with a small inline script that queues an early tap) and the lazy
+  interactive surface replaces it once hydrated.
 - Tokens: `app/globals.css` keeps the v2 token names (`--bg-*`, `--text-*`,
   `--accent-*`, …) and gives them SCREEN values on `:root` and PRINT values
   under `html[data-edition='print']`, so every component recolours by itself.
@@ -26,6 +29,9 @@ interactive.
 - Decoration that only one edition shows (SCREEN atmosphere, PRINT halftone
   and registration marks) is always rendered, `aria-hidden`, and hidden by the
   other skin's CSS, so the server render never mismatches.
+- `styles/v2/*.css` are v2 rules still imported by `app/globals.css`: the
+  About character portrait, magnetic buttons, CRT mode, scroll, the project
+  window and experience.
 - Fonts come from `next/font/google`: Cinzel, Marcellus and IBM Plex Mono for
   SCREEN; Bangers, Alfa Slab One, Archivo for PRINT. Only the active edition's
   families are painted.
@@ -41,7 +47,7 @@ crossfade or an instant switch. Scroll position is kept.
 
 ## Page composition (`app/page.tsx`)
 
-EditionPicker · IntroGate · LenisProvider · Navbar · ReducedMotionBanner ·
+PickerShell · EditionPicker · IntroGate · LenisProvider · Navbar · ReducedMotionBanner ·
 main [Hero · About · Skills · Projects · Experience · Contact] · Footer ·
 CommandPalette · Guide · BuildInfo · CursorHalo.
 
@@ -50,6 +56,11 @@ client islands hydrate the interactive parts (`data-component` /
 `data-island` mark them). Heavy or rarely used surfaces load on demand with
 `next/dynamic`: the picker surface, the intro, the guide surface and coach
 mark, the Build info panel, the demos, the terminal interpreter.
+
+Every `dynamic(() => import(…))` ends in
+`.catch(islandUnavailable<typeof import(…)>)` (`lib/utils/island.ts`): a chunk
+that fails to load leaves only that island missing instead of the error
+screen. `tests/islands.test.ts` enforces it.
 
 ## How the islands talk
 
@@ -86,11 +97,12 @@ page into the cream cover and lands on the hero.
 
 ## Data and content
 
-Everything a visitor reads is data in `lib/data/`: `profile`, `projects`,
+Every fact a visitor reads is data in `lib/data/`: `profile`, `projects`,
 `experience`, `skills` (with the verified `usedIn` map that drives both the
 usage map and the skills-per-job highlight), `photos`, `logos`, `hero`,
 `about`, `issue`, `introAssets`, `photoAscii`. Tests assert the content rules
 (no placeholders, no internals in visible strings, verified skill claims).
+Section chrome copy lives in the per-area copy modules listed in `README.md`.
 
 ## Build guards
 
