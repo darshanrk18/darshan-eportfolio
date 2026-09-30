@@ -1,253 +1,352 @@
 /**
- * §4.7 Experience — `git log --graph`. RSC shell: semantic commit entries with
- * native <details>/<summary> diff panels, node markers on the DAG gutter, the
- * amber 300+ big number, and the quiet-zone EducationCard 96px below.
- * CareerDag (client island) draws the scroll-linked SVG rail + year rail over
- * the gutter; a static hairline is the no-JS fallback.
+ * v3 Experience — S5 "CREDITS" / P5 "CH. IV THE FIELD YEARS". RSC shell,
+ * ONE DOM, two skins (styles/v3/experience.css):
  *
- * v2 §9.1: bullet rows carry data-blame + data-skills (verified map in
- * ./blame) and a CSS-revealed `jump to diagram ↑` chip; the lazy GitBlame
- * island (reserved 24px row above the DAG) wires hover/focus →
- * store.focusedSkills. v2 §9.2: the aws-future HEAD marker's dashed ring is
- * an SVG circle so its outline can march while the section is in view
- * (styles/v2/experience.css).
+ * - the career graph, newest first: the NEXT marker (SCREEN: dashed
+ *   champagne ring + "SDE @ Amazon Web Services · Jan 2027"; PRINT: the
+ *   blue-pencil NEXT ISSUE box), the three jobs (SCREEN: node, heading,
+ *   dates · place, role, bullets, outcome, the SURGE Award chip; PRINT: the
+ *   inked panels with a halftone photo plate, narration caption, OUTCOME
+ *   box, the SURGE burst), the IEEE publication (SCREEN: forked onto its
+ *   own lane; PRINT: the IEEE box) with "Read the paper" and "Copy the
+ *   citation";
+ * - the aside: the desk photograph (SCREEN), Education, and the
+ *   "See which skills each job used" panel (SkillsPerJob island).
+ *
+ * Content law: every string comes from lib/data (experience, profile,
+ * photos) or ./copy (chrome copy). Clutter law: no hashes, commit messages,
+ * lanes or year rail are rendered (they stay in data for the terminal / cv);
+ * the neu-branch entry is never drawn (showBranch). Bullets carry
+ * [data-skills] (./blame) and <mark data-skill> (./marks) for the highlight.
  */
 
-import SectionHeader from '@/components/chrome/SectionHeader'
-import { commits, type CommitEntry } from '@/lib/data/experience'
-import BigNumber from './BigNumber.client'
-import { commitBlame } from './blame'
-import CareerDag from './CareerDagIsland'
+import '@/styles/v3/experience.css'
+import SectionHead from '@/components/skills/SectionHead'
+import { cityOf, commits, nextMarker, showBranch, type CommitEntry } from '@/lib/data/experience'
+import { PHOTOS } from '@/lib/data/photos'
+import { commitBlame, isBlameJobId } from './blame'
+import CareerDraw from './CareerDagIsland'
+import { buildCitation } from './citation'
+import CopyCitation from './CopyCitation.client'
+import { PRINT_PLATES, XP_COPY } from './copy'
 import EducationCard from './EducationCard'
-import GitBlameIsland from './GitBlameIsland'
+import SkillsPerJob from './SkillsPerJobIsland'
+import { Bullet, Figures } from './Text'
 
-/**
- * Gutter geometry (must stay in sync with CareerDag lane detection, which
- * measures these markers): entries are padded pl-10 (40px) / lg:pl-28 (112px);
- * the `main` lane runs at x=12px (mobile) / 64px (desktop), the `feat/ms-cs`
- * branch lane at x=24px / 84px.
- */
-function markerClass(c: CommitEntry): string {
-  if (c.kind === 'tag') {
-    // 16px amber ring with the sanctioned amber glow (IEEE tag node).
-    return 'absolute left-[-36px] top-[2px] h-4 w-4 rounded-full border border-amber bg-page glow-amber lg:left-[-56px]'
-  }
-  // 'future' is rendered inline as an SVG dashed ring (§9.2 dash march).
-  const lane =
-    c.lane === 'main'
-      ? 'left-[-32px] lg:left-[-52px] bg-signal'
-      : 'left-[-20px] lg:left-[-32px] bg-electron'
-  return `absolute top-1.5 h-2 w-2 rounded-full ${lane}`
+/** The slant of each PRINT panel's rail-side edge (P5 §5 "Panel geometry"). */
+const PANEL_SLANT: Record<string, { a: number; b: number }> = {
+  'aws-intern': { a: 12, b: 0 },
+  'neu-ta': { a: 0, b: 9 },
+  schneider: { a: 11, b: 0 },
 }
 
-function EntryHeader({ c }: { c: CommitEntry }) {
+function JobBullets({
+  bullets,
+  skills,
+  className,
+}: {
+  bullets: readonly string[]
+  skills: readonly (readonly string[])[]
+  className?: string
+}) {
   return (
-    <>
-      <p className="type-code">
-        <span className="text-secondary">{c.hash}</span>{' '}
-        <span className="text-primary">{c.message}</span>
-        {c.kind === 'future' ? (
-          <span className="type-label-sm text-signal rounded-chip bg-raised ml-2 border border-dashed border-signal px-1.5 py-0.5 align-middle whitespace-nowrap">
-            HEAD → future
-          </span>
-        ) : null}
-        {c.award ? (
-          // Award tag — kin to the IEEE tag's amber, distinct from the branch chip.
-          <span className="type-label-sm text-amber rounded-chip bg-raised ml-2 border border-amber px-1.5 py-0.5 align-middle whitespace-nowrap">
-            {c.award}
-          </span>
-        ) : null}
-        {c.kind === 'branch' ? (
-          <span className="type-label-sm text-electron rounded-chip border-hairline bg-raised ml-2 border px-1.5 py-0.5 align-middle whitespace-nowrap">
-            {c.lane}
-          </span>
-        ) : null}
-        {c.kind === 'tag' && c.paperUrl ? (
-          <a
-            href={c.paperUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="type-label-sm text-signal ml-2 whitespace-nowrap hover:underline"
-          >
-            [ read paper ↗ ]
-          </a>
-        ) : null}
-      </p>
-      <p className="type-code text-secondary mt-1">{c.meta}</p>
-    </>
+    <ul className={className ? `xp-bullets ${className}` : 'xp-bullets'}>
+      {bullets.map((b, i) => {
+        const ids = skills[i] ?? []
+        return (
+          <li key={b} data-skills={ids.length > 0 ? ids.join(',') : undefined}>
+            <Bullet text={b} skills={ids} />
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
-function DiffPanel({
-  bullets,
-  outcome,
-  blame,
-}: {
-  bullets: readonly string[]
-  outcome?: string
-  /** §9.1 — skill node ids per bullet (parallel array from ./blame). */
-  blame?: readonly (readonly string[])[]
-}) {
+function Plate({ id }: { id: keyof typeof PRINT_PLATES }) {
+  const plate = PRINT_PLATES[id]
+  const photo = PHOTOS[plate.photo]
   return (
-    <div className="hairline bg-panel mt-3 px-4 py-3">
-      <ul className="space-y-1">
-        {bullets.map((b, i) => {
-          const skills = blame?.[i] ?? []
-          const blamable = skills.length > 0
-          return (
-            <li
-              key={b}
-              data-blame={blamable ? '1' : undefined}
-              data-skills={blamable ? skills.join(',') : undefined}
-              className="type-code relative grid grid-cols-[1.25rem_1fr]"
-            >
-              <span aria-hidden="true" className="text-signal select-none">
-                +
-              </span>
-              <span className="text-signal">{b}</span>
-              {blamable ? (
-                // §9.1 jump affordance — hidden until blame is on AND the row
-                // is hovered/focused (styles/v2/experience.css); the click is
-                // delegated in GitBlame.client → Lenis scrollToAnchor('#skills').
-                <button type="button" data-blame-jump className="blame-jump type-label-xs">
-                  jump to diagram ↑
-                </button>
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
-      {outcome ? (
-        // Allowed closing line (AWS: the offer outcome) — set apart from the
-        // `+` diff lines with a merge-arrow gutter in amber.
-        <p className="type-code border-hairline mt-2 grid grid-cols-[1.25rem_1fr] border-t pt-2">
-          <span aria-hidden="true" className="text-amber select-none">
-            →
-          </span>
-          <span className="text-primary">{outcome}</span>
-        </p>
+    <figure className="xp-plate ed-print-only" data-photo={plate.photo}>
+      <div className="xp-ht">
+        {/* Plain <img>: the PRINT paper grade, sized by the plate; lazy so SCREEN never fetches it. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={photo.print}
+          alt={photo.alt}
+          width={photo.width}
+          height={photo.height}
+          loading="lazy"
+          decoding="async"
+        />
+        <span aria-hidden="true" className="xp-scr" />
+      </div>
+      <span aria-hidden="true" className="xp-tint" data-tint={plate.tint} />
+      <figcaption className="xp-cap">{plate.caption}</figcaption>
+    </figure>
+  )
+}
+
+function Job({ c, index, last }: { c: CommitEntry; index: number; last: boolean }) {
+  const blame = isBlameJobId(c.id) ? commitBlame[c.id] : undefined
+  const skills = blame?.bulletSkills ?? []
+  const slant = PANEL_SLANT[c.id] ?? { a: 0, b: 0 }
+  const printOutcome = c.printOutcome ?? c.outcome?.replace(/\.$/, '')
+  return (
+    <li
+      className="xp-job"
+      data-job={c.id}
+      data-node={`n${index + 1}`}
+      data-last={last ? 'true' : undefined}
+      style={{
+        ['--k' as string]: index + 1,
+        ['--a' as string]: `${slant.a}px`,
+        ['--b' as string]: `${slant.b}px`,
+      }}
+    >
+      <span aria-hidden="true" className="xp-node" />
+      {last ? (
+        <>
+          {/* SCREEN: the IEEE branch forks off this node onto its own lane. */}
+          <svg
+            className="xp-fork ed-screen-only"
+            width="22"
+            height="28"
+            viewBox="0 0 22 28"
+            aria-hidden="true"
+            focusable="false"
+            fill="none"
+          >
+            <path d="M20.5 0C20.5 15 0.5 11 0.5 28" stroke="#454c56" strokeWidth="1" />
+          </svg>
+          <span aria-hidden="true" className="xp-fork-lane ed-screen-only" />
+        </>
       ) : null}
-    </div>
+      {/* PRINT: the letterer's caption — place and time, once (the PRINT date line; SCREEN's is .xp-dt). */}
+      <span className="xp-narr ed-print-only">
+        {cityOf(c.location)} · {c.periodShort}
+      </span>
+      {/* PRINT: the red leader from the chosen panel into the sheet. */}
+      <span aria-hidden="true" className="xp-leader ed-print-only" />
+      {/* PRINT: the award burst on the panel's corner — outside the clipped face. */}
+      {c.award ? (
+        <span className="xp-burst ed-print-only" role="img" aria-label={c.award}>
+          <span aria-hidden="true" className="xp-burst-text">
+            {c.award.split(' ').map((w, i) => (
+              <span key={i}>{w}</span>
+            ))}
+          </span>
+        </span>
+      ) : null}
+      <div className="xp-face">
+        {isBlameJobId(c.id) ? <Plate id={c.id} /> : null}
+        <div className="xp-text">
+          <div className="xp-hd">
+            <h3 className="xp-org">
+              <span className="ed-screen-only">{c.company}</span>
+              <span className="ed-print-only">{c.printCompany ?? c.company}</span>
+            </h3>
+            {/* SCREEN: the award as an inline chip beside the employer. */}
+            {c.award ? (
+              <span className="xp-award ed-screen-only">
+                <span aria-hidden="true" className="xp-award-dm" />
+                {c.award}
+              </span>
+            ) : null}
+            <span className="xp-dt ed-screen-only">
+              <Figures text={`${c.periodShort} · ${c.location}`} />
+            </span>
+          </div>
+          <p className="xp-role">
+            <span className="ed-screen-only">
+              <Figures text={c.role} />
+            </span>
+            <span className="ed-print-only">
+              {(c.printRoleLines ?? [c.role]).map((line, i) => (
+                <span key={i} className="xp-role-line">
+                  {line}
+                </span>
+              ))}
+            </span>
+          </p>
+          {c.printBullets ? (
+            <>
+              <JobBullets bullets={c.bullets} skills={skills} className="ed-screen-only" />
+              <JobBullets bullets={c.printBullets} skills={skills} className="ed-print-only" />
+            </>
+          ) : (
+            <JobBullets bullets={c.bullets} skills={skills} />
+          )}
+          {c.outcome ? (
+            <p className="xp-out ed-screen-only">
+              <Figures text={c.outcome} />
+            </p>
+          ) : null}
+          {printOutcome ? (
+            <p className="xp-outcome ed-print-only">
+              <span className="xp-outcome-tag">{XP_COPY.outcomeTag}</span>
+              <span aria-hidden="true" className="xp-outcome-bar" />
+              <span className="xp-outcome-text">{printOutcome}</span>
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </li>
   )
 }
 
 export default function Experience() {
+  const jobs = commits.filter(
+    (c) => c.kind === 'commit' || (c.kind === 'branch' && showBranch.screen)
+  )
+  const ieee = commits.find((c) => c.kind === 'tag')
+  const citation = buildCitation()
+
   return (
     <section
       id="experience"
       aria-labelledby="experience-heading"
-      className="section-pad"
+      className="section-pad xp-root"
       data-component="Experience"
       data-island="RSC"
       style={{ ['--vs-i' as string]: 4 }}
     >
-      <div className="container-site">
-        <SectionHeader
-          index="04"
-          name="EXPERIENCE"
-          file="experience.log"
-          headingId="experience-heading"
-          headline="The record, as a commit graph."
-        />
+      {/* SCREEN atmosphere (S5 §6) — hidden under PRINT by print.css. */}
+      <div aria-hidden="true" className="ed-light xp-atmo-light" />
+      <div aria-hidden="true" className="ed-grain xp-atmo-grain" />
+      {/* PRINT registration targets — hidden under SCREEN by screen.css. */}
+      <span aria-hidden="true" className="ed-regmark xp-regmark is-top" />
+      <span aria-hidden="true" className="ed-regmark xp-regmark is-left" />
+      <span aria-hidden="true" className="ed-regmark xp-regmark is-right" />
 
-        {/* §9.1 — reserved 24px row for the git-blame toggle (zero CLS when
-            the lazy island mounts; empty under reduced motion / no-JS). */}
-        <div className="mb-4 max-w-2xl pl-10 lg:pl-28">
-          <GitBlameIsland />
-        </div>
+      <div className="container-site xp-inner">
+        <div className="xp-stage" data-surface="stage">
+          {/* SCREEN stage decor: beam, crown, floor, vignette, rim, two embers. */}
+          <div aria-hidden="true" className="ed-beam xp-beam" />
+          <div aria-hidden="true" className="xp-crown ed-screen-only" />
+          <div aria-hidden="true" className="xp-floor ed-screen-only" />
+          <div aria-hidden="true" className="xp-vignette ed-screen-only" />
+          <div aria-hidden="true" className="xp-rim ed-screen-only" />
+          <span aria-hidden="true" className="ed-ember xp-ember" />
+          <span aria-hidden="true" className="ed-ember xp-ember is-b" />
 
-        <div className="relative" data-dag-root>
-          {/* No-JS / pre-hydration fallback: static main-lane hairline. */}
-          <div
-            aria-hidden="true"
-            className="border-hairline absolute top-2 bottom-6 left-3 border-l lg:left-16"
-          />
-          <CareerDag />
+          <div className="xp-grid">
+            {/* The head lives in the left column (both frames); the SCREEN photo rises beside it. */}
+            <div className="xp-head">
+              <SectionHead
+                headingId="experience-heading"
+                kicker={XP_COPY.kicker}
+                title={XP_COPY.title}
+                chapter={XP_COPY.chapter}
+                printTitle={XP_COPY.printTitle}
+              />
+            </div>
+            <div className="xp-main">
+              <div className="xp-graph" data-dag-root>
+                <CareerDraw />
 
-          <ol className="relative max-w-2xl space-y-12 pl-10 lg:space-y-16 lg:pl-28">
-            {commits.map((c) => (
-              <li key={c.id} className="relative">
-                {c.kind === 'future' ? (
-                  // Incoming/HEAD marker (§9.2): dashed signal ring as an SVG
-                  // stroke so its outline can march (stroke-dashoffset, 3s
-                  // linear, [data-march]-gated in styles/v2/experience.css).
-                  // Same 16px box + data attrs as before — CareerDag measures
-                  // the wrapper, so DAG geometry is unchanged. No-JS/reduced:
-                  // a static dashed ring, exactly the v1 look.
-                  <span
-                    aria-hidden="true"
-                    data-dag-node
-                    data-dag-id={c.id}
-                    data-dag-lane={c.lane}
-                    className="bg-page absolute top-[2px] left-[-36px] h-4 w-4 rounded-full lg:left-[-56px]"
-                  >
-                    <svg
-                      className="head-marker-ring absolute inset-0 h-full w-full"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      focusable="false"
-                      aria-hidden="true"
-                    >
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="7.5"
-                        stroke="var(--accent-signal)"
-                        strokeWidth="1"
-                        pathLength={48}
-                        strokeDasharray="3 3"
-                      />
-                    </svg>
-                  </span>
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    data-dag-node
-                    data-dag-id={c.id}
-                    data-dag-lane={c.lane}
-                    className={markerClass(c)}
-                  />
-                )}
+                {/* The NEXT marker: the one stretch of rail still to come. */}
+                <article className="xp-next" aria-label={nextMarker.ariaLabel}>
+                  <span aria-hidden="true" className="xp-node xp-node--next" />
+                  <div className="xp-next-row">
+                    <span className="xp-next-k ed-screen-only">{nextMarker.label}</span>
+                    <span className="xp-next-v ed-screen-only">
+                      <Figures text={nextMarker.line} />
+                    </span>
+                    <span className="xp-next-w ed-screen-only">{nextMarker.location}</span>
 
-                {c.bullets.length > 0 ? (
-                  <details className="group">
-                    <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                      <span
-                        aria-hidden="true"
-                        className="text-secondary float-right ml-3 inline-block [transition:transform_180ms_var(--ease-swift)] group-open:rotate-90"
-                      >
-                        ▸
+                    <span className="xp-next-bang ed-print-only">
+                      {XP_COPY.nextIssue[0]}
+                      <br />
+                      {XP_COPY.nextIssue[1]}
+                    </span>
+                    <span className="xp-next-co ed-print-only">
+                      <span className="xp-next-company">{nextMarker.company}</span>
+                      <span className="xp-next-role">
+                        {nextMarker.role} · {nextMarker.location}
                       </span>
-                      <EntryHeader c={c} />
-                    </summary>
-                    <DiffPanel
-                      bullets={c.bullets}
-                      outcome={c.outcome}
-                      blame={commitBlame[c.id]?.bulletSkills}
-                    />
-                  </details>
-                ) : (
-                  <EntryHeader c={c} />
-                )}
-
-                {c.bigNumber ? (
-                  <div className="mt-6 lg:absolute lg:top-0 lg:left-full lg:mt-0 lg:ml-16 lg:w-max">
-                    <BigNumber
-                      value={c.bigNumber.value}
-                      accent={c.bigNumber.accent}
-                      label={`${c.bigNumber.value} students`}
-                    />
-                    <p className="type-label-xs text-secondary mt-2">students</p>
+                    </span>
+                    <span className="xp-next-starts ed-print-only">
+                      <span className="xp-next-starts-k">{XP_COPY.starts}</span>
+                      <span className="xp-next-date">{nextMarker.start}</span>
+                    </span>
                   </div>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-        </div>
+                </article>
 
-        {/* The quiet zone: 96px gap on desktop (§4.7 pacing rule). */}
-        <div className="mt-16 lg:mt-24">
-          <EducationCard />
+                <ol className="xp-entries" aria-label={XP_COPY.graphLabel}>
+                  {jobs.map((c, i) => (
+                    <Job key={c.id} c={c} index={i} last={i === jobs.length - 1} />
+                  ))}
+                  {ieee ? (
+                    <li
+                      className="xp-ieee"
+                      data-job={ieee.id}
+                      style={{ ['--k' as string]: jobs.length + 1 }}
+                    >
+                      <span aria-hidden="true" className="xp-node xp-node--tag" />
+                      <div className="xp-ieee-hd">
+                        <span className="xp-ieee-tag">
+                          <span className="xp-org xp-org--sm">{ieee.company}</span>
+                          <span className="xp-kind">
+                            <span className="ed-screen-only">{ieee.role} · </span>
+                            <span className="ed-print-only">· </span>
+                            <Figures text={ieee.period} />
+                          </span>
+                        </span>
+                        <p className="xp-ieee-title">“{ieee.meta}”</p>
+                        <span className="xp-ieee-actions">
+                          {ieee.paperUrl ? (
+                            <a
+                              className="xp-lnk"
+                              href={ieee.paperUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {XP_COPY.readPaper}
+                              <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 11 11"
+                                aria-hidden="true"
+                                focusable="false"
+                              >
+                                <path
+                                  d="M2 9L9 2M4 2h5v5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.2"
+                                />
+                              </svg>
+                            </a>
+                          ) : null}
+                          <CopyCitation citation={citation} />
+                        </span>
+                      </div>
+                    </li>
+                  ) : null}
+                </ol>
+              </div>
+            </div>
+
+            <aside className="xp-aside" aria-label={XP_COPY.asideLabel}>
+              {/* SCREEN: the view from the AWS desk (S5 §5), decorative. */}
+              <figure className="xp-photo ed-screen-only" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={PHOTOS.desk.screen}
+                  alt=""
+                  width={PHOTOS.desk.width}
+                  height={PHOTOS.desk.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span className="xp-photo-key" />
+                <span className="xp-photo-low" />
+              </figure>
+              <EducationCard />
+              <SkillsPerJob />
+            </aside>
+          </div>
         </div>
       </div>
     </section>
