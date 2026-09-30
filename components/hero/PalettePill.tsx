@@ -30,7 +30,7 @@ export default function PalettePill() {
       type="button"
       onClick={() => setPaletteOpen(true)}
       className="hero-pill"
-      aria-label={`Open the command palette (${kbd === '⌘K' ? 'Command K' : 'Control K'})`}
+      aria-keyshortcuts={kbd === '⌘K' ? 'Meta+K' : 'Control+K'}
       data-component="PalettePill"
       data-island="client"
     >

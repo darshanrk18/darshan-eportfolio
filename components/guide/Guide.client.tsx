@@ -38,7 +38,7 @@ import {
   GUIDE_COMPLETE_LABEL,
   GUIDE_TOTAL,
   GUIDE_TRIED_EVENT,
-  chipAriaLabel,
+  chipNameSuffix,
   isComplete,
   isGuideId,
   readTried,
@@ -47,10 +47,11 @@ import {
 } from '@/lib/guide/core'
 import { useSignalStore } from '@/lib/state/store'
 import { trackEvent } from '@/lib/utils/analytics'
+import { islandUnavailable } from '@/lib/utils/island'
 import '@/styles/v3/guide.css'
 
-const GuideSurface = dynamic(() => import('./GuideSurface.client'), { ssr: false })
-const GuideRuntime = dynamic(() => import('./GuideRuntime.client'), { ssr: false })
+const GuideSurface = dynamic(() => import('./GuideSurface.client').catch(islandUnavailable<typeof import('./GuideSurface.client')>), { ssr: false })
+const GuideRuntime = dynamic(() => import('./GuideRuntime.client').catch(islandUnavailable<typeof import('./GuideRuntime.client')>), { ssr: false })
 
 /** The Navbar's slot the chip is portalled into (components/chrome/Navbar.tsx). */
 const SLOT_ID = 'guide-slot'
@@ -173,7 +174,6 @@ export default function Guide() {
         className="gd-chip"
         aria-expanded={open}
         aria-controls="guide-surface"
-        aria-label={chipAriaLabel(tried, open)}
         data-component="Guide"
         data-island="client"
         data-open={open ? '1' : undefined}
@@ -194,6 +194,7 @@ export default function Guide() {
           <circle className="gd-ring-dot" cx="10" cy="10" r="2.2" />
         </svg>
         <span className="gd-chip-label">{completeFlash ? GUIDE_COMPLETE_LABEL : GUIDE_CHIP_LABEL}</span>
+        <span className="sr-only">{chipNameSuffix(tried, open)}</span>
         <span className="gd-chip-count" aria-hidden="true">
           {count}/{GUIDE_TOTAL}
         </span>

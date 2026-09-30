@@ -30,9 +30,11 @@ export const SKILLS_COPY = {
   usageProjects: 'Projects',
   coreStack: 'Core stack',
   languages: 'Languages',
-  tileName: (label: string) => `${label} — where I’ve used it`,
+  /** Read after a tile's visible name (visually hidden): the name stays what the visitor sees (WCAG 2.5.3). */
+  tileHint: ' — where I’ve used it',
   inspectorName: (label: string) => `${label} — where I’ve used it`,
-  rowName: (place: string) => `${place}: light its tools in the diagram`,
+  /** Read after a usage row's visible name and dates (visually hidden). */
+  rowHint: ': light its tools in the diagram',
   rowTools: (place: string, tools: readonly string[]) => `${place}: ${tools.join(', ')}`,
 } as const
 

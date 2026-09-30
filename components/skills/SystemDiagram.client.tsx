@@ -127,7 +127,6 @@ function Tile({
       data-lit={lit ? 'true' : undefined}
       data-blamed={blamed ? 'true' : undefined}
       aria-pressed={active}
-      aria-label={SKILLS_COPY.tileName(skill.label)}
       style={{ ['--i' as string]: index, ['--r' as string]: `${stickerTilt(skill.id)}deg` }}
       onClick={() => onSelect(skill.id)}
       onPointerEnter={() => onPreview(skill.id)}
@@ -137,6 +136,7 @@ function Tile({
     >
       <EdLogo id={skill.id} size={18} />
       <span className="sk-tile-name">{skill.label}</span>
+      <span className="sr-only">{SKILLS_COPY.tileHint}</span>
     </button>
   )
 }
@@ -640,7 +640,6 @@ export default function SystemDiagram({ request }: SystemDiagramProps) {
                     type="button"
                     className="sk-urow-who"
                     aria-pressed={on}
-                    aria-label={SKILLS_COPY.rowName(place.name)}
                     onClick={() => toggleRow(row.place.id)}
                   >
                     <b className="sk-urow-name">
@@ -651,6 +650,7 @@ export default function SystemDiagram({ request }: SystemDiagramProps) {
                       <span className="ed-screen-only">{place.year}</span>
                       <span className="ed-print-only">{place.printMeta}</span>
                     </span>
+                    <span className="sr-only">{SKILLS_COPY.rowHint}</span>
                   </button>
                   {row.skills.length > 0 ? (
                     <ul
@@ -668,7 +668,6 @@ export default function SystemDiagram({ request }: SystemDiagramProps) {
                             data-skill-id={skill.id}
                             data-on={skill.id === shownId ? 'true' : undefined}
                             aria-pressed={skill.id === activeId}
-                            aria-label={SKILLS_COPY.tileName(skill.label)}
                             onClick={() => select(skill.id)}
                             onPointerEnter={() => preview(skill.id)}
                             onPointerLeave={() => preview(null)}
@@ -677,6 +676,7 @@ export default function SystemDiagram({ request }: SystemDiagramProps) {
                           >
                             <EdLogo id={skill.id} size={18} />
                             <span>{skill.label}</span>
+                            <span className="sr-only">{SKILLS_COPY.tileHint}</span>
                           </button>
                         </li>
                       ))}
