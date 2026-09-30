@@ -1668,10 +1668,14 @@ html[data-edition='print'] {
       padding: 16px 12px 12px;
       background-image: none;
     }
+    /* in flow it wraps inside the panel instead of running past its border */
     .sk-caption {
       position: static;
       display: inline-block;
+      max-width: 100%;
       margin-bottom: 16px;
+      white-space: normal;
+      text-wrap: balance;
     }
     .sk-diagram {
       gap: 26px;
