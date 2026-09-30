@@ -860,10 +860,20 @@ html[data-edition='screen'] {
     .xp-panel {
       margin-top: 32px;
     }
+    /* one column: the photograph (and its 40 px bottom margin) is hidden, so
+       EDUCATION keeps that 40 px off the IEEE title itself */
+    .xp-aside {
+      margin-top: 40px;
+    }
   }
   @media (max-width: 639px) {
     .xp-stage {
       padding: 24px 16px 32px;
+    }
+    /* the IEEE lane sits 20 px left of the rail (the fork's width); 12 px of
+       graph inset keeps it, and the tag on it, inside the stage's clip */
+    .xp-graph {
+      padding-left: 12px;
     }
     /* §6: every control in the panel and the IEEE row is a 44 px target */
     .xp-tile,
@@ -892,13 +902,14 @@ html[data-edition='screen'] {
     .xp-job[data-node='n3'] .xp-node {
       left: 0;
     }
+    /* the fork starts on the n3 node's centre (4.5 px) and ends 20 px left */
     .xp-fork,
     .xp-fork-lane,
     .xp-ieee::before {
-      left: -20px;
+      left: -16px;
     }
     .xp-node--tag {
-      left: -24px;
+      left: -20px;
     }
     .xp-job::after {
       left: 16px;
@@ -915,12 +926,20 @@ html[data-edition='screen'] {
     .xp-org {
       white-space: normal;
     }
+    /* the narrowest phones: the date line and the two IEEE links wrap
+       instead of running under the stage's edge (one line stays 13.5 px) */
     .xp-dt {
       flex: 1 1 100%;
       margin-left: 0;
+      margin-block: -2px;
+      line-height: 1.3;
+      white-space: normal;
+      text-wrap: balance;
     }
     .xp-ieee-actions {
       flex: 1 1 100%;
+      flex-wrap: wrap;
+      row-gap: 0;
       margin-left: 0;
     }
     .xp-ember {
