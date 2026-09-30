@@ -179,6 +179,12 @@ describe('share card and web manifest take the SCREEN look (§2.8, §3)', () => 
     expect(read('lib/utils/share.ts')).toMatch(/url: '\/opengraph-image\.jpg'/)
   })
 
+  it('the homepage description is long enough for LinkedIn (100+ characters, Post Inspector)', async () => {
+    const { siteDescription } = await import('@/lib/utils/share')
+    expect(siteDescription.length).toBeGreaterThanOrEqual(100)
+    expect(siteDescription.length).toBeLessThanOrEqual(160)
+  })
+
   it('the manifest is SCREEN-dark with the Studio Seal icons', async () => {
     const { default: manifest } = await import('@/app/manifest')
     const m = manifest()

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { profile } from '@/lib/data/profile'
 
-/** The homepage's title and description — also the layout's defaults. */
+/** The homepage's title and description — also the layout's defaults.
+ *  LinkedIn warns below 100 characters (Post Inspector); keep it above. */
 export const siteTitle = `${profile.displayName} — ${profile.role}`
 export const siteDescription =
-  'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.'
+  'Software engineer in Boston, MA. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Projects, experience and CV.'
 
 /** The share card — a static picture, app/opengraph-image.jpg (the split
  *  SCREEN | PRINT cover the owner picked, option B2 on the design canvas; its
