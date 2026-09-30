@@ -8,8 +8,9 @@
  *
  * Rows: the five section names (About · Skills · Work · Experience ·
  * Contact) staggered in at 50ms, a rule, then CV · Download résumé · Copy
- * email · GitHub · LinkedIn, and the edition toggle in the foot. Visitor
- * language only — no file names (`resume.pdf`), no command syntax.
+ * email · Search / Jump (opens the command palette — the compact bar has no
+ * keycap chip) · GitHub · LinkedIn, and the edition toggle in the foot.
+ * Visitor language only — no file names (`resume.pdf`), no command syntax.
  * Focus-trapped, Esc closes, body scroll locked while open.
  */
 
@@ -19,6 +20,7 @@ import { profile } from '@/lib/data/profile'
 import { copyEmailAction, scrollToAnchor } from '@/lib/commands/context'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { EASE_OUT_EXPO, EASE_STRUCTURAL, STAGGER_ITEMS } from '@/lib/motion/tokens'
+import { useSignalStore } from '@/lib/state/store'
 import { trackCvViewed, trackResumeDownloaded } from '@/lib/utils/analytics'
 import EditionToggle from '@/components/edition/EditionToggle.client'
 import DkSeal from '@/components/chrome/DkSeal'
@@ -208,6 +210,18 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
                   <span className={emailCopied ? 'is-live' : undefined} aria-live="polite">
                     {emailCopied ? 'Copied ✓' : 'Copy email'}
                   </span>
+                </button>
+              </m.li>
+              <m.li variants={itemVariants}>
+                <button
+                  type="button"
+                  className="sig-menu-row"
+                  onClick={() => {
+                    onClose()
+                    useSignalStore.getState().setPaletteOpen(true)
+                  }}
+                >
+                  Search / Jump
                 </button>
               </m.li>
               {SOCIAL_LINKS.map((link) => (

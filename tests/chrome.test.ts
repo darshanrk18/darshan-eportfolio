@@ -184,6 +184,11 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
       expect(wrap).toContain(decl)
     }
   })
+
+  it('the menu sheet reaches the command palette (the compact bar has no keycap)', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    expect(menu).toMatch(/setPaletteOpen\(true\)\s*\}\}\s*>\s*Search \/ Jump\s*</)
+  })
 })
 
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
