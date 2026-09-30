@@ -14,7 +14,8 @@
  *   ink-hatched bars (PRINT) from the engine's column scores — no depth, no
  *   node counts, no search jargon anywhere (clutter law).
  * - The coach mark ("You're ivory. …") dismisses itself after the first
- *   drop; the first drop also completes the guide's `play-c4` item.
+ *   drop; the first drop also completes the guide's `play-c4` item. Its
+ *   line has a touch wording ("Tap a column") beside the mouse one (InputWords).
  * - `game` routes the window's tabs: 'snake' → AStarSnake, 'rps' → the
  *   hand-tracking replay with its plain-English camera line. `resetKey`
  *   lets the window's "New game" button reset the board.
@@ -38,6 +39,7 @@ import {
   legalMoves,
   play,
 } from '@/lib/ai/connect4'
+import InputWords from '@/components/chrome/InputWords'
 import { workCopy, type ProjectGameId } from '@/lib/data/projects'
 import { EASE_SWIFT, EASE_OUT_EXPO } from '@/lib/motion/tokens'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
@@ -530,7 +532,12 @@ function BoardGame({ resetKey }: { resetKey: number }) {
               <span className="c4-coach-head ed-print-only" aria-hidden="true">
                 {workCopy.window.yourMove}
               </span>
-              <span className="c4-coach-text">{coachLine(edition, status)}</span>
+              <span className="c4-coach-text">
+                <InputWords
+                  mouse={coachLine(edition, status)}
+                  touch={coachLine(edition, status, 'touch')}
+                />
+              </span>
               <button
                 type="button"
                 className="c4-coach-x"

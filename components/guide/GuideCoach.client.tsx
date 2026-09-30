@@ -25,6 +25,8 @@
  * SCREEN — a small glass callout with a notch, the line and a dismiss ×.
  * PRINT  — a yellow "TRY THIS" panel with a sunburst corner, the speech
  *          bubble and the red button that performs the action.
+ * The line has a touch wording where it names a hover (both render, CSS
+ * shows one — InputWords).
  * role="note"; the dismiss is a real button named "Dismiss the hint"; the
  * action button carries the item's label. Never under 640 px and never
  * alongside the open guide, the palette or a lightbox (the runtime gates
@@ -33,6 +35,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import InputWords from '@/components/chrome/InputWords'
 import { createCommandCtx, getCurrentEdition } from '@/lib/commands/context'
 import { findCoachAnchor, runGuideAction } from '@/lib/guide/actions'
 import {
@@ -218,7 +221,9 @@ export default function GuideCoach({ id, onDismiss }: GuideCoachProps) {
         <span className="gd-coach-kicker" aria-hidden="true">
           {GUIDE_COACH_KICKER}
         </span>
-        <p className="gd-coach-text">{line}</p>
+        <p className="gd-coach-text">
+          <InputWords mouse={line} touch={guideCoach(id, edition, 'touch')} />
+        </p>
         <button type="button" className="gd-coach-try" onClick={tryIt}>
           <span className="gd-try-play" aria-hidden="true" />
           {item.label[edition]}

@@ -89,6 +89,9 @@ visitor copy per edition; `lib/guide/actions.ts` performs each item.
 `components/guide/Guide.client.tsx` portals the chip into the navbar's
 `#guide-slot`, listens for completions and schedules at most one coach mark,
 placed by `lib/guide/place.ts` so it never covers text or another control.
+Lines that name a key or a hover carry a touch wording too; both render and
+CSS shows one (`.mouse-only` / `.touch-only`, styles/v3/README.md §4a). On a
+phone the palette opens from the guide's "Go anywhere" row and its footer.
 
 ## The intro (PRINT's boot)
 

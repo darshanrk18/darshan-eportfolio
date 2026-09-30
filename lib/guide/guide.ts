@@ -15,9 +15,15 @@
  * labels that differ per edition (items 1 and 2) are intentional: item 2
  * names the OTHER edition, and it must stay equal to
  * SWITCH_EDITION_LABELS in lib/commands/registry.ts (asserted in the test).
+ *
+ * Mouse or touch (lib/utils/input.ts): a line that names a key or a hover
+ * has a `…Touch` wording for touch screens (no keys, no hover — and on a
+ * phone the palette opens only from this guide). The surface and the coach
+ * mark render both; CSS shows one.
  */
 
 import type { Edition } from '@/lib/edition/prepaint'
+import type { InputKind } from '@/lib/utils/input'
 import {
   GUIDE_COMPLETE_LABEL,
   GUIDE_SECTION,
@@ -42,6 +48,8 @@ export const GUIDE_MORE_LABEL: Record<Edition, string> = {
   screen: 'More in',
   print: 'More under Jump',
 }
+/** The footer on a touch screen: no keycap, and no "Jump" (the chip is hidden on touch). */
+export const GUIDE_MORE_TOUCH_LABEL = 'More things to try'
 /** The palette's Next row prefix: "Try: Light up the toolkit". */
 export const GUIDE_PALETTE_PREFIX = 'Try: '
 
@@ -53,10 +61,14 @@ export interface GuideItem {
   label: Record<Edition, string>
   /** One-line "how" under the label. */
   how: Record<Edition, string>
+  /** The "how" on a touch screen, where `how` names a key or a hover (else `how` serves both). */
+  howTouch?: Partial<Record<Edition, string>>
   /** Where the feature is, for the palette's Next row (section name / chapter). */
   where: Record<Edition, string>
   /** The coach mark's line beside the control; null = no coach mark (per edition: null = that edition draws its own, in the frame). */
   coach: Record<Edition, string | null> | null
+  /** The coach line on a touch screen, where `coach` names a hover (else `coach` serves both). */
+  coachTouch?: Partial<Record<Edition, string>>
 }
 
 const both = (s: string): Record<Edition, string> => ({ screen: s, print: s })
@@ -69,6 +81,11 @@ export const GUIDE_ITEMS: readonly GuideItem[] = [
     how: {
       screen: 'Press ⌘K to search every page and action.',
       print: 'Press ⌘K to jump to any chapter or action.',
+    },
+    /* No ⌘K chip on touch: the row's own button opens the palette. */
+    howTouch: {
+      screen: `Tap ${GUIDE_TRY_LABEL} to search every page and action.`,
+      print: `Tap ${GUIDE_TRY_LABEL} to jump to any chapter or action.`,
     },
     where: { screen: 'Top bar', print: 'Masthead' },
     coach: null,
@@ -99,6 +116,8 @@ export const GUIDE_ITEMS: readonly GuideItem[] = [
       /* P2 draws the panel's own "TRY: REVEAL THE PORTRAIT" tag — that is the page's coach. */
       print: null,
     },
+    /* A touch never hovers the portrait; the replay control is the way in. */
+    coachTouch: { screen: 'Tap replay to watch the portrait resolve.' },
   },
   {
     id: 'light-toolkit',
@@ -150,11 +169,13 @@ export const GUIDE_ITEMS: readonly GuideItem[] = [
       screen: 'Switch it on, then hover a job to see the tools it used.',
       print: 'Switch it on, then pick a job to see the stickers it used.',
     },
+    howTouch: { screen: 'Switch it on, then tap a job to see the tools it used.' },
     where: { screen: 'Experience', print: 'Ch. IV' },
     coach: {
       screen: 'Switch this on, then hover a job.',
       print: 'Flip the switch, then pick a job.',
     },
+    coachTouch: { screen: 'Switch this on, then tap a job.' },
   },
   {
     id: 'ask-console',
@@ -178,16 +199,24 @@ export function guideLabel(id: GuideId, edition: Edition): string {
   return ITEM_BY_ID[id].label[edition]
 }
 
-export function guideHow(id: GuideId, edition: Edition): string {
-  return ITEM_BY_ID[id].how[edition]
+export function guideHow(id: GuideId, edition: Edition, input: InputKind = 'mouse'): string {
+  const item = ITEM_BY_ID[id]
+  return (input === 'touch' && item.howTouch?.[edition]) || item.how[edition]
 }
 
 export function guideWhere(id: GuideId, edition: Edition): string {
   return ITEM_BY_ID[id].where[edition]
 }
 
-export function guideCoach(id: GuideId, edition: Edition): string | null {
-  return ITEM_BY_ID[id].coach?.[edition] ?? null
+export function guideCoach(
+  id: GuideId,
+  edition: Edition,
+  input: InputKind = 'mouse'
+): string | null {
+  const item = ITEM_BY_ID[id]
+  const line = item.coach?.[edition] ?? null
+  if (line === null) return null
+  return (input === 'touch' && item.coachTouch?.[edition]) || line
 }
 
 /** The polite announcement when an item completes. */
