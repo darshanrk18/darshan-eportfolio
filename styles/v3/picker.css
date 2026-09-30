@@ -937,6 +937,9 @@ html[data-pick='1'] .pk-shell .pk-img {
   .pk-cap {
     max-width: calc(var(--pk-sheet-x) - var(--pk-gutter) - 12px);
     white-space: normal;
+    /* two even lines, never a last word on its own (set only where it
+       wraps: on the base rule the text-wrap shorthand would undo nowrap) */
+    text-wrap: balance;
   }
 }
 /* …and on a frame under 480 px high (a phone held sideways) it also wraps
@@ -952,6 +955,7 @@ html[data-pick='1'] .pk-shell .pk-img {
       calc(var(--pk-seam) - 15.7cqh - var(--pk-gutter) - 8px)
     );
     white-space: normal;
+    text-wrap: balance;
   }
 }
 /* Under 768 px wide and 836 px high the face comes up beside the SCREEN
@@ -1116,6 +1120,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     font-size: 13px;
     line-height: 18px;
     white-space: normal;
+    text-wrap: balance;
     max-width: none;
   }
   .pk-seal {
