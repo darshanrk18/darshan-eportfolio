@@ -9,6 +9,9 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
   },
+  /* tsconfig says jsx: 'preserve' (Next's compiler); tests that render a
+     server component to static markup need the automatic runtime here. */
+  esbuild: { jsx: 'automatic' },
   resolve: {
     alias: {
       '@': rootDir,

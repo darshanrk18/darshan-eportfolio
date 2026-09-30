@@ -17,9 +17,18 @@ Related html attributes (all written by the same modules, never by hand):
 |---|---|---|
 | `data-edition` | pre-paint script, `applyEdition()` | edition in force (`screen` is the default and the SSR answer) |
 | `data-pick="1"` | pre-paint (nothing stored), `requestEditionPick()` (palette `choose-edition`) | the EditionPicker island (C5) should render; the picker clears it on a choice |
+| `data-picker-live="1"` | the picker surface (EditionPickerSurface.client.tsx), while mounted | the hydrated surface has replaced the server-rendered shell (`PickerShell.tsx`, shown by picker.css under `data-pick='1'` from the first paint); the shell is display:none |
+| `data-pick-queued="screen" \| "print"` | the shell's inline script (`PickerShell.tsx`), on a tap / Enter / 1 / 2 before the surface is live | a choice made on the shell; the surface reads and clears it the moment it goes live and chooses at once |
 | `data-intro="1"` | pre-paint only | stored PRINT + full motion + `sessionStorage['signal.intro']` absent → the intro host (C6) runs the intro |
 | `data-edition-switch="press" \| "projector"` | `switchEdition()` for the life of one view transition | keys `switch.css` |
 | `data-motion="reduced" \| "full"` | pre-paint, `setMotionPreference()` | unchanged from v2 |
+
+While `data-pick='1'`, picker.css also locks the page (`body { overflow: hidden }`)
+from the first paint; the shell's script traps Tab between the two halves and
+starts the PRINT half's fonts. The shell's hover is the surface's hover: every
+`.pk[data-hover=…]` rule has a `.pk-shell:has(.pk-half-…:hover)` twin, and the
+surface seeds `data-hover` (and copies the running transitions) from the
+shell's `:hover` at the swap.
 
 Storage: `localStorage['signal.edition']` ∈ `screen|print`;
 `sessionStorage['signal.intro']='1'` once the intro has run this session.

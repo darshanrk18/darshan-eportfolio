@@ -22,9 +22,24 @@
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
 import { PICK_ATTR } from '@/lib/commands/context'
+import { islandUnavailable } from '@/lib/utils/island'
+import { PICKER_FAILED_ATTR, PICKER_SHELL_ATTR } from './picker.attrs'
 import '@/styles/v3/picker.css'
 
-const EditionPickerSurface = dynamic(() => import('./EditionPickerSurface.client'), {
+/**
+ * If the surface chunk never arrives, the server shell stays and keeps
+ * working on its own: html[data-picker-failed] tells its script to apply a
+ * tap at once (not after the fallback wait), and a tap already queued is
+ * replayed now.
+ */
+function surfaceFailed(error: unknown) {
+  const html = document.documentElement
+  html.setAttribute(PICKER_FAILED_ATTR, '1')
+  document.querySelector<HTMLElement>(`[${PICKER_SHELL_ATTR}] .pk-half.is-queued`)?.click()
+  return islandUnavailable<typeof import('./EditionPickerSurface.client')>(error)
+}
+
+const EditionPickerSurface = dynamic(() => import('./EditionPickerSurface.client').catch(surfaceFailed), {
   ssr: false,
 })
 
