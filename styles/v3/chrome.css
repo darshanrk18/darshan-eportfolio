@@ -187,11 +187,16 @@
   }
 }
 
-/* phone / desktop halves of the bar */
+/* compact / full halves of the bar. The full bar (links · guide chip ·
+   toggle · GitHub · LinkedIn · CV · ⌘K) needs about 1010 px of content in
+   SCREEN and 1014 px in PRINT, so below 1100 — phones, iPads either way
+   round, phones in landscape, narrow windows — the bar is the compact one:
+   ident · guide chip · toggle · Menu (the MobileMenu sheet has the rest,
+   the edition toggle included). */
 .sig-nav-phone {
   display: none;
 }
-@media (max-width: 767.98px) {
+@media (max-width: 1099.98px) {
   .sig-nav-links,
   .sig-nav-desk,
   .sig-nav-vr,
@@ -201,6 +206,8 @@
   .sig-nav-phone {
     display: inline-flex;
   }
+}
+@media (max-width: 767.98px) {
   .sig-nav-tools {
     gap: 10px;
   }
@@ -459,6 +466,12 @@ html[data-edition='print'] {
       gap: 6px;
     }
   }
+  /* compact on tablets: the tools sit at the right, as in the full bar */
+  @media (min-width: 768px) and (max-width: 1099.98px) {
+    .sig-nav-tools {
+      margin-left: auto;
+    }
+  }
   /* P1 order: toggle · 8 THINGS TO TRY · ⌘K JUMP */
   .sig-nav-tools > * {
     order: 2;
@@ -630,6 +643,18 @@ html[data-edition='print'] {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+/* On tablets the sheet keeps the bar's 24 px gutters, so the ident and
+   Close sit where the ident and Menu were. */
+@media (min-width: 768px) {
+  .sig-menu-head,
+  .sig-menu-row,
+  .sig-menu-foot {
+    padding-inline: 24px;
+  }
+  .sig-menu-rule {
+    margin-inline: 24px;
+  }
 }
 
 html[data-edition='screen'] {

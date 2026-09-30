@@ -11,7 +11,8 @@
  * Right cluster (both): `#guide-slot` (an EMPTY span the Guide island (C5)
  * portals its "8 things to try" chip into — rendered once, present in the
  * desktop and the phone bar) · EditionToggle · rule · GitHub · LinkedIn ·
- * CV · ⌘K keycap (hidden on touch). Phone (< 768): ident · guide slot ·
+ * CV · ⌘K keycap (hidden on touch). Compact (< 1100 — phones, tablets,
+ * narrow windows, where the full bar cannot fit): ident · guide slot ·
  * toggle · Menu (→ MobileMenu).
  *
  * v3 removed at rest (clutter law): the `~/darshan-konnur` breadcrumb, the
