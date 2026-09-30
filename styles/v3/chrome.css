@@ -392,6 +392,15 @@ html[data-edition='print'] {
     background: var(--bg-page);
     border-bottom: 3px solid var(--text-primary);
   }
+  /* The bar's ink boxes (issue box, pills, guide chip, icons, CV, keycap,
+     Menu) take a 2 px border, the toggle's. Chrome already draws a 2.5 px
+     border at 2 px at every pixel ratio, and the masthead is fitted to
+     that; Safari on a Retina screen drew the full 2.5 px, which made each
+     box 1 px wider and left the issue box no room. One weight, one fit, in
+     every browser. */
+  .sig-nav .gd-chip {
+    border-width: 2px;
+  }
   .sig-nav-ident {
     color: var(--text-primary);
     gap: 12px;
@@ -415,7 +424,7 @@ html[data-edition='print'] {
     /* always clear of the ABOUT pill (the pills' auto margin can reach 0) */
     margin-right: 10px;
     padding: 4px 9px 4px 10px;
-    border: 2.5px solid var(--text-primary);
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     transform: rotate(-2deg);
@@ -473,7 +482,7 @@ html[data-edition='print'] {
   .sig-nav-links a {
     min-height: 32px;
     padding: 0 8px;
-    border: 2.5px solid var(--text-primary);
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     font: 400 15px/1 var(--font-display);
@@ -545,7 +554,7 @@ html[data-edition='print'] {
   .sig-nav-kbd,
   .sig-nav-menu {
     min-height: 32px;
-    border: 2.5px solid var(--text-primary);
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     color: var(--text-primary);

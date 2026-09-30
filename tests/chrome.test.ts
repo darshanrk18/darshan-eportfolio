@@ -189,6 +189,17 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
     const menu = read('components/chrome/MobileMenu.tsx')
     expect(menu).toMatch(/setPaletteOpen\(true\)\s*\}\}\s*>\s*Search \/ Jump\s*</)
   })
+
+  it('draws the PRINT bar ink boxes at 2 px, the weight Chrome renders and the fit assumes', () => {
+    const print = css.slice(css.indexOf("html[data-edition='print'] {"), css.indexOf('.sig-menu {'))
+    for (const sel of ['.sig-nav-issue', '.sig-nav-links a', '.sig-nav-menu']) {
+      const rule = print.match(new RegExp(`${sel.replace(/[.]/g, '\\.')} \\{([^}]*)\\}`))?.[1]
+      expect(rule, sel).toContain('border: 2px solid var(--text-primary);')
+    }
+    expect(print).toMatch(/\.sig-nav \.gd-chip \{\s*border-width: 2px;\s*\}/)
+    expect(print).not.toMatch(/border: 2\.5px/)
+  })
+
 })
 
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
