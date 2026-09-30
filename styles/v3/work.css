@@ -116,6 +116,27 @@ html[data-edition='print'] {
 .pw-tabs::-webkit-scrollbar {
   display: none;
 }
+/* A strip that has to scroll (the phone row, or a narrow bar) fades out over
+   its last 28 px instead of cutting a word at the edge, and the fade clears
+   as the strip reaches its end. It is scroll-driven, so it exists only while
+   the strip overflows; engines without scroll timelines keep the plain edge. */
+@supports (animation-timeline: scroll()) {
+  .pw-tabs {
+    animation: pw-tabs-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+@keyframes pw-tabs-fade {
+  0%,
+  90% {
+    -webkit-mask-image: linear-gradient(to left, transparent, #000 28px);
+    mask-image: linear-gradient(to left, transparent, #000 28px);
+  }
+  100% {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
 .pw-tab {
   flex-shrink: 0;
   min-height: 44px;
@@ -125,6 +146,15 @@ html[data-edition='print'] {
   cursor: pointer;
   white-space: nowrap;
   position: relative;
+}
+/* A window with one tab (a project without games) shows its name whole where
+   it fits and ends it in an ellipsis where it does not, instead of cutting a
+   letter at the strip's edge. */
+.pw-tab:only-child {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pw-tagline {
   white-space: nowrap;
