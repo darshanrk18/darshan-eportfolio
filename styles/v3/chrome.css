@@ -212,6 +212,20 @@
     gap: 10px;
   }
 }
+/* No room for the pill under 360, nor under 480 once the guide is complete
+   (the chip then shows its label instead of the count, and for a moment
+   "You've tried everything"): the bar's toggle steps out and the menu's
+   foot, which always carries the same toggle, is the switch. */
+@media (max-width: 359.98px) {
+  .sig-nav-tools > .ed-toggle {
+    display: none !important;
+  }
+}
+@media (max-width: 479.98px) {
+  .sig-nav-tools:has(.gd-chip[data-complete]) > .ed-toggle {
+    display: none !important;
+  }
+}
 
 /* ============================================================================
    TOP BAR — SCREEN (S1: ident · rule · Cinzel caps · guide · toggle · rule ·
@@ -343,6 +357,19 @@ html[data-edition='screen'] {
   }
   .sig-nav-menu:hover {
     color: var(--text-primary);
+  }
+  /* Under 390: seal · chip · toggle · Menu fit with the tools a little
+     closer and the pill's halves and Menu a little narrower. */
+  @media (max-width: 389.98px) {
+    .sig-nav-tools {
+      gap: 10px;
+    }
+    .sig-nav .ed-toggle > button {
+      padding: 0 8px;
+    }
+    .sig-nav-menu {
+      padding: 0 6px;
+    }
   }
 }
 
@@ -561,12 +588,16 @@ html[data-edition='print'] {
       margin-left: 12px;
     }
   }
-  /* Phones: bug · toggle · chip · MENU must fit 375 — the wordmark goes
-     (the seal bug stays the ident), the tools sit closer together. */
-  @media (max-width: 479.98px) {
+  /* Phones: bug · toggle · chip · MENU must fit — the wordmark goes below
+     560 (from 480 up the chip shows its label, and once "You've tried
+     everything"; the seal bug stays the ident), and below 480 the tools sit
+     closer together. */
+  @media (max-width: 559.98px) {
     .sig-nav-word {
       display: none;
     }
+  }
+  @media (max-width: 479.98px) {
     .sig-nav-tools {
       gap: 6px;
     }

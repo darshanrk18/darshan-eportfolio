@@ -13,7 +13,8 @@
  * desktop and the phone bar) · EditionToggle · rule · GitHub · LinkedIn ·
  * CV · ⌘K keycap (hidden on touch). Compact (< 1100 — phones, tablets,
  * narrow windows, where the full bar cannot fit): ident · guide slot ·
- * toggle · Menu (→ MobileMenu).
+ * toggle · Menu (→ MobileMenu); under 360, and under 480 once the guide is
+ * complete, the toggle lives only in the menu's foot.
  *
  * v3 removed at rest (clutter law): the `~/darshan-konnur` breadcrumb, the
  * `main ✓` branch chip, the file-name tabs and the `compiled NN%` readout.
