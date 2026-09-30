@@ -14,6 +14,20 @@
 
 @import 'tailwindcss';
 
+/* SCREEN's body face, Marcellus, draws its figures like letters ("IOO%",
+   "CS5O1O"). The digits 0-9 alone come from Tenor Sans (same width, weight
+   and classical build; owner's pick on the design canvas, Sep 30 2026): a
+   1.5 KB digits-only subset, fetched only where a digit is drawn. SIL OFL —
+   public/fonts/OFL-TenorSans.txt. */
+@font-face {
+  font-family: 'Screen Digits';
+  src: url('/fonts/tenor-sans-digits.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
 /* ----------------------------------------------------------------------------
    Tailwind v4 theme mapping — tokens → utilities.
    `inline` keeps utilities pointing at the live CSS vars so the
@@ -189,8 +203,9 @@
 
   /* ---- v3 §2.3 faces (SCREEN) ------------------------------------------ */
   --font-display: var(--font-cinzel), Georgia, serif;
-  --font-body: var(--font-marcellus), Georgia, serif;
-  --font-slab: var(--font-marcellus), Georgia, serif;
+  --font-screen-body: 'Screen Digits', var(--font-marcellus), Georgia, serif;
+  --font-body: var(--font-screen-body);
+  --font-slab: var(--font-screen-body);
   /* §3.1 easings (the only three) + §3.2 durations */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-swift: cubic-bezier(0.3, 0, 0, 1);

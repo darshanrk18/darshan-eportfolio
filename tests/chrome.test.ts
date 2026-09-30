@@ -154,6 +154,23 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
   })
 })
 
+describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
+  it('digits 0-9 come from the self-hosted Tenor Sans subset, in front of Marcellus', async () => {
+    const { statSync } = await import('node:fs')
+    const css = read('app/globals.css')
+    expect(css).toMatch(/font-family: 'Screen Digits';[\s\S]*?unicode-range: U\+0030-0039;/)
+    expect(css).toMatch(/--font-screen-body: 'Screen Digits', var\(--font-marcellus\)/)
+    expect(css).toMatch(/--font-body: var\(--font-screen-body\);/)
+    expect(statSync('public/fonts/tenor-sans-digits.woff2').size).toBeLessThan(4 * 1024)
+    expect(statSync('public/fonts/OFL-TenorSans.txt').size).toBeGreaterThan(1000)
+    // every direct use of Marcellus puts the digits face first
+    const picker = read('styles/v3/picker.css')
+    expect(picker.match(/var\(--font-marcellus\)/g)?.length).toBe(
+      picker.match(/'Screen Digits', var\(--font-marcellus\)/g)?.length
+    )
+  })
+})
+
 describe('share card and web manifest take the SCREEN look (§2.8, §3)', () => {
   it('the share card is the static split cover: a 1200×630 JPEG under 300 KB, with alt text', async () => {
     const { readFileSync, statSync, existsSync } = await import('node:fs')
