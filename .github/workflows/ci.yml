@@ -2,24 +2,130 @@ name: ci
 
 on:
   push:
-    branches: [main, 'rebuild/**']
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+# One run per pull request: a new push cancels the run it replaces.
+# Runs on main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    name: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      SMOKE_PORT: '3000'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build # runs next build + scripts/measure-bundle.mjs
-      # TODO(spec §8.6): once installed, add —
-      #   size-limit (enforce §6.5 budgets from .size-limit.json)
-      #   Playwright smoke + @axe-core/playwright (e2e/smoke.spec.ts)
-      #   @lhci/cli autorun against the Vercel preview URL (lighthouserc.json)
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Restore the Next.js build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'styles/**', 'next.config.js', 'postcss.config.mjs', 'tsconfig.json') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      # next build, then scripts/check-prepaint.mjs (the inline pre-paint
+      # script survived minification) and scripts/measure-bundle.mjs (fails
+      # the job when '/' first-load JS or /cv's own JS is over budget).
+      - name: Build (bundle budget and pre-paint check)
+        id: build
+        shell: bash
+        run: npm run build 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      # Also the guard for the budget gate itself: measure-bundle never fails a
+      # build when measuring crashes, so no budget lines means this step fails.
+      - name: Report the bundle budgets
+        if: ${{ !cancelled() && steps.build.outcome != 'skipped' }}
+        shell: bash
+        run: |
+          log="$RUNNER_TEMP/build.log"
+          budgets=$(grep '^\[measure-bundle\] budget ' "$log" || true)
+          {
+            echo "### Bundle budgets"
+            echo
+            if [ -n "$budgets" ]; then
+              echo "| Route | Measure | Size (KB gz) | Budget (KB gz) | Result |"
+              echo "|---|---|---:|---:|---|"
+              echo "$budgets" |
+                awk '{ printf "| `%s` | %s | %s | %s | %s |\n", $3, $4, $5, $7, ($10 == "✓" ? "within budget" : "**over budget**") }'
+            else
+              echo "The build log has no budget lines: the bundle was not measured."
+            fi
+            if grep -q 'gzipped first-load JS per route' "$log"; then
+              echo
+              echo "<details><summary>First-load JS per route</summary>"
+              echo
+              echo '```'
+              sed -n '/gzipped first-load JS per route/,/(shared)/p' "$log" | sed '1d'
+              echo '```'
+              echo
+              echo "</details>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$budgets" ]; then
+            echo "::error::The bundle budgets were not checked (no budget lines in the build log)."
+            exit 1
+          fi
+
+      - name: Start the production server
+        shell: bash
+        run: |
+          npm start -- --port "$SMOKE_PORT" > "$RUNNER_TEMP/server.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl --silent --fail --output /dev/null "http://localhost:$SMOKE_PORT/"; then
+              echo "The server answers on port $SMOKE_PORT."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::The production server did not answer within 60 s."
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
+
+      # scripts/qa/smoke.mjs drives the runner's Google Chrome through both
+      # editions, the picker, the intro, /cv, /work, /arcade, the 404 and the
+      # phone width, and fails on any console error.
+      - name: Browser smoke test
+        run: node scripts/qa/smoke.mjs --base "http://localhost:$SMOKE_PORT" --out "$RUNNER_TEMP/smoke"
+
+      - name: Upload screenshots and logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/smoke
+            ${{ runner.temp }}/server.log
+            ${{ runner.temp }}/build.log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -11,8 +11,9 @@
  * script runs post-build, so the manifest bundled into the *next* build is
  * this run's measurement). Sizes are facts either way — never hand-edited.
  *
- * TODO(spec §8.6): budget ENFORCEMENT belongs to size-limit (.size-limit.json)
- * once installed; this script only measures and reports.
+ * It is also the budget gate: under GitHub Actions it fails the run when a
+ * route is over its budget (below). The CI workflow also fails when these
+ * budget lines are missing from the build log, i.e. when measuring failed.
  */
 
 import { readFile, writeFile, stat } from 'node:fs/promises'
@@ -35,7 +36,6 @@ const outFile = path.join(root, 'lib', 'build', 'manifest.json')
  *   + 0.2 CRT hydrate-apply        ≈ 178 KB gz HARD ceiling.
  * Enforced here in CI (GITHUB_ACTIONS) so the gate moved in the same commit
  * as the spend; deploys still never fail on measurement (§ header note).
- * size-limit (.size-limit.json, same 178) takes over once installed.
  */
 const FIRST_LOAD_BUDGET_GZ_KB = { '/': 178 }
 /**
@@ -166,6 +166,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  // Measurement must never break a deploy; budgets are enforced by size-limit in CI.
+  // Measurement must never break a deploy. In CI, the workflow fails when the
+  // budget lines this run should have printed are missing.
   console.warn('[measure-bundle] failed (non-fatal):', error)
 })
