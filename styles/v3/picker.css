@@ -117,7 +117,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   container-type: size;
   background: var(--pk-black);
   color: var(--pk-text);
-  font-family: var(--font-marcellus), Georgia, serif;
+  font-family: 'Screen Digits', var(--font-marcellus), Georgia, serif;
   -webkit-font-smoothing: antialiased;
   opacity: 1;
   transition: opacity 400ms var(--ease-swift, ease);
@@ -395,7 +395,7 @@ html[data-pick='1'] .pk-shell .pk-img {
 }
 .pk-body-s {
   margin: 22px 0 0;
-  font: 400 18px/1.5 var(--font-marcellus), Georgia, serif;
+  font: 400 18px/1.5 'Screen Digits', var(--font-marcellus), Georgia, serif;
   color: var(--pk-text2);
 }
 .pk-cta-s {
@@ -464,7 +464,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   left: var(--pk-gutter);
   bottom: 26px;
   margin: 0;
-  font: 400 14px/20px var(--font-marcellus), Georgia, serif;
+  font: 400 14px/20px 'Screen Digits', var(--font-marcellus), Georgia, serif;
   color: var(--pk-text3);
   white-space: nowrap;
   pointer-events: none;
