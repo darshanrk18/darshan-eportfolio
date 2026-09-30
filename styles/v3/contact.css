@@ -1558,6 +1558,37 @@ html[data-edition='print'] {
       }
     }
   }
+  /* No scroll-driven animations (Firefox, Safari before 26): a 32 px paper
+     fade that sticks to the right edge while chips run past it and rests
+     after the last chip at the end. It is shown only where the chips overrun
+     the strip (a pressed chip is 18 px wider): on a strip that just fits,
+     its width would make the chips scroll. */
+  @supports not (animation-timeline: scroll()) {
+    .ct-sugs {
+      container-type: inline-size;
+    }
+    .ct-sugs::after {
+      content: '';
+      display: none;
+      position: sticky;
+      right: -4px;
+      flex: none;
+      width: 32px;
+      margin: -6px 0 -6px -8px;
+      background: linear-gradient(90deg, transparent, var(--ed-white));
+      pointer-events: none;
+    }
+    @container (max-width: 452px) {
+      .ct-sugs::after {
+        display: block;
+      }
+    }
+    @container (max-width: 470px) {
+      .ct-sugs:has(.ct-sug[aria-pressed='true'])::after {
+        display: block;
+      }
+    }
+  }
   .ct-sugs li {
     flex-shrink: 0;
   }
