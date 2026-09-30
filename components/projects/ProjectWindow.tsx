@@ -1,45 +1,65 @@
 'use client'
 
 /**
- * Terminal-chrome project window (spec §4.6, v2 §8).
- * Title bar (three FUNCTIONAL traffic lights §8.1: red stops the demo,
- * yellow collapses the case file, green maximizes; ▶ run / ■ stop) →
- * 16:10 stage (generative-plate poster; the demo island mounts over it on
- * run) → PROBLEM / BUILD / RESULT case file → footer strip (stack chips,
- * view source, read paper, permalink, touch-only ⤢ maximize chip).
- * Selection crossfades content (200ms total) with reserved heights to
- * prevent CLS, plus a synced title-bar opacity dip (§8.2). Green opens a
- * Motion layoutId FLIP lightbox (§8.3): fixed full-viewport frame, focus
- * trap, body scroll + Lenis lock, Esc-restores-first precedence, and a
- * reserved-height placeholder in the flow for zero CLS. Demos are lazy
- * islands loaded on first ▶ run only; the poster is the fallback.
- * Listens for SIGNAL_EVENTS.openProject / runProject so palette and
- * terminal commands re-trigger the surface. `fixedSlug` pins the window
- * to one project for /work/[slug] reuse.
+ * The project window (spec §4.6, v2 §8; v3 S4 "the game window" / P4 "the
+ * open issue"). One DOM, two skins (styles/v3/work.css + styles/v2/projects.css
+ * for the mechanics):
+ * - Title bar: three FUNCTIONAL lights (stop the demo · collapse the case file
+ *   · maximize) in visitor language, the demo tabs (TRIPLAY_AI: Connect Four /
+ *   Snake / Rock-Paper-Scissors; other projects: one tab named after them),
+ *   PRINT's title suffix ("— you vs. the engine"), then New game (Connect
+ *   Four only) and Maximize ("Play full size" in PRINT). `windowTitle` is
+ *   never rendered (clutter law).
+ * - Body: the demo pane (left) + the case file (right), stacked on phones.
+ *   The demo mounts itself the first time the window scrolls into view
+ *   ("Open one and it runs right here"); the generative plate stays beneath
+ *   as the loading / stopped poster. Selection crossfades (200 ms) with the
+ *   frame height reserved (zero CLS).
+ * - Maximize opens a Motion layoutId FLIP lightbox (focus trap, body scroll
+ *   + Lenis lock, Esc-restores-first precedence, reserved-height placeholder)
+ *   and completes the guide's `open-project` item.
+ * Listens for SIGNAL_EVENTS.openProject / runProject so palette and terminal
+ * commands re-trigger the surface. `fixedSlug` pins the window to one
+ * project for /work/[slug] reuse.
  */
 
-import Link from 'next/link'
 import nextDynamic from 'next/dynamic'
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react'
 import { AnimatePresence, LazyMotion, domMax, m } from 'motion/react'
 import clsx from 'clsx'
 import { SIGNAL_EVENTS } from '@/lib/commands/context'
-import { profile } from '@/lib/data/profile'
-import { getProject, isProjectSlug, type ProjectSlug } from '@/lib/data/projects'
+import {
+  getProject,
+  isProjectSlug,
+  projectSlugs,
+  windowTabs,
+  workCopy,
+  type ProjectGameId,
+  type ProjectSlug,
+} from '@/lib/data/projects'
 import { getLenis } from '@/lib/motion/lenis'
 import { EASE_STRUCTURAL, SPRING_UI } from '@/lib/motion/tokens'
-import { useMagnetic } from '@/lib/motion/useMagnetic'
+import { useInViewOnce } from '@/lib/motion/useInViewOnce'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { useSignalStore } from '@/lib/state/store'
-import { trackEvent, trackProjectRun } from '@/lib/utils/analytics'
+import { trackEvent, trackProjectOpened, trackProjectRun } from '@/lib/utils/analytics'
+import CaseFile from './CaseFile'
+import EdText from './EdText'
 import GenerativePlate from './GenerativePlate'
+
+import '@/styles/v3/work.css'
+
+interface DemoProps {
+  game?: ProjectGameId
+  resetKey?: number
+}
 
 /**
  * Demo islands, one per project — code-split; a chunk loads only the first
  * time its project is run (§6.4). While loading (and under any failure to
  * mount) the generative-plate poster beneath stays visible.
  */
-const DEMOS: Partial<Record<ProjectSlug, ComponentType>> = {
+const DEMOS: Partial<Record<ProjectSlug, ComponentType<DemoProps>>> = {
   'ticket-forge': nextDynamic(() => import('./demos/TicketForgeViz'), {
     ssr: false,
     loading: () => null,
@@ -70,7 +90,37 @@ const DEMOS: Partial<Record<ProjectSlug, ComponentType>> = {
   }),
 }
 
-const CASE_COLUMNS = ['PROBLEM', 'BUILD', 'RESULT'] as const
+/** v3 §2.6 — the guide island listens for this on window. */
+const GUIDE_TRIED_EVENT = 'signal:guide-tried'
+/**
+ * v3 §2.6 item 6 — the guide's "Try it" for "Open a project full size" (and
+ * any palette row that wants it): `window.dispatchEvent(new CustomEvent(
+ * 'signal:maximize-project', { detail: { slug? } }))` maximizes the window
+ * (the named project when given, else whatever is open). Dispatch after
+ * scrolling to #projects; retry briefly until the island has mounted (m).
+ */
+export const MAXIMIZE_PROJECT_EVENT = 'signal:maximize-project'
+
+function Icon({ name }: { name: 'refresh' | 'expand' | 'restore' | 'play' }) {
+  const d = {
+    refresh: 'M10.2 6.6A4.3 4.3 0 1 1 8.9 2.9M9.4 .9v2.6H6.8',
+    expand: 'M7.5 1h3.5v3.5M11 1L7 5M4.5 11H1V7.5M1 11l4-4',
+    restore: 'M11 4.5H7.5V1M7.5 4.5L11 1M1 7.5h3.5V11M4.5 7.5L1 11',
+    play: 'M3 1.5v9l7-4.5z',
+  }[name]
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+      <path
+        d={d}
+        fill={name === 'play' ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 export interface ProjectWindowProps {
   /** Pin the window to one project (used by /work/[slug]); omits store sync. */
@@ -85,34 +135,95 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
   const [displaySlug, setDisplaySlug] = useState<ProjectSlug>(active)
   const [fading, setFading] = useState(false)
   const [running, setRunning] = useState(false)
+  const [game, setGame] = useState<string>(() => windowTabs(getProject(active)!)[0].id)
+  const [resetKey, setResetKey] = useState(0)
   const [hovered, setHovered] = useState(false)
   /** §8.1 yellow — per-window collapse state, not persisted. */
   const [collapsedSlugs, setCollapsedSlugs] = useState<Partial<Record<ProjectSlug, boolean>>>({})
   /** §8.3 — measured frame height, locked into the in-flow placeholder. */
   const [slotHeight, setSlotHeight] = useState<number | null>(null)
   const pendingRunRef = useRef<ProjectSlug | null>(null)
+  /** A maximize asked for by event while the window was swapping projects. */
+  const pendingMaxRef = useRef(false)
+  /** The visitor pressed stop — do not auto-run again until a swap. */
+  const stoppedRef = useRef(false)
   const displaySlugRef = useRef(displaySlug)
   displaySlugRef.current = displaySlug
   const frameRef = useRef<HTMLDivElement | null>(null)
-  /** §6.5 — the ▶ run button is one of the ~10 named magnetic elements. */
-  const runBtnRef = useRef<HTMLButtonElement | null>(null)
-  useMagnetic(runBtnRef, { strength: 0.25, radius: 80 })
+
+  // The demo runs itself once the window is in view (v3: "it runs right here").
+  const { ref: inViewRef, inView } = useInViewOnce<HTMLDivElement>({
+    threshold: 0.2,
+    rootMargin: '0px 0px 5% 0px',
+  })
+  const setFrame = useCallback(
+    (node: HTMLDivElement | null) => {
+      frameRef.current = node
+      inViewRef(node)
+    },
+    [inViewRef],
+  )
+  useEffect(() => {
+    if (inView && !stoppedRef.current) setRunning(true)
+  }, [inView])
 
   const maximized = useSignalStore((s) => s.maximizedProject) === displaySlug
   const collapsed = !!collapsedSlugs[displaySlug]
   const caseId = `pw-case-${fixedSlug ?? 'main'}`
+  const paneId = `pw-pane-${fixedSlug ?? 'main'}`
 
   const startRun = (slug: ProjectSlug) => {
+    stoppedRef.current = false
     setRunning(true)
     trackProjectRun(slug)
   }
-
-  const maximize = () => {
-    setSlotHeight(frameRef.current?.offsetHeight ?? null)
-    useSignalStore.getState().setMaximizedProject(displaySlug)
-    trackEvent('project_maximized', { slug: displaySlug })
+  const stopRun = () => {
+    stoppedRef.current = true
+    setRunning(false)
   }
+
+  const maximize = useCallback(() => {
+    useSignalStore.getState().setMaximizedProject(displaySlugRef.current)
+  }, [])
   const restore = () => useSignalStore.getState().setMaximizedProject(null)
+
+  // The in-flow height, kept fresh while the window is NOT a lightbox: the
+  // store can be set from outside (the guide's "Open a project full size",
+  // the palette), so the placeholder, the analytics event and the guide's
+  // `open-project` completion all key off `maximized` itself — whoever set it.
+  const flowHeightRef = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    if (!maximized && frameRef.current) flowHeightRef.current = frameRef.current.offsetHeight
+  })
+  useEffect(() => {
+    if (!maximized) return
+    setSlotHeight(flowHeightRef.current)
+    trackEvent('project_maximized', { slug: displaySlugRef.current })
+    window.dispatchEvent(new CustomEvent(GUIDE_TRIED_EVENT, { detail: { id: 'open-project' } }))
+    return () => setSlotHeight(null)
+  }, [maximized])
+
+  // The guide / palette ask for full size by event (§2.6 item 6).
+  useEffect(() => {
+    const onMax = (e: Event) => {
+      const slug = (e as CustomEvent<{ slug?: string }>).detail?.slug
+      if (slug && isProjectSlug(slug) && slug !== displaySlugRef.current) {
+        if (fixedSlug) return
+        useSignalStore.getState().setActiveProject(slug)
+        pendingMaxRef.current = true
+        return
+      }
+      if (useSignalStore.getState().maximizedProject === displaySlugRef.current) return
+      maximize()
+    }
+    window.addEventListener(MAXIMIZE_PROJECT_EVENT, onMax)
+    return () => window.removeEventListener(MAXIMIZE_PROJECT_EVENT, onMax)
+  }, [fixedSlug, maximize])
+  useEffect(() => {
+    if (!pendingMaxRef.current || fading) return
+    pendingMaxRef.current = false
+    maximize()
+  }, [displaySlug, fading, maximize])
 
   // Selection change → close any lightbox, then 100ms fade out, swap content,
   // fade back (≈200ms total). The title-bar text dips in sync (§8.2).
@@ -120,21 +231,22 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
     if (active === displaySlug) return
     const store = useSignalStore.getState()
     if (store.maximizedProject) store.setMaximizedProject(null)
-    if (reduced) {
+    const swap = () => {
       setDisplaySlug(active)
-      setRunning(pendingRunRef.current === active)
+      setGame(windowTabs(getProject(active)!)[0].id)
+      stoppedRef.current = false
+      setRunning(inView || pendingRunRef.current === active)
       pendingRunRef.current = null
+      setFading(false)
+    }
+    if (reduced) {
+      swap()
       return
     }
     setFading(true)
-    const id = setTimeout(() => {
-      setDisplaySlug(active)
-      setRunning(pendingRunRef.current === active)
-      pendingRunRef.current = null
-      setFading(false)
-    }, 100)
+    const id = setTimeout(swap, 100)
     return () => clearTimeout(id)
-  }, [active, displaySlug, reduced])
+  }, [active, displaySlug, reduced, inView])
 
   // Cross-island events: palette/terminal select or run a project.
   useEffect(() => {
@@ -142,14 +254,15 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
       const slug = (e as CustomEvent<{ slug?: string }>).detail?.slug
       if (!slug || !isProjectSlug(slug)) return
       pendingRunRef.current = null
-      if (slug === displaySlugRef.current) setRunning(false)
     }
     const onRun = (e: Event) => {
       const slug = (e as CustomEvent<{ slug?: string }>).detail?.slug
       if (!slug || !isProjectSlug(slug)) return
       if (!fixedSlug) useSignalStore.getState().setActiveProject(slug)
       if (slug === displaySlugRef.current) {
+        stoppedRef.current = false
         setRunning(true)
+        if (slug === 'triplay-ai') setGame('connect-four')
       } else {
         pendingRunRef.current = slug
       }
@@ -176,14 +289,15 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
         store.setMaximizedProject(null)
         return
       }
+      stoppedRef.current = true
       setRunning(false)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [running, maximized])
 
-  // §8.3 while maximized: body scroll locked (MobileMenu mechanism), Lenis
-  // stopped, focus moved into the dialog and returned on close.
+  // §8.3 while maximized: body scroll locked, Lenis stopped, focus moved into
+  // the dialog and returned on close.
   useEffect(() => {
     if (!maximized) return
     const previouslyFocused = document.activeElement as HTMLElement | null
@@ -198,11 +312,11 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
     }
   }, [maximized])
 
-  // Focus trap while maximized (MobileMenu pattern): Tab cycles inside.
+  // Focus trap while maximized: Tab cycles inside.
   const onFrameKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!maximized || e.key !== 'Tab') return
     const focusables = frameRef.current?.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled])'
+      'a[href], button:not([disabled])',
     )
     if (!focusables || focusables.length === 0) return
     const first = focusables[0]
@@ -220,11 +334,19 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
   if (!project) return null
 
   const Demo = DEMOS[project.slug]
-  const repoHref = project.repoUrl ?? profile.githubUrl
-  const caseCopy: Record<(typeof CASE_COLUMNS)[number], string> = {
-    PROBLEM: project.problem,
-    BUILD: project.build,
-    RESULT: project.result,
+  const tabs = windowTabs(project)
+  const activeTab = tabs.find((t) => t.id === game) ?? tabs[0]
+  const tagline = project.games?.find((g) => g.id === activeTab.id)?.tagline
+  const isBoard = project.games ? activeTab.id === 'connect-four' : false
+
+  // PRINT page-turn: the neighbouring issues (wraps).
+  const idx = projectSlugs.indexOf(project.slug)
+  const prevSlug = projectSlugs[(idx + projectSlugs.length - 1) % projectSlugs.length]
+  const nextSlug = projectSlugs[(idx + 1) % projectSlugs.length]
+  const turnTo = (slug: ProjectSlug) => {
+    if (fixedSlug) return
+    useSignalStore.getState().setActiveProject(slug)
+    trackProjectOpened(slug)
   }
 
   return (
@@ -246,32 +368,36 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
           ) : null}
         </AnimatePresence>
         <m.div
-          ref={frameRef}
+          ref={setFrame}
           layoutId={`pw-${displaySlug}`}
           layout={!reduced}
           transition={reduced ? { duration: 0 } : SPRING_UI}
-          className={clsx('elev-window bg-panel', maximized && 'pw-max')}
+          className={clsx('pw ed-stage', maximized && 'pw-max')}
           data-component="ProjectWindow"
           data-island="client"
+          data-running={running ? '' : undefined}
+          data-board={isBoard ? '' : undefined}
           role={maximized ? 'dialog' : undefined}
           aria-modal={maximized || undefined}
-          aria-label={maximized ? `${project.name} — maximized` : undefined}
+          aria-label={maximized ? `${project.name} — full size` : `Project window — ${project.name}`}
           tabIndex={maximized ? -1 : undefined}
           onKeyDown={onFrameKeyDown}
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
         >
+          <span className="pw-rim" aria-hidden="true" />
+
           {/* Title bar */}
-          <div className="border-hairline flex items-center gap-3 border-b px-4 py-2.5">
-            {/* §8.1 functional traffic lights (decorative on touch — CSS) */}
+          <div className="pw-bar">
+            {/* §8.1 functional lights (decorative on touch — CSS) */}
             <span className="pw-lights">
               <button
                 type="button"
                 className="pw-light"
                 data-light="red"
                 disabled={!running}
-                aria-label="Stop demo"
-                onClick={() => setRunning(false)}
+                aria-label={workCopy.window.stop}
+                onClick={stopRun}
               >
                 <span className="pw-light-disc" aria-hidden="true">
                   <span className="pw-light-glyph">×</span>
@@ -281,10 +407,12 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
                 type="button"
                 className="pw-light"
                 data-light="yellow"
-                aria-label="Collapse case file"
+                aria-label={collapsed ? workCopy.window.expand : workCopy.window.collapse}
                 aria-expanded={!collapsed}
                 aria-controls={caseId}
-                onClick={() => setCollapsedSlugs((c) => ({ ...c, [displaySlug]: !c[displaySlug] }))}
+                onClick={() =>
+                  setCollapsedSlugs((c) => ({ ...c, [displaySlug]: !c[displaySlug] }))
+                }
               >
                 <span className="pw-light-disc" aria-hidden="true">
                   <span className="pw-light-glyph">−</span>
@@ -294,7 +422,7 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
                 type="button"
                 className="pw-light"
                 data-light="green"
-                aria-label={maximized ? 'Restore window' : 'Maximize window'}
+                aria-label={maximized ? workCopy.window.restore : workCopy.window.maximize.screen}
                 onClick={() => (maximized ? restore() : maximize())}
               >
                 <span className="pw-light-disc" aria-hidden="true">
@@ -302,150 +430,163 @@ export default function ProjectWindow({ fixedSlug }: ProjectWindowProps) {
                 </span>
               </button>
             </span>
-            <span
-              className="type-label-sm text-secondary min-w-0 truncate"
+
+            <div
+              role="tablist"
+              aria-label={project.games ? `Games in ${project.name}` : 'Open project'}
+              className="pw-tabs"
               style={{ opacity: fading ? 0 : 1, transition: 'opacity 75ms var(--ease-swift)' }}
             >
-              {project.windowTitle}
-            </span>
-            {project.award ? (
-              <span className="type-label-xs rounded-chip bg-amber-dim text-amber min-w-0 truncate px-2 py-0.5">
-                {project.award}
-              </span>
-            ) : null}
-            {project.live ? (
-              <span className="type-label-xs text-signal flex shrink-0 items-center gap-1.5">
-                <span
-                  className="bg-signal inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ animation: 'pulse-soft 2s ease-in-out infinite' }}
-                  aria-hidden="true"
-                />
-                LIVE
-              </span>
-            ) : null}
-            <button
-              ref={runBtnRef}
-              type="button"
-              onClick={() => (running ? setRunning(false) : startRun(project.slug))}
-              aria-label={
-                running ? `Stop the ${project.name} demo` : `Run the ${project.name} demo`
-              }
-              className="type-label-sm rounded-btn border-hairline text-signal hover:border-hairline-strong ml-auto shrink-0 border px-3 py-1 transition-colors duration-(--dur-micro) ease-(--ease-swift)"
-            >
-              {/* §6.5 — the ▶ run button is one of the ~10 magnetic elements. */}
-              <span data-mag-label>{running ? '■ stop' : '▶ run'}</span>
-            </button>
+              {tabs.map((tab) => {
+                const selected = tab.id === activeTab.id
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    id={`${paneId}-tab-${tab.id}`}
+                    aria-selected={selected}
+                    aria-controls={paneId}
+                    tabIndex={selected ? 0 : -1}
+                    className="pw-tab"
+                    onClick={() => {
+                      setGame(tab.id)
+                      if (!running) startRun(project.slug)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+                      e.preventDefault()
+                      const i = tabs.findIndex((t) => t.id === tab.id)
+                      const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]
+                      setGame(n.id)
+                      document.getElementById(`${paneId}-tab-${n.id}`)?.focus()
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                )
+              })}
+              {tagline ? (
+                <span className="pw-tagline ed-print-only" aria-hidden="true">
+                  — {tagline}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="pw-ctl">
+              {running && isBoard ? (
+                <button
+                  type="button"
+                  className="pw-btn"
+                  onClick={() => setResetKey((k) => k + 1)}
+                >
+                  <Icon name="refresh" />
+                  <span>{workCopy.window.newGame}</span>
+                </button>
+              ) : null}
+              {!running ? (
+                <button type="button" className="pw-btn" onClick={() => startRun(project.slug)}>
+                  <Icon name="play" />
+                  <span>{workCopy.window.run}</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="pw-btn pw-btn-max"
+                onClick={() => (maximized ? restore() : maximize())}
+              >
+                <Icon name={maximized ? 'restore' : 'expand'} />
+                {maximized ? (
+                  <span>{workCopy.window.restore}</span>
+                ) : (
+                  <span>
+                    <EdText
+                      screen={workCopy.window.maximize.screen}
+                      print={workCopy.window.maximize.print}
+                    />
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Crossfading window content (stage height is reserved by aspect ratio;
-              in the lightbox the stage grows to fill instead — CSS §8.3) */}
+          {/* Crossfading window content */}
           <div
             className="pw-body"
+            data-collapsed={collapsed || undefined}
             style={{
               opacity: fading ? 0 : 1,
               transition: 'opacity 100ms var(--ease-swift)',
             }}
           >
-            {/* Stage */}
-            <div className="pw-stage bg-panel relative aspect-[16/10] overflow-hidden">
-              <GenerativePlate
-                variant={project.slug}
-                seed={project.name}
-                // No demo island yet ⇒ ▶ run animates the generative plate instead.
-                animate={(hovered && !running) || (running && !Demo)}
-              />
-              {running && Demo ? (
-                <div className="absolute inset-0">
-                  <Demo />
-                </div>
-              ) : running ? null : (
-                <button
-                  type="button"
-                  onClick={() => startRun(project.slug)}
-                  aria-label={`Run the ${project.name} demo`}
-                  className="group absolute inset-0 flex items-center justify-center"
-                >
-                  <span className="type-label-sm rounded-btn border-hairline bg-overlay text-signal group-hover:border-hairline-strong group-hover:shadow-(--glow-signal) border px-4 py-2 transition-[border-color,box-shadow] duration-(--dur-micro) ease-(--ease-swift)">
-                    ▶ run
-                  </span>
-                </button>
-              )}
-            </div>
+            {/* The demo pane */}
+            <div
+              id={paneId}
+              role="tabpanel"
+              aria-labelledby={`${paneId}-tab-${activeTab.id}`}
+              className="pw-demo"
+            >
+              {/* SCREEN atmosphere / PRINT sunburst — decorative, per edition. */}
+              <span className="ed-beam pw-beam" aria-hidden="true" />
+              <span className="ed-sunburst pw-sunburst ed-print-only" aria-hidden="true" />
+              <span className="ed-halftone-red pw-screen ed-print-only" aria-hidden="true" />
 
-            {/* §8.1 yellow collapse wrapper: 1fr → 0fr, no measured heights */}
-            <div id={caseId} className="pw-collapse" data-collapsed={collapsed || undefined}>
-              <div className="pw-collapse-inner">
-                {/* Case file — copy verbatim from lib/data/projects (Appendix A.3) */}
-                <div className="border-hairline grid gap-6 border-t p-6 lg:min-h-[184px] lg:grid-cols-3 lg:gap-8">
-                  {CASE_COLUMNS.map((label) => (
-                    <div key={label}>
-                      <h3 className="type-label-xs text-secondary mb-2">{label}</h3>
-                      <p className="font-sans text-[15px] leading-[1.65]">{caseCopy[label]}</p>
-                    </div>
-                  ))}
+              <div className="pw-stage">
+                <div className="pw-plate" aria-hidden="true">
+                  <GenerativePlate
+                    variant={project.slug}
+                    seed={project.name}
+                    // No demo island yet ⇒ the plate animates instead.
+                    animate={(hovered && !running) || (running && !Demo)}
+                  />
                 </div>
-
-                {/* Footer strip */}
-                <div className="border-hairline flex flex-wrap items-center gap-x-6 gap-y-3 border-t px-6 py-4">
-                  {project.stack.length > 0 ? (
-                    <ul aria-label="Stack" className="flex flex-wrap gap-2">
-                      {project.stack.map((item) => (
-                        <li
-                          key={item}
-                          className="type-label-sm rounded-chip border-hairline bg-raised text-secondary border px-2 py-0.5"
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {/* §8.3 touch affordance — hidden on fine pointers (CSS) */}
+                {running && Demo ? (
+                  <div className="pw-live">
+                    <Demo game={activeTab.id as ProjectGameId} resetKey={resetKey} />
+                  </div>
+                ) : running ? null : (
                   <button
                     type="button"
-                    onClick={() => (maximized ? restore() : maximize())}
-                    className="pw-max-chip type-label-sm rounded-btn border-hairline text-secondary hover:text-primary border px-3 transition-colors duration-(--dur-micro) ease-(--ease-swift)"
+                    onClick={() => startRun(project.slug)}
+                    className="pw-run"
                   >
-                    {maximized ? '⤢ restore' : '⤢ maximize'}
+                    <span className="pw-btn">
+                      <Icon name="play" />
+                      <span>{workCopy.window.run}</span>
+                    </span>
                   </button>
-                  <div className="type-label-sm ml-auto flex flex-wrap gap-x-4 gap-y-2">
-                    <a
-                      href={repoHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="link-draw text-secondary hover:text-primary transition-colors duration-(--dur-micro) ease-(--ease-swift)"
-                    >
-                      [ view source ]
-                    </a>
-                    {project.demoUrl ? (
-                      <a
-                        href={project.demoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="link-draw text-secondary hover:text-primary transition-colors duration-(--dur-micro) ease-(--ease-swift)"
-                      >
-                        {project.live ? '[ open app ]' : '[ watch demo ]'}
-                      </a>
-                    ) : null}
-                    {project.paperUrl ? (
-                      <a
-                        href={project.paperUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="link-draw text-secondary hover:text-primary transition-colors duration-(--dur-micro) ease-(--ease-swift)"
-                      >
-                        [ read paper ]
-                      </a>
-                    ) : null}
-                    {fixedSlug ? null : (
-                      <Link
-                        href={`/work/${project.slug}`}
-                        className="link-draw text-secondary hover:text-primary transition-colors duration-(--dur-micro) ease-(--ease-swift)"
-                      >
-                        [ permalink ]
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                )}
+              </div>
+            </div>
+
+            {/* §8.1 yellow collapse wrapper */}
+            <div id={caseId} className="pw-case-col">
+              <div className="pw-case-inner">
+                <CaseFile
+                  project={project}
+                  nav={
+                    fixedSlug ? null : (
+                      <span className="cf-turn ed-print-only">
+                        <button
+                          type="button"
+                          className="cf-pg"
+                          onClick={() => turnTo(prevSlug)}
+                          aria-label={`${workCopy.caseFile.previous}: ${getProject(prevSlug)!.name}`}
+                        >
+                          ← {getProject(prevSlug)!.name}
+                        </button>
+                        <button
+                          type="button"
+                          className="cf-pg is-next"
+                          onClick={() => turnTo(nextSlug)}
+                          aria-label={`${workCopy.caseFile.next}: ${getProject(nextSlug)!.name}`}
+                        >
+                          {getProject(nextSlug)!.name} →
+                        </button>
+                      </span>
+                    )
+                  }
+                />
               </div>
             </div>
           </div>

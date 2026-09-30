@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic'
 
 const ArcadeSnake = dynamic(() => import('./ArcadeSnake.client'), {
   ssr: false,
-  loading: () => <p className="type-code text-secondary">booting autopilot…</p>,
+  loading: () => <p className="type-code text-secondary">Starting the autopilot…</p>,
 })
 
 export default function ArcadeSnakeIsland() {

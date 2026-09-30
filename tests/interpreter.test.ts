@@ -23,7 +23,7 @@ function makeCtx(): CommandCtx {
     router: { push: vi.fn() },
     copy: vi.fn(async () => true),
     download: vi.fn(),
-    setTheme: vi.fn(),
+    setEdition: vi.fn(async () => {}),
     setMotion: vi.fn(),
     focusSkill: vi.fn(),
     openProject: vi.fn(),
@@ -140,17 +140,26 @@ describe('terminal interpreter', () => {
     expect(ctx.download).toHaveBeenCalledWith(profile.resumePdf, 'darshan-konnur.pdf')
   })
 
-  it('theme and motion builtins call ctx', async () => {
+  it('edition and motion builtins call ctx', async () => {
     const ctx = makeCtx()
     const io = makeIO()
-    await execute('theme dark', ctx, io)
-    expect(ctx.setTheme).toHaveBeenCalledWith('dark')
+    await execute('edition print', ctx, io)
+    expect(ctx.setEdition).toHaveBeenCalledWith('print', 'terminal')
+    expect(io.lines[0].text).toBe('switching to the PRINT edition…')
     await execute('motion off', ctx, io)
     expect(ctx.setMotion).toHaveBeenCalledWith(true)
     await execute('motion on', ctx, io)
     expect(ctx.setMotion).toHaveBeenCalledWith(false)
-    await execute('theme purple', ctx, io)
-    expect(io.lines.some((l) => l.text === 'usage: theme dark|light')).toBe(true)
+    await execute('edition purple', ctx, io)
+    expect(io.lines.some((l) => l.text === 'usage: edition screen|print')).toBe(true)
+  })
+
+  it('edition <current> reports instead of switching', async () => {
+    const ctx = makeCtx()
+    const io = makeIO()
+    await execute('edition screen', ctx, io)
+    expect(ctx.setEdition).not.toHaveBeenCalled()
+    expect(io.lines[0]).toEqual({ text: 'already reading the SCREEN edition', tone: 'secondary' })
   })
 
   it('sudo hire darshan answers already-hired and opens the inbox', async () => {
@@ -183,7 +192,7 @@ describe('terminal interpreter', () => {
   it('whoami --face streams 32 aria-hidden art rows, last 3 in signal', async () => {
     const io = makeIO()
     await execute('whoami --face', makeCtx(), io)
-    expect(io.lines).toHaveLength(PHOTO_ASCII.length + 2) // 32 art + alt + link line
+    expect(io.lines).toHaveLength(PHOTO_ASCII.length + 1) // 32 art + the sr-only alt (v3: no trailer)
     const art = io.lines.slice(0, PHOTO_ASCII.length)
     expect(art.map((l) => l.text)).toEqual([...PHOTO_ASCII])
     expect(art.every((l) => l.ariaHidden === true)).toBe(true)
@@ -191,15 +200,14 @@ describe('terminal interpreter', () => {
     expect(art.slice(-3).every((l) => l.tone === 'signal')).toBe(true)
   })
 
-  it('whoami --face announces one sr-only sentence and a working ./about.md link', async () => {
+  it('whoami --face announces one sr-only sentence and nothing after the portrait (v3)', async () => {
     const io = makeIO()
     await execute('whoami --face', makeCtx(), io)
     const alt = io.lines[PHOTO_ASCII.length]
     expect(alt).toEqual({ text: FACE_ALT, srOnly: true })
-    const done = io.lines[PHOTO_ASCII.length + 1]
-    expect(done.text).toBe('render complete — the 880px build lives in ./about.md')
-    expect(done.link).toEqual({ label: './about.md', anchor: '#about' })
-    expect(faceLines()).toHaveLength(PHOTO_ASCII.length + 2)
+    // v3: no "render complete … ./about.md" trailer — the frames end on the readout.
+    expect(faceLines()).toHaveLength(PHOTO_ASCII.length + 1)
+    expect(faceLines().some((l) => /render|\.md\b|\d+px/.test(l.text))).toBe(false)
   })
 
   it('cat darshan.jpg is an exact alias for whoami --face', async () => {
@@ -217,13 +225,30 @@ describe('terminal interpreter', () => {
     expect(io.lines[0].text).toContain('--face')
   })
 
-  it('theme with no arg reports the current theme', async () => {
+  it('edition with no arg reports the edition in force and how to switch', async () => {
     const ctx = makeCtx()
     const io = makeIO()
-    await execute('theme', ctx, io)
-    expect(io.lines[0].text).toBe("theme is currently dark — 'theme dark|light' to switch")
+    await execute('edition', ctx, io)
+    expect(io.lines[0].text).toBe("reading the SCREEN edition — 'edition print' to switch")
     expect(io.lines[0].tone).toBe('secondary')
-    expect(ctx.setTheme).not.toHaveBeenCalled()
+    expect(ctx.setEdition).not.toHaveBeenCalled()
+    const g = globalThis as { document?: unknown }
+    g.document = { documentElement: { dataset: { edition: 'print' } } }
+    try {
+      const io2 = makeIO()
+      await execute('edition', makeCtx(), io2)
+      expect(io2.lines[0].text).toBe("reading the PRINT edition — 'edition screen' to switch")
+    } finally {
+      delete g.document
+    }
+  })
+
+  it('the theme builtin is gone (not aliased)', async () => {
+    const io = makeIO()
+    await execute('theme dark', makeCtx(), io)
+    expect(io.lines[0].tone).toBe('error')
+    expect(io.lines[0].text).toContain('command not found: theme')
+    expect(complete('them')).toEqual({})
   })
 
   it('snake parses --autopilot into the startSnake options', async () => {
@@ -348,7 +373,7 @@ describe('terminal interpreter', () => {
       'open resume',
       'email',
       'cv',
-      'theme dark|light',
+      'edition screen|print',
       'motion off|on',
       'sudo hire darshan',
       'snake',
@@ -365,7 +390,8 @@ describe('terminal interpreter', () => {
     expect(complete('open tri')).toEqual({ value: 'open triplay-ai' })
     expect(complete('cat r')).toEqual({ value: 'cat resume.txt' })
     expect(complete('sudo h')).toEqual({ value: 'sudo hire darshan' })
-    expect(complete('theme d')).toEqual({ value: 'theme dark' })
+    expect(complete('edition p')).toEqual({ value: 'edition print' })
+    expect(complete('edition ')).toEqual({ options: ['screen', 'print'] })
     const ambiguous = complete('h')
     expect(ambiguous.options).toContain('help')
     expect(ambiguous.options).toContain('history')
