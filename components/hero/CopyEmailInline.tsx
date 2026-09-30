@@ -1,17 +1,15 @@
 'use client'
 
 /**
- * `copy email` quick-row action (spec §4.3): click copies the address and
- * swaps the label to `copied ✓` in signal for 1.2s. Renders as a mailto
- * anchor so the no-JS fallback still works; JS enhances it into a copy.
+ * "Copy email" quick action (v3 S1 quick row): click copies the address and
+ * swaps the label to "Copied" in the live colour for 1.2 s. Renders as a
+ * mailto anchor so the no-JS fallback still works; JS enhances it into a
+ * copy. Visitor language only (clutter law).
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { profile } from '@/lib/data/profile'
 import { copyEmailAction } from '@/lib/commands/context'
-
-const LINK_CLASS =
-  'text-secondary transition-colors hover:text-primary underline-offset-4 hover:underline'
 
 export default function CopyEmailInline() {
   const [copied, setCopied] = useState(false)
@@ -40,10 +38,10 @@ export default function CopyEmailInline() {
     <a
       href={`mailto:${profile.email}`}
       onClick={onClick}
-      className={copied ? 'text-signal' : LINK_CLASS}
+      className={copied ? 'link-draw is-live' : 'link-draw'}
       aria-label={`Copy email address ${profile.email}`}
     >
-      <span aria-live="polite">{copied ? 'copied ✓' : 'copy email'}</span>
+      <span aria-live="polite">{copied ? 'Copied' : 'Copy email'}</span>
     </a>
   )
 }

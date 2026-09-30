@@ -1,31 +1,54 @@
 'use client'
 
 /**
- * §6.4 in-view loader for the scroll-linked DAG overlay. The overlay is
- * purely decorative (its own SSR output is an empty aria-hidden host and the
- * RSC shell draws a static hairline fallback), so nothing is lost by not
- * server-rendering it — which lets the chunk load only once the section is
- * within half a viewport (IO, rootMargin '50% 0px', per §6.4 item 3).
+ * The career graph's draw-in trigger (S5 motion note: "the career graph
+ * draws in from the NEXT marker downward, one node every 90 ms"; P5: the
+ * NEXT ISSUE node pulses once on load). The RSC renders the graph in its
+ * finished state; this ~0.3 KB island arms the entrance on mount
+ * ([data-armed] on the graph root) and plays it once the graph is in view
+ * ([data-drawn]). The choreography itself is CSS (styles/v3/experience.css,
+ * per-entry `--k` stagger). No-JS: the finished state. Reduced motion:
+ * useInViewOnce resolves at mount and the global rule collapses the
+ * animations, so the graph simply appears.
  *
- * The sentinel div fills [data-dag-root] for the observer; the island mounts
- * as its *sibling* so CareerDag's own host keeps [data-dag-root] as its
- * parentElement (it measures markers through that container).
+ * v2's scroll-linked SVG rail (CareerDag.client + motion's useScroll) is
+ * retired: both frames draw the rail as static lines.
  */
 
-import dynamic from 'next/dynamic'
+import { useCallback, useEffect, useRef } from 'react'
 import { useInViewOnce } from '@/lib/motion/useInViewOnce'
 
-const CareerDag = dynamic(() => import('./CareerDag.client'), { ssr: false })
+export default function CareerDraw() {
+  const nodeRef = useRef<HTMLSpanElement | null>(null)
+  const { ref, inView } = useInViewOnce<HTMLSpanElement>({ threshold: 0.1 })
 
-export default function CareerDagIsland() {
-  const { ref, inView } = useInViewOnce<HTMLDivElement>({
-    threshold: 0,
-    rootMargin: '50% 0px',
-  })
+  const setRef = useCallback(
+    (node: HTMLSpanElement | null) => {
+      nodeRef.current = node
+      ref(node)
+    },
+    [ref]
+  )
+
+  useEffect(() => {
+    const root = nodeRef.current?.closest<HTMLElement>('[data-dag-root]')
+    if (!root) return
+    root.setAttribute('data-armed', '1')
+  }, [])
+
+  useEffect(() => {
+    if (!inView) return
+    const root = nodeRef.current?.closest<HTMLElement>('[data-dag-root]')
+    root?.setAttribute('data-drawn', '1')
+  }, [inView])
+
   return (
-    <>
-      <div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0" />
-      {inView ? <CareerDag /> : null}
-    </>
+    <span
+      ref={setRef}
+      aria-hidden="true"
+      className="xp-draw-sentinel"
+      data-component="CareerDraw"
+      data-island="client"
+    />
   )
 }

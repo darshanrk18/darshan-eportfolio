@@ -1,16 +1,25 @@
 /**
- * /work/[slug] — permalink case files (spec §4.11). Five prerendered RSC
- * pages: reduced nav (breadcrumb + back + /cv), the terminal-chrome project
- * window (generative-plate poster + ▶ run demo island + case file + links),
- * a next-project link, and SoftwareSourceCode JSON-LD. Deliberately thin.
+ * /work/[slug] — permalink case files (spec §4.11; v3 both editions). Seven
+ * prerendered RSC pages: a reduced nav (the seal, "Back to the site", CV),
+ * the project window in the Work skin (WorkStage: tabs + poster + "Run the
+ * demo" island, with the server-rendered CaseFile as its second column), a
+ * next-project link and SoftwareSourceCode JSON-LD. Deliberately thin: the
+ * only client JS is WorkStage (+ the demo chunk on first run). The route
+ * shares the layout's edition attribute, so both skins apply; no picker,
+ * intro or Lenis here (§2.1). Nothing from the clutter list is drawn: no
+ * breadcrumb path, no folder names, no `windowTitle`.
  */
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getProject, projectSlugs } from '@/lib/data/projects'
-import { profile } from '@/lib/data/profile'
+import CaseFile from '@/components/projects/CaseFile'
+import DkSeal from '@/components/chrome/DkSeal'
 import WorkStage from '@/components/work/WorkStage'
+import { getProject, projectSlugs, workCopy } from '@/lib/data/projects'
+import { profile } from '@/lib/data/profile'
+
+import '@/styles/v3/work.css'
 
 export function generateStaticParams(): { slug: string }[] {
   return projectSlugs.map((slug) => ({ slug }))
@@ -33,12 +42,6 @@ export async function generateMetadata({ params }: WorkPageProps): Promise<Metad
   }
 }
 
-const CASE_FILE = [
-  { label: 'PROBLEM', key: 'problem' },
-  { label: 'BUILD', key: 'build' },
-  { label: 'RESULT', key: 'result' },
-] as const
-
 export default async function WorkPage({ params }: WorkPageProps) {
   const { slug } = await params
   const project = getProject(slug)
@@ -56,145 +59,43 @@ export default async function WorkPage({ params }: WorkPageProps) {
   }
 
   const idx = projectSlugs.indexOf(project.slug)
-  const next = getProject(projectSlugs[(idx + 1) % projectSlugs.length])
+  const next = getProject(projectSlugs[(idx + 1) % projectSlugs.length])!
 
   return (
     <>
-      {/* Reduced nav: breadcrumb + back to site + /cv (spec §4.11). */}
-      <header
-        className="border-b border-hairline"
-        style={{ zIndex: 'var(--z-nav)', position: 'relative' }}
-      >
-        <nav
-          aria-label="Primary"
-          className="container-site flex h-12 items-center justify-between gap-4"
-        >
-          <span className="type-label-sm text-secondary">
-            ~/darshan-konnur
-            <span className="text-tertiary" aria-hidden="true">
-              {' '}
-              / work / {project.slug}
-            </span>
-          </span>
-          <span className="type-label-sm flex items-center gap-5">
-            <Link href="/" className="text-secondary transition-colors hover:text-primary">
-              ← back to site
-            </Link>
+      {/* Reduced nav: the seal (home), back to the site, /cv (spec §4.11). */}
+      <header className="wk-page-nav" style={{ zIndex: 'var(--z-nav)', position: 'relative' }}>
+        <nav aria-label="Primary" className="container-site wk-page-nav-row">
+          <Link href="/" className="wk-page-ident" aria-label={`${profile.displayName} — home`}>
+            <DkSeal variant="mark" size={26} />
+          </Link>
+          <span className="wk-page-links">
+            <Link href="/">Back to the site</Link>
             {/* /cv is deliberately a plain <a>: it keeps the zero-JS route a
                 full-document navigation (spec §4.10). */}
-            <a href="/cv" className="text-secondary transition-colors hover:text-primary">
-              cv ↗
-            </a>
+            <a href="/cv">CV</a>
           </span>
         </nav>
       </header>
 
       <main
         id="main"
-        className="container-site relative pb-24 pt-12"
-        style={{ zIndex: 'var(--z-content)' }}
+        className="container-site wk wk-page"
+        style={{ zIndex: 'var(--z-content)', position: 'relative' }}
       >
-        <p className="type-label-xs text-secondary">
-          {project.dir}/{project.slug}/
+        <p className="wk-kicker ed-label ed-screen-only" data-surface="kicker">
+          <span className="wk-rule" aria-hidden="true" />
+          {workCopy.screen.kicker}
         </p>
-        <h1 className="type-h2 mt-2">{project.name}</h1>
-        <p className="type-body-lg text-secondary mt-3" style={{ maxWidth: '65ch' }}>
-          {project.oneLiner}
-        </p>
+        <p className="wk-chapter wk-page-chapter ed-print-only">{workCopy.print.chapter}</p>
 
-        {/* The project window: terminal chrome, 0 radius (§4.6 anatomy). */}
-        <div className="elev-window mt-10 bg-panel">
-          <div className="flex h-10 items-center gap-3 border-b border-hairline px-4">
-            <span className="flex gap-1.5" aria-hidden="true">
-              <span className="h-2 w-2 rounded-full border border-hairline" />
-              <span className="h-2 w-2 rounded-full border border-hairline" />
-              <span className="h-2 w-2 rounded-full border border-hairline" />
-            </span>
-            <span className="type-label-sm text-secondary min-w-0 truncate">{project.windowTitle}</span>
-            {project.award ? (
-              <span className="type-label-xs rounded-chip bg-amber-dim text-amber min-w-0 truncate px-2 py-0.5">
-                {project.award}
-              </span>
-            ) : null}
-            {project.live ? (
-              <span className="type-label-xs text-signal flex shrink-0 items-center gap-1.5">
-                <span
-                  className="bg-signal inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ animation: 'pulse-soft 2s ease-in-out infinite' }}
-                  aria-hidden="true"
-                />
-                LIVE
-              </span>
-            ) : null}
-          </div>
+        <WorkStage slug={project.slug} name={project.name}>
+          <CaseFile project={project} as="h1" />
+        </WorkStage>
 
-          <WorkStage slug={project.slug} name={project.name} />
-
-          {/* Case file: three mono-labeled columns, stacking on small screens. */}
-          <dl className="grid gap-6 p-6 md:grid-cols-3 md:gap-8">
-            {CASE_FILE.map(({ label, key }) => (
-              <div key={key}>
-                <dt className="type-label-xs text-secondary">{label}</dt>
-                <dd className="type-body mt-2" style={{ fontSize: 15 }}>
-                  {project[key]}
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          {/* Footer strip: stack chips + links (§4.6). */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-hairline p-4">
-            {project.stack.length > 0 ? (
-              <ul className="flex flex-wrap gap-2" aria-label="Stack">
-                {project.stack.map((s) => (
-                  <li
-                    key={s}
-                    className="type-label-sm hairline rounded-chip px-2.5 py-1 text-secondary"
-                  >
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <span className="type-label-sm flex flex-wrap gap-5">
-              <a
-                href={project.repoUrl ?? profile.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-secondary transition-colors hover:text-primary"
-              >
-                [ view source ]
-              </a>
-              {project.demoUrl ? (
-                <a
-                  href={project.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-secondary transition-colors hover:text-primary"
-                >
-                  {project.live ? '[ open app ]' : '[ watch demo ]'}
-                </a>
-              ) : null}
-              {project.paperUrl ? (
-                <a
-                  href={project.paperUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-secondary transition-colors hover:text-primary"
-                >
-                  [ read paper ]
-                </a>
-              ) : null}
-            </span>
-          </div>
-        </div>
-
-        <p className="type-label-sm mt-10">
-          <Link
-            href={`/work/${next!.slug}`}
-            className="text-secondary transition-colors hover:text-primary"
-          >
-            next project: {next!.name} →
+        <p className="wk-page-next">
+          <Link href={`/work/${next.slug}`}>
+            {workCopy.caseFile.next}: {next.name} →
           </Link>
         </p>
 

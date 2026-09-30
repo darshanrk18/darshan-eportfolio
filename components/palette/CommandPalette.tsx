@@ -23,11 +23,15 @@ import {
 } from '@/lib/commands/context'
 import { useSignalStore } from '@/lib/state/store'
 import { trackPaletteOpened } from '@/lib/utils/analytics'
+import { islandUnavailable } from '@/lib/utils/island'
 
 /** One import promise: prefetch and dynamic() share the webpack chunk cache. */
 const loadPaletteDialog = () => import('./PaletteDialog')
 
-const PaletteDialog = dynamic(loadPaletteDialog, { ssr: false })
+const PaletteDialog = dynamic(
+  () => loadPaletteDialog().catch(islandUnavailable<typeof import('./PaletteDialog')>),
+  { ssr: false },
+)
 
 /** Elements whose hover should warm the palette chunk (nav chip, hero pill). */
 const TRIGGER_SELECTOR = '[data-palette-trigger], [aria-label="Open command palette"], .hero-pill'
@@ -98,7 +102,7 @@ export default function CommandPalette() {
     const prefetch = () => {
       if (prefetched) return
       prefetched = true
-      void loadPaletteDialog()
+      void loadPaletteDialog().catch(() => {}) // a warm-up; the real load reports its own failure
     }
 
     let idleId: number | undefined

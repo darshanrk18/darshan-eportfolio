@@ -7,7 +7,12 @@
  * everything else here is a terminal-only builtin.
  */
 
-import { getCurrentTheme, isSourceModeOn, type CommandCtx } from '@/lib/commands/context'
+import {
+  getCurrentEdition,
+  isSourceModeOn,
+  otherEdition,
+  type CommandCtx,
+} from '@/lib/commands/context'
 import { findByAlias, getCommand, type Command } from '@/lib/commands/registry'
 import { profile } from '@/lib/data/profile'
 import { PHOTO_ASCII } from '@/lib/data/photoAscii'
@@ -42,6 +47,17 @@ export const BANNER = "SIGNAL v1.0 — type 'help'"
 
 const line = (text: string, tone?: TermTone): TermLine => (tone ? { text, tone } : { text })
 
+/**
+ * v3 §2.6 item 8 — "Ask the console who I am" completes when the terminal
+ * runs `whoami` in any form. The guide island listens on window; no import
+ * needed. DOM-guarded (this module runs in node tests).
+ */
+export const GUIDE_TRIED_EVENT = 'signal:guide-tried'
+function guideTried(id: string): void {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return
+  window.dispatchEvent(new CustomEvent(GUIDE_TRIED_EVENT, { detail: { id } }))
+}
+
 /** v2 §11.1 — reduced-motion check for the `demo` refusal (DOM-guarded). */
 function motionReducedNow(): boolean {
   return typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduced'
@@ -64,7 +80,7 @@ export function helpLines(): TermLine[] {
     line('actions', 'secondary'),
     line(`  email              copy ${profile.email}`),
     line('  open resume        download the resume PDF'),
-    line('  theme dark|light   switch theme (no arg reports)'),
+    line('  edition screen|print  switch edition (no arg reports)'),
     line('  motion off|on      disable or enable animation'),
     line('  view source        annotate this page for 6s'),
     line('fun', 'secondary'),
@@ -86,8 +102,10 @@ export const FACE_ALT = 'ASCII portrait of Darshan Konnur'
 
 /**
  * v2 §2.2/§11.1 `whoami --face` (alias `cat darshan.jpg`): the 32 ASCII rows
- * (secondary, final 3 in signal, all aria-hidden), one sr-only alt sentence,
- * then the render-complete line whose `./about.md` is a real link.
+ * (secondary, final 3 in signal, all aria-hidden) and one sr-only alt
+ * sentence. v3 drops v2's trailing "render complete … ./about.md" line: the
+ * S6/P6 frames show only the portrait and the readout, and the clutter law
+ * keeps pipeline words and file names off the page even here.
  */
 export function faceLines(): TermLine[] {
   const last = PHOTO_ASCII.length - 3
@@ -96,14 +114,7 @@ export function faceLines(): TermLine[] {
     tone: i >= last ? 'signal' : 'secondary',
     ariaHidden: true,
   }))
-  return [
-    ...rows,
-    { text: FACE_ALT, srOnly: true },
-    {
-      text: 'render complete — the 880px build lives in ./about.md',
-      link: { label: './about.md', anchor: '#about' },
-    },
-  ]
+  return [...rows, { text: FACE_ALT, srOnly: true }]
 }
 
 export function whoamiLines(): TermLine[] {
@@ -204,8 +215,10 @@ export async function execute(
     case 'whoami':
       if (arg === '--face') {
         io.print(faceLines())
+        guideTried('ask-console')
       } else if (arg === '') {
         io.print(whoamiLines())
+        guideTried('ask-console')
       } else {
         io.print([line(`whoami: unrecognized option '${rest.join(' ')}' — try 'whoami --face'`, 'error')])
       }
@@ -240,18 +253,30 @@ export async function execute(
       io.print([line(`open: no such project: ${rest.join(' ') || '(none)'} — try 'ls projects'`, 'error')])
       return
     }
-    case 'theme':
-      if (arg === 'dark' || arg === 'light') {
-        ctx.setTheme(arg)
-        io.print([line(`theme set to ${arg}`)])
+    case 'edition': {
+      /* v3 §2.1 — the terminal skin of the edition switch. ctx.setEdition
+         runs the §2.4 press/projector transition; we only narrate. */
+      if (arg === 'screen' || arg === 'print') {
+        const current = getCurrentEdition()
+        if (current === arg) {
+          io.print([line(`already reading the ${arg.toUpperCase()} edition`, 'secondary')])
+        } else {
+          io.print([line(`switching to the ${arg.toUpperCase()} edition…`)])
+          await ctx.setEdition(arg, 'terminal')
+        }
       } else if (arg === '') {
+        const current = getCurrentEdition()
         io.print([
-          line(`theme is currently ${getCurrentTheme()} — 'theme dark|light' to switch`, 'secondary'),
+          line(
+            `reading the ${current.toUpperCase()} edition — 'edition ${otherEdition(current)}' to switch`,
+            'secondary',
+          ),
         ])
       } else {
-        io.print([line('usage: theme dark|light', 'secondary')])
+        io.print([line('usage: edition screen|print', 'secondary')])
       }
       return
+    }
     case 'motion':
       if (arg === 'off') {
         ctx.setMotion(true)
@@ -355,7 +380,7 @@ const TOP_LEVEL = [
   'cat',
   'email',
   'cv',
-  'theme',
+  'edition',
   'motion',
   'sudo',
   'snake',
@@ -377,7 +402,7 @@ const ARG_CANDIDATES: Record<string, readonly string[]> = {
   snake: ['--autopilot'],
   crt: ['on', 'off'],
   view: ['source'],
-  theme: ['dark', 'light'],
+  edition: ['screen', 'print'],
   motion: ['off', 'on'],
   ls: ['projects'],
   sudo: ['hire darshan'],

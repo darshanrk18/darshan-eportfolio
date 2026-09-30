@@ -1,0 +1,35 @@
+[
+ {
+  "viewport": [
+   1280,
+   900
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true,
+   "console": true
+  }
+ },
+ {
+  "goto": "/",
+  "settle": 2500
+ },
+ {
+  "sweep": true,
+  "pause": 400
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "text": "design-workshop/v3/qa/sweep-screen.txt"
+ },
+ {
+  "aria": "design-workshop/v3/qa/sweep-screen-aria.json"
+ },
+ {
+  "console": "design-workshop/v3/qa/sweep-screen-console.txt"
+ }
+]

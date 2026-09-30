@@ -184,8 +184,8 @@ export default function AStarSnake() {
         />
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        a* agent auto-solving snake — open set in blue, explored cells dimmed, chosen path in
-        green, food in amber
+        Snake finds its own food with A* — the cells it weighs are tinted, the path it picks is
+        lit
       </figcaption>
     </figure>
   )

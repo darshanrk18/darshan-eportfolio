@@ -8,8 +8,13 @@
  *
  * The <Script> tags that load gtag.js live in app/layout.tsx.
  *
+ * v3 (V3_SPEC §2.1): `theme_toggled` → `edition_switched { edition, via }`;
+ * `boot_completed` is gone with the boot overlay.
+ *
  * @module lib/utils/analytics
  */
+
+import type { Edition, EditionVia } from '@/lib/edition/prepaint'
 
 declare global {
   interface Window {
@@ -56,9 +61,6 @@ export function trackPageView(pagePath: string, pageTitle?: string): void {
    SIGNAL event taxonomy (§7.3) — use these helpers, not ad-hoc names.
    -------------------------------------------------------------------------- */
 
-/** `boot_completed { ms }` — boot overlay finished (real elapsed ms). */
-export const trackBootCompleted = (ms: number) => trackEvent('boot_completed', { ms: Math.round(ms) })
-
 /** `palette_opened` */
 export const trackPaletteOpened = () => trackEvent('palette_opened')
 
@@ -91,8 +93,13 @@ export const trackResumeDownloaded = (source?: string) =>
 /** `email_copied` */
 export const trackEmailCopied = () => trackEvent('email_copied')
 
-/** `theme_toggled { to }` */
-export const trackThemeToggled = (to: 'dark' | 'light') => trackEvent('theme_toggled', { to })
+/**
+ * v3 §2.1 `edition_switched { edition, via }` — the edition in force after a
+ * switch and the surface that asked for it (picker / toggle / palette /
+ * terminal). Fired by applyEdition() only — never call this directly.
+ */
+export const trackEditionSwitched = (edition: Edition, via: EditionVia) =>
+  trackEvent('edition_switched', { edition, via })
 
 /** `motion_disabled` — manual reduced-motion opt-in. */
 export const trackMotionDisabled = () => trackEvent('motion_disabled')

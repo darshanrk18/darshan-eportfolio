@@ -2,9 +2,21 @@
  * Typed shared command registry (spec §5.1) — the ONE action layer.
  * Palette (§5.2), terminal (§5.3, surface 'terminal' + its own builtins),
  * navbar, and hash-anchor handling all consume this registry.
+ *
+ * v3 (V3_SPEC §2.1, §2.5, §2.7, §1.8): `toggle-theme` is gone; the edition
+ * pack is `switch-edition`, `choose-edition`, `replay-intro` and the
+ * `build-info` panel opener. C5 APPENDS the guide's rows here — never
+ * rewrites.
  */
 
-import { SIGNAL_EVENTS, toggleSourceMode, type CommandCtx } from './context'
+import {
+  INTRO_SESSION_KEY,
+  SIGNAL_EVENTS,
+  getCurrentEdition,
+  requestEditionPick,
+  toggleSourceMode,
+  type CommandCtx,
+} from './context'
 import { sectionTabs } from './sections'
 import { profile } from '@/lib/data/profile'
 import { projects, type ProjectSlug } from '@/lib/data/projects'
@@ -23,6 +35,12 @@ export type CommandSurface = 'palette' | 'terminal' | 'nav'
 
 export interface Command {
   id: string
+  /**
+   * Palette row label. Read it at RENDER time (never cache it): a few
+   * commands resolve it against live state — `switch-edition` reads the
+   * edition in force so it says "Read it as a comic" in SCREEN and "See the
+   * screen edition" in PRINT.
+   */
   title: string
   aliases?: string[]
   keywords: string[]
@@ -33,9 +51,16 @@ export interface Command {
   surfaces: Array<'palette' | 'terminal' | 'nav'>
 }
 
+/** v3 §2.6 item 2 / §3 — the switch row's label per edition in force. */
+export const SWITCH_EDITION_LABELS = {
+  screen: 'Read it as a comic',
+  print: 'See the screen edition',
+} as const
+
 const navigateCommands: Command[] = sectionTabs.map(({ anchor, tab, name }) => ({
   id: `go-${anchor.slice(1)}`,
-  title: `Go to ${name.charAt(0)}${name.slice(1).toLowerCase()}`,
+  /* Director call (a): the Work section is 'Work' in visitor copy. */
+  title: `Go to ${anchor === '#projects' ? 'Work' : `${name.charAt(0)}${name.slice(1).toLowerCase()}`}`,
   aliases: [anchor.slice(1), tab],
   keywords: ['go', 'navigate', 'section', anchor.slice(1), tab],
   group: 'navigate' as const,
@@ -69,11 +94,11 @@ const skillCommands: Command[] = allSkillNodes.map((node) => ({
   },
 }))
 
-export const commands: readonly Command[] = [
+const allCommands: Command[] = [
   ...navigateCommands,
   {
     id: 'go-cv',
-    title: 'Open /cv — the recruiter cut',
+    title: 'Open the résumé page',
     aliases: ['cv', '/cv'],
     keywords: ['cv', 'resume', 'recruiter', 'dossier', 'print'],
     group: 'navigate',
@@ -108,14 +133,43 @@ export const commands: readonly Command[] = [
     },
   },
   {
-    id: 'toggle-theme',
-    title: 'Toggle theme',
-    aliases: ['theme'],
-    keywords: ['theme', 'dark', 'light', 'toggle'],
+    /* v3 §2.1/§3 — the edition switch. `title` is a getter: the palette
+       renders cmd.title on every open, so the row reads "Read it as a
+       comic" in SCREEN and "See the screen edition" in PRINT without any
+       palette-side logic. Runs the §2.4 press/projector transition through
+       ctx.setEdition('toggle', 'palette'). The Navbar pill (EditionToggle)
+       calls switchEdition directly with via 'toggle'. */
+    id: 'switch-edition',
+    get title() {
+      return SWITCH_EDITION_LABELS[getCurrentEdition()]
+    },
+    aliases: [
+      'edition',
+      'switch edition',
+      'comic',
+      'screen edition',
+      'print edition',
+      SWITCH_EDITION_LABELS.screen,
+      SWITCH_EDITION_LABELS.print,
+    ],
+    keywords: ['edition', 'switch', 'screen', 'print', 'comic', 'cinema', 'toggle', 'skin'],
     group: 'action',
     surfaces: ['palette', 'nav'],
     run(ctx) {
-      ctx.setTheme('toggle')
+      return ctx.setEdition('toggle', 'palette')
+    },
+  },
+  {
+    /* v3 §2.5 — re-open the edition picker (X1). Sets html[data-pick='1'];
+       the EditionPicker island (C5) watches the attribute and renders. */
+    id: 'choose-edition',
+    title: 'Choose your edition',
+    aliases: ['choose edition', 'picker', 'pick edition'],
+    keywords: ['choose', 'edition', 'picker', 'screen', 'print', 'comic', 'cinema'],
+    group: 'action',
+    surfaces: ['palette'],
+    run() {
+      requestEditionPick()
     },
   },
   {
@@ -214,7 +268,7 @@ export const commands: readonly Command[] = [
        cluster-wave sequence and fires GA `deploy_all` at sequence start so
        its own on-diagram button is counted too. */
     id: 'deploy-all',
-    title: 'Deploy the system',
+    title: 'Light up the toolkit',
     aliases: ['deploy', 'deploy --all', 'deploy all'],
     keywords: ['deploy', 'build', 'system', 'skills', 'modules', 'healthy'],
     group: 'fun',
@@ -273,7 +327,48 @@ export const commands: readonly Command[] = [
       useSignalStore.getState().setCrtEnabled(true)
     },
   },
+  {
+    /* v3 §1.8 — the ONLY door to build evidence (SHA, KB, fps, seen count).
+       Flips store.buildInfoOpen; the C1 BuildInfo island is next/dynamic
+       and mounts while the flag is true. */
+    id: 'build-info',
+    title: 'Build info',
+    aliases: ['build', 'build info', 'about this build'],
+    keywords: ['build', 'info', 'bundle', 'size', 'sha', 'commit', 'fps', 'version', 'evidence'],
+    group: 'fun',
+    surfaces: ['palette'],
+    run() {
+      useSignalStore.getState().setBuildInfoOpen(true)
+    },
+  },
+  {
+    /* v3 §2.7 — replay PRINT's boot. Only meaningful in PRINT, so it
+       switches there first (press transition) when SCREEN is in force,
+       clears the once-per-session flag and then dispatches
+       SIGNAL_EVENTS.replayIntro for the intro host (C6). */
+    id: 'replay-intro',
+    title: 'Replay the intro (PRINT)',
+    aliases: ['replay intro', 'replay the intro', 'intro'],
+    keywords: ['replay', 'intro', 'boot', 'comic', 'print', 'cover', 'opening'],
+    group: 'fun',
+    surfaces: ['palette'],
+    async run(ctx) {
+      if (typeof window === 'undefined') return
+      try {
+        sessionStorage.removeItem(INTRO_SESSION_KEY)
+      } catch {
+        /* storage unavailable — the intro host re-checks eligibility itself */
+      }
+      if (getCurrentEdition() !== 'print') await ctx.setEdition('print', 'palette')
+      window.dispatchEvent(new CustomEvent(SIGNAL_EVENTS.replayIntro))
+    },
+  },
 ]
+
+/** Every command; the repo link only while the repo is public (profile.siteRepoPublic). */
+export const commands: readonly Command[] = allCommands.filter(
+  (c) => c.id !== 'view-source' || profile.siteRepoPublic
+)
 
 /** Resolve a command by exact id. */
 export function getCommand(id: string): Command | undefined {

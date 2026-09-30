@@ -9,8 +9,9 @@
 
 import dynamic from 'next/dynamic'
 import type { ProjectWindowProps } from './ProjectWindow'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const ProjectWindowIsland = dynamic(() => import('./ProjectWindow'))
+const ProjectWindowIsland = dynamic(() => import('./ProjectWindow').catch(islandUnavailable<typeof import('./ProjectWindow')>))
 
 export default ProjectWindowIsland
 export type { ProjectWindowProps }

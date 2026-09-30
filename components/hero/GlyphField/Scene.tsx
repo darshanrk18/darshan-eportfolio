@@ -220,7 +220,7 @@ function Field({ initialTier, onReady, onTierChange, onTeardown }: GlyphScenePro
     built.uniforms.uSize.value.set(size.width, size.height)
   }, [built, size])
 
-  // Accent colors from the CSS tokens; follows html[data-theme] live.
+  // Field colours from the CSS tokens (--accent-signal = champagne, --accent-electron = steel in SCREEN); re-read when html[data-edition] switches.
   useEffect(() => {
     if (!built) return
     const apply = () => {
@@ -234,7 +234,7 @@ function Field({ initialTier, onReady, onTierChange, onTeardown }: GlyphScenePro
     const observer = new MutationObserver(apply)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme'],
+      attributeFilter: ['data-edition'],
     })
     return () => observer.disconnect()
   }, [built])

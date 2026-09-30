@@ -1,17 +1,14 @@
 /* ============================================================================
    SIGNAL v2 — chrome.css
    OWNER: chrome agent — exclusively. No other agent edits this file.
-   SPEC: V2_SPEC §6.1 (theme-switch view-transition radial wipe),
-   §6.4 (cross-document @view-transition compile sweep), §6.5 (.link-draw
-   underline + magnetic transform vars + :active state), §7.2 (view-source
-   mode annotation layer), toast styling (components/chrome/Toast.tsx),
-   §10.3 (footer build-complete payoff rule).
-   §6.3 boot POST lines are styled inside BootOverlay.tsx (Tailwind +
-   whitespace-pre leaders) — no global rules needed. §10.2 narrator rows
-   reuse the palette's existing cmdk row styles — none needed here either.
-   NOTE: the chrome agent is ALSO the only agent besides prep allowed inside
-   app/globals.css — solely to replace values in the existing
-   html[data-theme='light'] token block (§6.2 paper terminal).
+   SPEC: V2_SPEC §6.4 (cross-document @view-transition compile sweep),
+   §6.5 (.link-draw underline + magnetic transform vars + :active state),
+   §7.2 (view-source mode annotation layer), toast styling
+   (components/chrome/Toast.tsx), §10.3 (footer build-complete payoff rule).
+   v3: the §6.1 radial wipe is GONE with the dark/light theme; the edition
+   switch (press / projector) lives in styles/v3/switch.css keyed off
+   html[data-edition-switch]. The §6.3 boot overlay is retired (v3 §1.6).
+   §10.2 narrator rows reuse the palette's existing cmdk row styles.
    ========================================================================== */
 
 /* ----------------------------------------------------------------------------
@@ -20,8 +17,8 @@
    external entries, and /cv → back. Client-side router.push()/<Link> stays
    an instant cut by decision. Browsers without @view-transition ignore all
    of this; zero JS.
-   Order matters: §6.1's html[data-theme-wipe] rules BELOW override this
-   same-specificity selector during a same-document theme switch.
+   Order matters: styles/v3/switch.css (imported later) overrides this
+   same-specificity selector during a same-document edition switch.
    -------------------------------------------------------------------------- */
 @view-transition {
   navigation: auto;
@@ -38,30 +35,6 @@
 
 html:not([data-motion='reduced'])::view-transition-new(root) {
   animation: sweep-in 300ms var(--ease-out-expo);
-}
-
-/* ----------------------------------------------------------------------------
-   §6.1 Theme switch — same-document radial wipe from the toggle's coords.
-   ThemeToggle.tsx sets --wipe-x/--wipe-y + html[data-theme-wipe] around
-   document.startViewTransition(), and removes the attribute when the
-   transition settles — so these rules never leak into §6.4's cross-document
-   sweep. Reduced motion / no-VT-API fall back to an instant switch in JS;
-   the CSS gate below is the belt to that suspenders.
-   -------------------------------------------------------------------------- */
-@keyframes theme-wipe {
-  from {
-    clip-path: circle(0px at var(--wipe-x, 50%) var(--wipe-y, 50%));
-  }
-  to {
-    clip-path: circle(150vmax at var(--wipe-x, 50%) var(--wipe-y, 50%));
-  }
-}
-
-html[data-theme-wipe]::view-transition-old(root) {
-  animation: none;
-}
-html[data-theme-wipe]::view-transition-new(root) {
-  animation: theme-wipe 500ms var(--ease-structural);
 }
 
 html[data-motion='reduced']::view-transition-old(root),

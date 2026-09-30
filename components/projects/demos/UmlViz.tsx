@@ -101,7 +101,7 @@ export default function UmlViz() {
                     textAnchor="middle"
                     fill="var(--text-primary)"
                     fontSize="10"
-                    fontFamily="var(--font-jbmono), monospace"
+                    fontFamily="var(--font-mono), monospace"
                   >
                     {b.label}
                   </text>
@@ -143,7 +143,7 @@ export default function UmlViz() {
                     textAnchor="middle"
                     fill="var(--accent-signal)"
                     fontSize="10"
-                    fontFamily="var(--font-jbmono), monospace"
+                    fontFamily="var(--font-mono), monospace"
                   >
                     {e.letter}
                   </text>
@@ -155,7 +155,7 @@ export default function UmlViz() {
 
         {/* pattern glossary labels */}
         <g opacity={seg(progress, 0.9, 0.1)}>
-          <text x={30} y={120} fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-jbmono), monospace">
+          <text x={30} y={120} fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-mono), monospace">
             MVC
           </text>
           <text
@@ -164,7 +164,7 @@ export default function UmlViz() {
             textAnchor="middle"
             fill="var(--text-secondary)"
             fontSize="9"
-            fontFamily="var(--font-jbmono), monospace"
+            fontFamily="var(--font-mono), monospace"
           >
             S·O·L·I·D — single responsibility · open/closed · liskov · interface segregation ·
             dependency inversion
@@ -172,8 +172,8 @@ export default function UmlViz() {
         </g>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        uml pattern glossary drawing itself — mvc + strategy + builder class boxes, edges
-        annotated with the five solid principles
+        The calendar&apos;s structure drawing itself: MVC with Strategy and Builder, each edge
+        tagged with the SOLID principle it follows
       </figcaption>
     </figure>
   )

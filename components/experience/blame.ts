@@ -1,52 +1,80 @@
 /**
- * v2 §9.1 git-blame cross-highlight data — per-bullet skill ids for the
- * commit entries in lib/data/experience. VERIFICATION RULE (binding, §9.1):
- * a bullet may name ONLY skill ids that resolve via getSkillNode() AND whose
- * `usedIn` (lib/data/skills.ts) includes this commit's employer — enforced by
- * tests/blame.test.ts, so the blame feature is structurally incapable of
- * asserting an unverified claim.
+ * "See which skills each job used" — the per-bullet skill map behind the
+ * cross-highlight (v2 §9.1 git-blame, renamed in v3 to visitor language).
  *
- * Deviations from the spec's §9.1 table, forced by lib/data/skills.ts:
- * - `java` / `python` are languages (editor-tab chips), not diagram nodes —
- *   getSkillNode() cannot resolve them, so they are excluded everywhere.
- * - `cloudwatch` has an empty usedIn — excluded from aws-intern bullet 2.
- * - `github-actions` is verified for Ticket-Forge only, not Schneider —
- *   excluded from schneider bullet 3.
- * - `neu-ta` has no verified diagram-node claim (JUnit's usedIn names the
- *   AWS internship, not the TA role) — the commit has no blame entry and its
- *   bullet simply does not participate in blame.
+ * VERIFICATION RULE (binding): a bullet may name ONLY skill ids that resolve
+ * via getSkill() (a diagram node OR a language — v3 extends the model to the
+ * Languages row so Python / Java tiles are legal) AND whose `usedIn`
+ * (lib/data/skills.ts) names this job's usage place. tests/blame.test.ts
+ * enforces it, so the feature is structurally incapable of asserting an
+ * unverified claim.
+ *
+ * What the job's TILE SHEET shows is not this table: it is
+ * skillsUsedAt(place) — every skill the verified map ties to the job, in
+ * chip order. This table only says which bullet each skill belongs to (the
+ * hover narrows the highlight to that bullet's skills, and the bullet marks
+ * come from it — see ./marks.ts).
+ *
+ * Deviations from a naive reading of the bullets, forced by the map:
+ * - `cloudwatch` has an empty usedIn — never blamed.
+ * - `github-actions` is verified for Ticket-Forge only, not Schneider.
+ * - `neu-ta` blames Java only (Java → CS5010 TA is verified; JUnit / JaCoCo
+ *   appear in the bullet but junit.usedIn names the AWS internship).
+ * - Schneider bullet 2 (Microsoft 365 automation) is deliberately unmarked,
+ *   as the approved P5 frame draws it.
  */
 
-import type { CommitEntry } from '@/lib/data/experience'
+import type { CommitId } from '@/lib/data/experience'
+import { skillsUsedAt, type UsagePlaceId, type Skill } from '@/lib/data/skills'
+
+export type BlameJobId = Extract<CommitId, 'aws-intern' | 'neu-ta' | 'schneider'>
 
 export interface BlameEntry {
-  /** The `usedIn.where` string that verifies this commit's skill claims. */
-  where: string
-  /** Parallel to CommitEntry.bullets — skill node ids per bullet ([] = none). */
+  /** The usage place (lib/data/skills USAGE_PLACES) that verifies this job's claims. */
+  place: UsagePlaceId
+  /** Parallel to CommitEntry.bullets — skill ids per bullet ([] = none). */
   bulletSkills: readonly (readonly string[])[]
 }
 
-export const commitBlame: Partial<Record<CommitEntry['id'], BlameEntry>> = {
+export const commitBlame: Record<BlameJobId, BlameEntry> = {
   'aws-intern': {
-    where: 'AWS internship',
+    place: 'aws-intern',
     bulletSkills: [
-      // serverless evidence-capture prototype (Lambda/S3 + browser automation)
-      ['aws', 'playwright'],
+      // serverless evidence-capture prototype (Java, Python, Lambda/S3 + browser automation)
+      ['java', 'python', 'aws', 'playwright'],
       // CDK/IAM infrastructure-as-code + Docker hardening
       ['aws', 'docker'],
-      // Java 100% coverage + e2e validation suite
-      ['junit', 'playwright'],
+      // Java 100% coverage (JUnit) + Python Lambda unit tests + e2e validation
+      ['java', 'junit', 'python', 'playwright'],
+    ],
+  },
+  'neu-ta': {
+    place: 'neu-ta',
+    bulletSkills: [
+      // labs and office hours on Java OOP, SOLID, UML, patterns, testing
+      ['java'],
     ],
   },
   schneider: {
-    where: 'Schneider Electric',
+    place: 'schneider',
     bulletSkills: [
       // workflow apps for 10k+ employees
-      ['flask', 'react', 'nodejs', 'mysql'],
-      // M365 automation is Python/PowerShell/Graph — no verified diagram node
+      ['python', 'flask', 'react', 'nodejs', 'mysql'],
+      // M365 automation is Python/PowerShell/Graph — drawn unmarked (P5)
       [],
       // containers + CI/CD + monitoring
       ['docker', 'kubernetes', 'jenkins', 'prometheus', 'grafana'],
     ],
   },
+}
+
+export const blameJobIds = Object.keys(commitBlame) as readonly BlameJobId[]
+
+export function isBlameJobId(id: string): id is BlameJobId {
+  return Object.prototype.hasOwnProperty.call(commitBlame, id)
+}
+
+/** The tile sheet for a job: every verified skill of its place, chip order. */
+export function jobSkills(id: BlameJobId): readonly Skill[] {
+  return skillsUsedAt(commitBlame[id].place)
 }

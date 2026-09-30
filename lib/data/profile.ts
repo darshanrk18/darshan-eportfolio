@@ -13,16 +13,38 @@ export const profile = {
   name: 'Darshan Ravindra Konnur',
   displayName: 'Darshan Konnur',
   role: 'Software Engineer',
-  heroTagline: '// software engineer — incoming SDE @ AWS — MS CS @ Northeastern',
+  /* v2's comment-line `heroTagline` is gone (clutter law: no command-line
+     syntax at rest; nothing read it). The hero reads `eyebrow` + `heroLede`. */
   location: 'Boston, MA',
+  /** The location written out — the PRINT cover's caption box (P1). */
+  locationLong: 'Boston, Massachusetts',
   /** Headline status — the one positioning line used sitewide. */
   status: 'Incoming SDE @ AWS · Jan 2027',
+  /**
+   * v3 S1 kicker (the hero eyebrow with the live dot) — the long form of
+   * `status`, approved in round 3. Everywhere else says "Jan 2027".
+   */
+  eyebrow: 'Incoming SDE · AWS · January 2027',
+  /**
+   * v3 S1 lede — condensed from CONTENT_FINAL About P1 + P3's last
+   * sentence (approved). `heroLedeEmphasis` is the one word set in the
+   * primary text colour (the frame's <b>Northeastern</b>).
+   */
+  heroLede:
+    'Software engineer in Boston, finishing my MS in Computer Science at Northeastern. I like taking systems from prototype to production — and proving they work.',
+  heroLedeEmphasis: 'Northeastern',
   email: 'konnur.d@northeastern.edu',
   githubUrl: 'https://github.com/darshanrk18',
   linkedinUrl: 'https://linkedin.com/in/darshankonnur',
   resumePdf: '/resume/darshan-konnur.pdf',
-  /** Verified git remote of this site (navbar branch chip + footer view-source). */
+  /** Git remote of this site (palette "Open repository", Build info). */
   siteRepoUrl: 'https://github.com/darshanrk18/darshan-eportfolio',
+  /**
+   * The repo is private, so a visitor following either link gets GitHub's
+   * 404: both stay hidden until it is public. Make the repo public, then set
+   * this to true.
+   */
+  siteRepoPublic: false,
   siteUrl,
   /**
    * Incoming full-time role (owner-confirmed). Render as FUTURE only —
@@ -37,7 +59,7 @@ export const profile = {
   },
   education: {
     school: 'Northeastern University',
-    degree: 'MS, Computer Science',
+    degree: 'MS in Computer Science',
     location: 'Boston, MA',
     period: 'Jan 2025 – Dec 2026 (expected)',
     /** MS began Jan 2025 (owner-verified) — used by the experience DAG. */
@@ -54,7 +76,7 @@ export const profile = {
   },
   educationPrior: {
     school: 'M. S. Ramaiah Institute of Technology',
-    degree: 'BE, Computer Science',
+    degree: 'BE in Computer Science',
     location: 'Bengaluru, India',
     period: 'Aug 2017 – Jul 2021',
   },

@@ -114,7 +114,7 @@ export default function BoxArchViz() {
               textAnchor="middle"
               fill="var(--text-primary)"
               fontSize="11"
-              fontFamily="var(--font-jbmono), monospace"
+              fontFamily="var(--font-mono), monospace"
             >
               {b.label}
             </text>
@@ -129,13 +129,13 @@ export default function BoxArchViz() {
         <line x1={404} y1={112} x2={404} y2={74} stroke="var(--border-hairline)" />
 
         {/* flow step labels */}
-        <text x={158} y={38} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-jbmono), monospace">
+        <text x={158} y={38} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-mono), monospace">
           1 authorize →
         </text>
-        <text x={158} y={70} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-jbmono), monospace">
+        <text x={158} y={70} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-mono), monospace">
           ← 2 token
         </text>
-        <text x={240} y={124} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-jbmono), monospace">
+        <text x={240} y={124} textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-mono), monospace">
           3 request + bearer token →
         </text>
 
@@ -153,13 +153,13 @@ export default function BoxArchViz() {
 
         {/* K8s strip */}
         <line x1={24} y1={152} x2={456} y2={152} stroke="var(--border-hairline)" />
-        <text x={24} y={172} fill="var(--text-secondary)" fontSize="10" fontFamily="var(--font-jbmono), monospace">
+        <text x={24} y={172} fill="var(--text-secondary)" fontSize="10" fontFamily="var(--font-mono), monospace">
           k8s deployment — replicas 2 → 5
         </text>
         {/* load tick */}
         <rect x={370} y={162} width={60} height={6} fill="var(--bg-raised)" stroke="var(--border-hairline)" strokeWidth={0.5} />
         <rect x={370} y={162} width={60 * loadT} height={6} fill="var(--accent-amber)" opacity={0.8} />
-        <text x={436} y={169} fill="var(--text-secondary)" fontSize="8" fontFamily="var(--font-jbmono), monospace">
+        <text x={436} y={169} fill="var(--text-secondary)" fontSize="8" fontFamily="var(--font-mono), monospace">
           load
         </text>
 
@@ -184,20 +184,20 @@ export default function BoxArchViz() {
                 textAnchor="middle"
                 fill={running ? 'var(--text-primary)' : 'var(--text-secondary)'}
                 fontSize="9"
-                fontFamily="var(--font-jbmono), monospace"
+                fontFamily="var(--font-mono), monospace"
               >
                 {running ? `pod-${i + 1}` : 'pending'}
               </text>
             </g>
           )
         })}
-        <text x={24} y={250} fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-jbmono), monospace">
+        <text x={24} y={250} fill="var(--text-secondary)" fontSize="9" fontFamily="var(--font-mono), monospace">
           {`${Math.min(5, podsRunning)}/5 running`}
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        oauth flow — client authorizes, receives a token, calls the resource api — then a k8s
-        deployment schedules pods and scales 2 → 5 under load (illustration)
+        Illustration: a sign-in becomes an authorized request, then the service scales out
+        under load
       </figcaption>
     </figure>
   )
