@@ -11,9 +11,14 @@
  * email · Search / Jump (opens the command palette — the compact bar has no
  * keycap chip) · GitHub · LinkedIn, and the edition toggle in the foot.
  * Visitor language only — no file names (`resume.pdf`), no command syntax.
- * Focus-trapped, Esc closes, body scroll locked while open.
- * `data-lenis-prevent` hands the wheel back to the browser over the sheet:
- * on a short window the row list scrolls, and the page behind stays put.
+ * Focus-trapped, Esc closes, body scroll locked while open. The trap moves
+ * focus on every Tab itself: Safari by default tabs only between form
+ * fields, so its own Tab left the sheet for the contact terminal's input.
+ * The sheet itself takes focus (tabIndex -1) when a click lands on
+ * something that does not (Safari never focuses a clicked button), so Tab
+ * and Esc still reach the trap. `data-lenis-prevent` hands the wheel back
+ * to the browser over the sheet: on a short window the row list scrolls,
+ * and the page behind stays put.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -36,7 +41,6 @@ export interface MobileMenuProps {
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
   const reduced = usePrefersReducedMotion()
-  const sheetRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const [emailCopied, setEmailCopied] = useState(false)
   const copiedTimer = useRef<number | null>(null)
@@ -68,20 +72,14 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
       return
     }
     if (e.key !== 'Tab') return
-    // Focus trap: cycle within the sheet.
-    const focusables = sheetRef.current?.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled])'
+    // Focus trap: Tab and Shift+Tab cycle through the sheet's links and
+    // buttons, from wherever focus is (the sheet itself included).
+    e.preventDefault()
+    const items = Array.from(
+      e.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
     )
-    if (!focusables || focusables.length === 0) return
-    const first = focusables[0]
-    const last = focusables[focusables.length - 1]
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault()
-      first.focus()
-    }
+    const i = items.indexOf(document.activeElement as HTMLElement)
+    items[(e.shiftKey ? (i > 0 ? i : items.length) - 1 : i + 1) % items.length]?.focus()
   }
 
   const goToSection = (anchor: string) => {
@@ -121,13 +119,13 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         {open ? (
           <m.div
             key="mobile-menu"
-            ref={sheetRef}
             role="dialog"
             aria-modal="true"
             aria-label="Site menu"
             data-component="MobileMenu"
             data-island="client"
             data-lenis-prevent
+            tabIndex={-1}
             onKeyDown={handleKeyDown}
             className="sig-menu"
             initial={reduced ? { opacity: 0 } : { y: '-100%' }}

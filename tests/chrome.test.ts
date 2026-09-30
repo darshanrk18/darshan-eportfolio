@@ -205,6 +205,15 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
     const sheet = menu.match(/<m\.div[^>]*className="sig-menu"/)?.[0] ?? ''
     expect(sheet).toContain('data-lenis-prevent')
   })
+
+  it('the menu sheet keeps Tab inside in every browser (Safari tabs only to form fields)', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    const sheet = menu.match(/<m\.div[^>]*className="sig-menu"/)?.[0] ?? ''
+    // a click on something Safari does not focus leaves focus on the sheet
+    expect(sheet).toContain('tabIndex={-1}')
+    // every Tab is handled by the trap, not left to the browser
+    expect(menu).toMatch(/if \(e\.key !== 'Tab'\) return\s*e\.preventDefault\(\)/)
+  })
 })
 
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
