@@ -60,7 +60,8 @@ export function markSkills(bullet: string, skillIds: readonly string[]): MarkSeg
 
 export type FigureSegment = { text: string; figure: boolean }
 
-const FIGURE_RE = /\d[\d,]*(?:\.\d+)?%?\+?/g
+/* A thousands comma belongs to the figure ('10,000+'); a trailing one ('S3,') does not. */
+const FIGURE_RE = /\d(?:[\d,]*\d)?(?:\.\d+)?%?\+?/g
 
 export function figures(text: string): FigureSegment[] {
   const out: FigureSegment[] = []
