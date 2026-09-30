@@ -35,6 +35,11 @@ new design of the whole site; the numbers in parentheses are pull requests.
 - The arcade's Snake shows only the snake's length. (#5)
 - The homepage description is longer (130 characters) so LinkedIn shows it in
   full; the facts are unchanged. (#6)
+- `/cv` is rebuilt from the résumé: the name, photograph, contact links, skills
+  and education in a side rail, and beside it the experience, all seven
+  projects and the publication, in both editions. It still has no JavaScript
+  of its own, and it has its own print layout, so printing it from either
+  edition gives a plain résumé on white paper with page numbers. (#12)
 
 ### Fixed
 
@@ -46,6 +51,14 @@ new design of the whole site; the numbers in parentheses are pull requests.
   body face draws its digits that way. The digits 0–9 now come from Tenor Sans,
   a 1.5 KB subset loaded only where a digit is drawn; letters and PRINT are
   unchanged. (#7)
+- In Experience, a highlighted figure no longer takes the comma after it
+  (as in "S3,"); a thousands comma ("10,000+") still belongs to the figure. (#12)
+
+### Security
+
+- Every open Dependabot alert is fixed without moving to Next.js 16: Next.js
+  15.5.27, PostCSS 8.5 through an npm override (Next.js 15 pins 8.4), Vitest 5
+  with Vite 7, and patched development tools. (#13)
 
 ## [3.0.0] - 2026-09-30
 
@@ -57,7 +70,7 @@ and light themes. (#3)
 - **SCREEN**, a dark, cinematic cut: a black field with a volumetric light, a
   metal-finish name, steel labels and blocks of highly transparent frosted
   glass.
-- **PRINT**, an inked four-colour comic: cream paper, ink boxes, halftone
+- **PRINT**, an inked four-color comic: cream paper, ink boxes, halftone
   photographs, stickers, and a skippable intro that prints into the cover.
 - A picker on the first visit. It is sent as part of the page, so it appears
   before any JavaScript runs, and a tap made before the page is interactive
@@ -122,7 +135,7 @@ The terminal-styled site, given motion and depth. (#2)
 - The boot screen became a BIOS-style start-up that prints the measured size
   of each route.
 - The first-load JavaScript budget for `/` moved once, from the measured
-  166 KB to 178 KB gzipped, itemised for smooth scrolling and the new parts.
+  166 KB to 178 KB gzipped, itemized for smooth scrolling and the new parts.
 
 ### Fixed
 
