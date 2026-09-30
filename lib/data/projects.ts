@@ -108,7 +108,7 @@ export const projects: readonly Project[] = [
     problem: 'Manual ticket triage wastes engineering time and ignores workload and experience signals.',
     build:
       'Recommendation engine ranking engineers via ticket context, engineer profiles, historical assignments, workload and recent-experience signals; pgvector similarity search, confidence scoring, explainability and cold-start handling; full MLOps loop (MLflow registry, DVC, Airflow, model CI/CD and monitoring) on GCP with Terraform, Docker and GitHub Actions.',
-    result: "3rd place at Northeastern's MLOps Project Expo, presented at Google's Cambridge, MA office.",
+    result: '3rd place at the Google MLOps Project Expo in Cambridge, MA.',
     stack: [
       'Python',
       'FastAPI',
@@ -133,8 +133,8 @@ export const projects: readonly Project[] = [
     dir: 'projects',
     year: '2026',
     oneLiner:
-      'The operating system for your job search — version-controlled resumes and an application pipeline that never forgets what you sent.',
-    short: 'The operating system for your job search.',
+      'A job-search tracker with version-controlled resumes and a record of every application sent.',
+    short: 'Versioned resumes, tracked applications.',
     coverLine: 'Versioned resumes, tracked applications.',
     problem: 'Job searches sprawl across resume versions and applications with no source of truth.',
     build:

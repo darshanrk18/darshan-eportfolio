@@ -185,17 +185,18 @@ export default function CvPage() {
                 {p.stack.length > 0 ? <>{p.stack.join(' · ')} · </> : null}
                 <a className="underline" href={`/work/${p.slug}`}>
                   case file
-                </a>{' '}
-                ·{' '}
-                {p.paperUrl ? (
-                  <a className="underline" href={p.paperUrl} data-print-url>
-                    paper
-                  </a>
-                ) : (
-                  <a className="underline" href={p.repoUrl ?? profile.githubUrl} data-print-url>
-                    source
-                  </a>
-                )}
+                </a>
+                {/* "source" only where the code is public — a private project's
+                    link used to open the GitHub profile under that label. */}
+                {p.paperUrl || p.repoUrl ? (
+                  <>
+                    {' '}
+                    ·{' '}
+                    <a className="underline" href={p.paperUrl ?? p.repoUrl} data-print-url>
+                      {p.paperUrl ? 'paper' : 'source'}
+                    </a>
+                  </>
+                ) : null}
                 {p.demoUrl ? (
                   <>
                     {' '}

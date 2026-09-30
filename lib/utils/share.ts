@@ -6,14 +6,17 @@ export const siteTitle = `${profile.displayName} — ${profile.role}`
 export const siteDescription =
   'Software engineer. Incoming SDE @ AWS (Jan 2027). MS CS @ Northeastern, IEEE-published. Boston, MA.'
 
-/** The share card (app/opengraph-image.tsx), served at this path. A page
- *  that sets its own `openGraph`/`twitter` loses the inherited card, so the
- *  helper names it explicitly. Keep in step with the card file's name. */
+/** The share card — a static picture, app/opengraph-image.jpg (the split
+ *  SCREEN | PRINT cover the owner picked, option B2 on the design canvas; its
+ *  source and re-render steps live in design-workshop/og/). A page that sets
+ *  its own `openGraph`/`twitter` loses the inherited card, so the helper
+ *  names it explicitly. Keep in step with the card file's name. The card
+ *  prints "Incoming SDE @ AWS · Jan 2027": re-render it when that changes. */
 export const shareImage = {
-  url: '/opengraph-image',
+  url: '/opengraph-image.jpg',
   width: 1200,
   height: 630,
-  alt: `${profile.displayName} — ${profile.role}`,
+  alt: `${profile.displayName} — ${profile.role}. A portrait split down a torn seam: the dark SCREEN edition on the left, the inked PRINT comic on the right.`,
 }
 
 /**
