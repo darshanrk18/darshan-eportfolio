@@ -1410,17 +1410,31 @@ html[data-edition='screen'] {
     filter: brightness(0) invert(1);
     opacity: 0.82;
   }
-  /* A long name (no logo) wraps inside its chip on a narrow card rather than
-     running past the card's clipped edge. */
   .rk-bill li[data-boxed] {
-    max-width: 100%;
     padding: 5px 7px;
     border: 1px solid var(--border-strong);
     border-radius: 3px;
     background: var(--ed-tint);
     font-size: 10.5px;
-    line-height: 1.2;
-    white-space: normal;
+  }
+  /* A long name (no logo) may run a few px into the card's right padding, as
+     drawn; only on a card whose text column is under 140 px (the two-up
+     phone rack at 360-395, the six-up rack at 1101-1147), where "Mixed
+     Integer Programming" would reach the card's clipped edge, does it wrap
+     inside its box. The span's negative margins keep a one-line chip the
+     same height there. */
+  .rk-bill {
+    container-type: inline-size;
+  }
+  @container (width < 140px) {
+    .rk-bill li[data-boxed] {
+      max-width: 100%;
+      white-space: normal;
+    }
+    .rk-bill li[data-boxed] > span {
+      margin-block: -0.1em;
+      line-height: 1.2;
+    }
   }
   .rk-more {
     display: none;
