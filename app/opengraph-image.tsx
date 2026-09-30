@@ -1,20 +1,39 @@
 /**
- * OG / Twitter card (spec §7.2) — pure typography via next/og: obsidian
- * background, serif name, mono status line, signal caret. No image assets.
- * Fonts are fetched from Google Fonts at build time; if that fetch fails the
- * card falls back to next/og's default font rather than failing the build.
+ * OG / Twitter card (v2 §7.2; v3 §3 / §5) — the SCREEN look via next/og:
+ * black field with the volumetric top light, the Studio Seal in silver,
+ * the Cinzel name, an IBM Plex Mono status line with a champagne live dot.
+ * No build evidence (clutter law), no image assets: the seal is an inline
+ * path (components/chrome/DkSeal DK_SEAL_MARK_PATH).
+ *
+ * Satori rules: flex only, no CSS vars (hex copies of the SCREEN tokens),
+ * one font loader per family + weight, exact glyphs requested. Fonts are
+ * fetched from Google Fonts at build time; if a fetch fails the card falls
+ * back to next/og's default font rather than failing the build.
  */
 
 import { ImageResponse } from 'next/og'
+import { DK_SEAL_MARK_PATH } from '@/components/chrome/DkSeal'
 import { profile } from '@/lib/data/profile'
 
 export const alt = 'Darshan Konnur — Software Engineer'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-async function loadGoogleFont(family: string, text: string): Promise<ArrayBuffer | null> {
+/* SCREEN tokens (app/globals.css :root), copied because Satori has no vars. */
+const FIELD = '#050607'
+const SILVER = '#d9dde4'
+const STEEL = '#aab3c0'
+const STEEL_DIM = '#8b96a4'
+const CHAMPAGNE = '#d8c49a'
+const EDGE = 'rgba(154,165,179,0.3)'
+
+async function loadGoogleFont(
+  family: string,
+  weight: number,
+  text: string
+): Promise<ArrayBuffer | null> {
   try {
-    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&text=${encodeURIComponent(text)}`
+    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&text=${encodeURIComponent(text)}`
     const css = await (await fetch(url)).text()
     const match = css.match(/src: url\((.+?)\) format\('(?:truetype|opentype)'\)/)
     if (!match?.[1]) return null
@@ -27,29 +46,21 @@ async function loadGoogleFont(family: string, text: string): Promise<ArrayBuffer
 }
 
 export default async function OpengraphImage() {
-  const name = profile.displayName
-  const tagline = profile.heroTagline
-  const statusLine = `${profile.status} · ${profile.location}`
-  const eyebrow = '~/darshan-konnur — main'
+  const name = profile.displayName.toUpperCase()
+  const kicker = profile.status.toUpperCase()
+  const line = `${profile.role} · ${profile.location}`
 
-  // v2 §10.6 — the build-run motif travels with the card. VERIFIED: Google's
-  // css2 endpoint silently DROPS U+2713 from JetBrains Mono subsets (the
-  // fetch succeeds but the served font has no ✓ cmap entry), after which
-  // Satori's own dynamic-font fetch 400s — so the glyph "still fails" and the
-  // spec's sanctioned ASCII fallback row ships deterministically.
-  const buildRow = 'ok · compiled · 0 errors'
-
-  const [serif, mono] = await Promise.all([
-    loadGoogleFont('Instrument Serif', name),
-    loadGoogleFont('JetBrains Mono', `${tagline}${statusLine}${eyebrow}${buildRow}`),
+  const [cinzel, plex] = await Promise.all([
+    loadGoogleFont('Cinzel', 500, name),
+    loadGoogleFont('IBM Plex Mono', 400, `${kicker}${line}`),
   ])
 
-  const fonts: { name: string; data: ArrayBuffer; style: 'normal'; weight: 400 }[] = []
-  if (serif) fonts.push({ name: 'Instrument Serif', data: serif, style: 'normal', weight: 400 })
-  if (mono) fonts.push({ name: 'JetBrains Mono', data: mono, style: 'normal', weight: 400 })
+  const fonts: { name: string; data: ArrayBuffer; style: 'normal'; weight: 400 | 500 }[] = []
+  if (cinzel) fonts.push({ name: 'Cinzel', data: cinzel, style: 'normal', weight: 500 })
+  if (plex) fonts.push({ name: 'IBM Plex Mono', data: plex, style: 'normal', weight: 400 })
 
-  const serifFamily = serif ? 'Instrument Serif' : 'serif'
-  const monoFamily = mono ? 'JetBrains Mono' : 'monospace'
+  const displayFamily = cinzel ? 'Cinzel' : 'serif'
+  const monoFamily = plex ? 'IBM Plex Mono' : 'monospace'
 
   return new ImageResponse(
     (
@@ -60,75 +71,66 @@ export default async function OpengraphImage() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: '#050607',
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
-          backgroundSize: '32px 32px',
-          padding: '64px 72px',
-          border: '1px solid #1C2229',
+          backgroundColor: FIELD,
+          backgroundImage:
+            'radial-gradient(ellipse at 50% -10%, rgba(214,196,158,0.18) 0%, rgba(140,155,175,0.07) 42%, rgba(5,6,7,0) 72%)',
+          padding: '56px 72px 60px',
+          border: `1px solid ${EDGE}`,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            fontFamily: monoFamily,
-            fontSize: 24,
-            color: '#8B949E',
-            letterSpacing: '0.06em',
-          }}
-        >
-          {eyebrow}
+        {/* Ident — the Studio Seal, silver. */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <svg width="56" height="56" viewBox="0 0 100 100" fill={SILVER}>
+            <path d={DK_SEAL_MARK_PATH} />
+          </svg>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          {/* Kicker with the live dot. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              fontFamily: monoFamily,
+              fontSize: 22,
+              color: STEEL,
+              letterSpacing: '0.28em',
+            }}
+          >
             <div
               style={{
                 display: 'flex',
-                fontFamily: serifFamily,
-                fontSize: 132,
-                lineHeight: 1,
-                color: '#E6EDF3',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              {name}
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                width: 14,
-                height: 104,
-                marginLeft: 18,
-                marginBottom: 8,
-                backgroundColor: '#3FE0A0',
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                backgroundColor: CHAMPAGNE,
+                marginRight: 18,
+                boxShadow: '0 0 12px rgba(216,196,154,0.55)',
               }}
             />
+            {kicker}
           </div>
+          {/* The name — Cinzel, silver, metal-lit. */}
           <div
             style={{
               display: 'flex',
-              marginTop: 36,
-              fontFamily: monoFamily,
-              fontSize: 28,
-              color: '#8B949E',
+              marginTop: 26,
+              fontFamily: displayFamily,
+              /* 14 caps at 0.06em fit the 1056 px column with room to spare. */
+              fontSize: 88,
+              lineHeight: 1,
+              color: SILVER,
+              letterSpacing: '0.06em',
+              whiteSpace: 'nowrap',
             }}
           >
-            {tagline}
+            {name}
           </div>
-          {/* v2 §10.6 — build-run row in the signal hex. The AWS/date line
-              already lives in the tagline (kept to one occurrence). */}
-          <div
-            style={{
-              display: 'flex',
-              marginTop: 20,
-              fontFamily: monoFamily,
-              fontSize: 24,
-              color: '#3FE0A0',
-              letterSpacing: '0.04em',
-            }}
-          >
-            {buildRow}
-          </div>
+          {/* The champagne rule under the name (an SVG line: Satori collapses
+              an empty sized div inside a column). */}
+          <svg width="220" height="2" viewBox="0 0 220 2" style={{ marginTop: 28 }}>
+            <rect width="220" height="1" fill={CHAMPAGNE} fillOpacity="0.7" />
+          </svg>
         </div>
 
         <div
@@ -137,24 +139,14 @@ export default async function OpengraphImage() {
             alignItems: 'center',
             fontFamily: monoFamily,
             fontSize: 24,
-            color: '#8B949E',
-            letterSpacing: '0.06em',
+            color: STEEL_DIM,
+            letterSpacing: '0.08em',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              width: 12,
-              height: 12,
-              borderRadius: 999,
-              backgroundColor: '#3FE0A0',
-              marginRight: 16,
-            }}
-          />
-          {statusLine}
+          {line}
         </div>
       </div>
     ),
-    { ...size, fonts: fonts.length > 0 ? fonts : undefined },
+    { ...size, fonts: fonts.length > 0 ? fonts : undefined }
   )
 }

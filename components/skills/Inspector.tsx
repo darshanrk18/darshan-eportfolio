@@ -1,82 +1,73 @@
 'use client'
 
 /**
- * §4.5 skill inspector — kubectl-describe panel.
- * Desktop/tablet: 360px panel sliding in from the right (spring 300/30,
- * --z-inspector, --elev-window). Mobile (<768): bottom sheet, tap outside or
- * close to dismiss. Focus-managed: focus moves in on open, Esc returns it to
- * the node; outside click closes. Usage lines come ONLY from SkillNode.usedIn
- * (CONTENT_FINAL verified map); empty ⇒ `Context: core stack`. Usage lines
- * with a `projectSlug` deep-link to that project (in-page explorer when the
- * Projects section is present, /work/<slug> permalink otherwise / without
- * JS). Reduced motion: no slide.
+ * v3 skill inspector — the card beside the diagram (S3 §3 F3 "aside.insp":
+ * logo tile, name, kind line, one-line blurb, the verified usage rows with
+ * years) and, under PRINT, the close-up panel (P3 §3 C2: sunburst art with
+ * the big die-cut sticker, the name in slab caps, the group tag, the blurb,
+ * "Where he used it" and the rows). ONE DOM, two skins (styles/v3/skills.css).
+ *
+ * Desktop (≥ 1200): an inline column that always shows the shown skill
+ * (selected or hover/focus preview; Python at rest) and cross-fades on
+ * change. Below 1200 the same element is a bottom sheet that opens only on
+ * a tap (`sheetOpen`), with focus moved in, Esc and outside-tap to close.
+ * Every fact comes from lib/data/skills `usedIn` (CONTENT_FINAL); an empty
+ * list shows the core-stack line. Rows that name a project deep-link to it
+ * (in-page window when the Work section is present, /work/<slug> otherwise).
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
-import { AnimatePresence, LazyMotion, domAnimation, m } from 'motion/react'
-import { SPRING_UI } from '@/lib/motion/tokens'
-import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
-import type { SkillNode } from '@/lib/data/skills'
+import { CORE_STACK_LINE, getUsagePlace, skillTrayLabel, type Skill } from '@/lib/data/skills'
 import type { ProjectSlug } from '@/lib/data/projects'
 import { scrollToAnchor, SIGNAL_EVENTS } from '@/lib/commands/context'
 import { useSignalStore } from '@/lib/state/store'
 import { trackProjectOpened } from '@/lib/utils/analytics'
+import Logo from './Logo'
+import { SKILLS_COPY } from './copy'
 
 export interface InspectorProps {
-  /** Node to describe; null closes the panel. */
-  node: SkillNode | null
-  /** restoreFocus: true for Esc/close-button (focus returns to the node). */
-  onClose: (restoreFocus: boolean) => void
+  /** The skill shown (selected or previewed); null = the prompt state. */
+  skill: Skill | null
+  /** Below 1200 px the card is a sheet; it is open only after a tap. */
+  sheetOpen: boolean
+  /** Close: the prompt state (desktop) / the sheet slides away (phone). */
+  onClose: () => void
 }
 
-export default function Inspector({ node, onClose }: InspectorProps) {
-  const reduced = usePrefersReducedMotion()
-  const panelRef = useRef<HTMLDivElement>(null)
-  const [sheet, setSheet] = useState(false)
+export default function Inspector({ skill, sheetOpen, onClose }: InspectorProps) {
+  const panelRef = useRef<HTMLElement>(null)
 
-  // Bottom sheet below 768px (viewport query — not a reduced-motion query).
+  /* Sheet mode: focus in, Esc closes, tapping outside closes. Desktop never
+     moves focus (the card is inline and follows hover). */
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const update = () => setSheet(mq.matches)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
-
-  const open = node !== null
-  const nodeId = node?.id
-
-  // Focus management + Esc + outside click.
-  useEffect(() => {
-    if (!open) return
-    panelRef.current?.focus()
-
+    if (!sheetOpen) return
+    const panel = panelRef.current
+    if (!panel) return
+    const wasNarrow = window.matchMedia('(max-width: 1199px)').matches
+    if (!wasNarrow) return
+    /* Next frame: the sheet's open state has been painted (a hidden element
+       cannot take focus). */
+    const focusTimer = window.requestAnimationFrame(() => panel.focus({ preventScroll: true }))
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose(true)
+      if (event.key === 'Escape') onClose()
     }
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null
-      if (target && panelRef.current && !panelRef.current.contains(target)) onClose(false)
+      if (target && !panel.contains(target)) onClose()
     }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('pointerdown', onPointerDown)
     return () => {
+      window.cancelAnimationFrame(focusTimer)
       document.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('pointerdown', onPointerDown)
     }
-  }, [open, nodeId, onClose])
+  }, [sheetOpen, onClose])
 
-  const offscreen = sheet ? { y: '100%' as const } : { x: 380 }
-  const onscreen = sheet ? { y: 0 } : { x: 0 }
-
-  // Deep-link a usage line to its project: same behavior as CommandCtx
-  // .openProject when the Projects explorer is on this page; otherwise the
-  // anchor's /work/<slug> permalink handles it (also the no-JS path).
   const openProject = (event: ReactMouseEvent<HTMLAnchorElement>, slug: ProjectSlug) => {
     if (!document.getElementById('projects')) return
     event.preventDefault()
-    onClose(false)
     useSignalStore.getState().setActiveProject(slug)
     scrollToAnchor('#projects')
     window.dispatchEvent(new CustomEvent(SIGNAL_EVENTS.openProject, { detail: { slug } }))
@@ -84,80 +75,106 @@ export default function Inspector({ node, onClose }: InspectorProps) {
   }
 
   return (
-    <LazyMotion features={domAnimation} strict>
-      <AnimatePresence>
-        {node ? (
-          <m.div
-            key={sheet ? 'skills-inspector-sheet' : 'skills-inspector-panel'}
-            ref={panelRef}
-            role="dialog"
-            id="skills-inspector"
-            aria-label={`${node.label} — usage details`}
-            data-component="Inspector"
-            data-island="client"
-            tabIndex={-1}
-            className="bg-panel elev-window fixed flex flex-col outline-none max-md:inset-x-0 max-md:bottom-0 max-md:max-h-[70vh] md:inset-y-0 md:right-0 md:w-[360px]"
-            style={{ zIndex: 'var(--z-inspector)' }}
-            initial={reduced ? false : offscreen}
-            animate={onscreen}
-            exit={offscreen}
-            transition={reduced ? { duration: 0 } : SPRING_UI}
+    <aside
+      ref={panelRef}
+      className="sk-insp ed-panel"
+      data-component="Inspector"
+      data-island="client"
+      data-open={skill ? 'true' : 'false'}
+      data-sheet-open={sheetOpen ? 'true' : undefined}
+      aria-label={skill ? SKILLS_COPY.inspectorName(skill.label) : SKILLS_COPY.inspectorLabel}
+      tabIndex={-1}
+    >
+      {/* SCREEN: the steel tick where the leader arrives (positioned by --leader-y). */}
+      <span aria-hidden="true" className="sk-insp-tick ed-screen-only" />
+      {skill ? (
+        <div className="sk-insp-body" key={skill.id}>
+          {/* PRINT: the close-up's top art — sunburst + red dot screen + the big die-cut sticker. */}
+          <div aria-hidden="true" className="sk-insp-art ed-print-only">
+            <span className="ed-sunburst sk-insp-burst" />
+            <span className="ed-halftone-red sk-insp-dots" />
+            <span className="sk-insp-big">
+              <Logo id={skill.id} size={96} />
+            </span>
+          </div>
+          <button
+            type="button"
+            className="sk-insp-close"
+            aria-label={SKILLS_COPY.inspectorClose}
+            onClick={onClose}
           >
-            <div className="border-hairline flex h-12 shrink-0 items-center justify-between border-b px-4">
-              <span className="type-label-xs text-secondary">describe · {node.id}</span>
-              <button
-                type="button"
-                aria-label="Close inspector"
-                onClick={() => onClose(true)}
-                className="type-code text-secondary hover:text-primary -mr-2 flex h-11 w-11 shrink-0 items-center justify-center md:h-8 md:w-8"
-              >
-                ✕
-              </button>
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
+              <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+          </button>
+          {/* PRINT: the caption box under the art; SCREEN: the card body. */}
+          <div className="sk-insp-text">
+            <div className="sk-insp-head">
+              <span className="sk-insp-tile ed-screen-only" aria-hidden="true">
+                <Logo id={skill.id} size={26} />
+              </span>
+              <div className="sk-insp-title">
+                <p className="sk-insp-name">{skill.label}</p>
+                <p className="sk-insp-kind">
+                  <span className="ed-screen-only">{skill.kind}</span>
+                  <span className="ed-print-only sk-insp-tag">{skillTrayLabel(skill)}</span>
+                </p>
+              </div>
             </div>
-            <div className="type-code overflow-y-auto p-4">
-              <dl className="skills-describe">
-                <dt>Name:</dt>
-                <dd>{node.id}</dd>
-                <dt>Kind:</dt>
-                <dd>{node.kind}</dd>
-                {node.usedIn.length > 0 ? (
-                  <>
-                    <dt>Status:</dt>
-                    <dd>In production</dd>
-                    <dt>Used in:</dt>
-                    <dd>
-                      {node.usedIn.map((usage, i) => {
-                        const slug = usage.projectSlug
-                        return (
-                          <div key={i}>
-                            {slug ? (
-                              <a
-                                href={`/work/${slug}`}
-                                onClick={(event) => openProject(event, slug)}
-                                className="underline underline-offset-2 transition-colors duration-(--dur-micro) ease-(--ease-swift) hover:text-signal focus-visible:text-signal"
-                              >
-                                {usage.where}
-                              </a>
-                            ) : (
-                              usage.where
-                            )}
-                            {usage.note ? ` — ${usage.note}` : null}
+            <p className="sk-insp-desc">{skill.blurb}</p>
+            {skill.usedIn.length > 0 ? (
+              <>
+                <p className="sk-insp-where ed-print-only" aria-hidden="true">
+                  {SKILLS_COPY.printWhere}
+                </p>
+                <ul className="sk-insp-rows">
+                  {skill.usedIn.map((usage) => {
+                    const place = getUsagePlace(usage.place)
+                    if (!place) return null
+                    const slug = place.projectSlug
+                    const label = (
+                      <>
+                        <span className="ed-screen-only">{place.name}</span>
+                        <span className="ed-print-only">{place.printName}</span>
+                      </>
+                    )
+                    const name = slug ? (
+                      <a
+                        href={`/work/${slug}`}
+                        className="sk-insp-link"
+                        onClick={(event) => openProject(event, slug)}
+                      >
+                        {label}
+                      </a>
+                    ) : (
+                      label
+                    )
+                    return (
+                      <li key={usage.place}>
+                        <span aria-hidden="true" className="sk-insp-dot ed-print-only" />
+                        {/* One cell beside the PRINT dot: name (+ year) and the note flow together. */}
+                        <div className="sk-insp-cell">
+                          <div className="sk-insp-row">
+                            <b>{name}</b>
+                            <span className="sk-insp-year ed-screen-only">{place.year}</span>
                           </div>
-                        )
-                      })}
-                    </dd>
-                  </>
-                ) : (
-                  <>
-                    <dt>Context:</dt>
-                    <dd>core stack</dd>
-                  </>
-                )}
-              </dl>
-            </div>
-          </m.div>
-        ) : null}
-      </AnimatePresence>
-    </LazyMotion>
+                          {usage.note ? <p className="sk-insp-note">{usage.note}</p> : null}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </>
+            ) : (
+              <p className="sk-insp-core">{CORE_STACK_LINE}</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="sk-insp-body sk-insp-body--empty">
+          <p className="sk-insp-prompt">{SKILLS_COPY.inspectorPrompt}</p>
+        </div>
+      )}
+    </aside>
   )
 }

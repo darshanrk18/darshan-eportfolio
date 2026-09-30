@@ -1,0 +1,409 @@
+/* ============================================================================
+   SIGNAL v3 — print.css  (V3_SPEC §2.2, §3, §4)
+   THE PRINT EDITION SKIN — the comic: frame 47's bones in frame 29's palette
+   (cream paper, ink, comic red / yellow / blue, halftone, stickers, SFX).
+   OWNER: Phase A wrote the shared recipes at the top (integrator maintains
+   them). Section agents (C1–C6) APPEND their own rules at the bottom under
+   a `---- <section> ----` banner comment; never edit a shared recipe here.
+   SCOPE: every rule here is nested under html[data-edition='print'], so
+   nothing leaks into SCREEN. screen.css styles the SAME .ed-* names for
+   SCREEN: one DOM, two skins (§3 "Shared markup, two skins").
+   SOURCE: design-workshop/screen-print/r2/kit-print.css ported 1:1 —
+   pk-* → ed-*, kit vars → the globals.css tokens (--text-primary is ink,
+   --accent-signal red, --accent-amber yellow, --accent-electron blue).
+   Ink boxes are 2px (the frames draw boxes at 2px) with the hard offset
+   shadow --ed-shadow. Conventions + data-surface hooks: styles/v3/README.md.
+   ========================================================================== */
+
+html[data-edition='print'] {
+  /* ---- page ------------------------------------------------------------ */
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-page);
+    color: var(--text-primary);
+  }
+  /* §6 — focus is ink on paper. */
+  :focus-visible {
+    outline-color: var(--text-primary);
+  }
+
+  /* ---- SCREEN-only atmosphere never draws here -------------------------- */
+  .ed-screen-only,
+  .ed-light,
+  .ed-halo,
+  .ed-gate,
+  .ed-beam,
+  .ed-ember,
+  .ed-grain,
+  .ed-float {
+    display: none !important;
+  }
+
+  /* ---- halftone screens + newsprint texture (backgrounds; combine with a
+          decorative node + .ed-print-only for overlays) ------------------- */
+  .ed-halftone {
+    background-image: radial-gradient(circle, rgba(23, 20, 27, 0.16) 1px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+  .ed-halftone-red {
+    background-image: radial-gradient(circle, rgba(215, 38, 45, 0.42) 1.1px, transparent 1.6px);
+    background-size: 7px 7px;
+  }
+  .ed-halftone-blue {
+    background-image: radial-gradient(circle, rgba(30, 111, 214, 0.42) 1.1px, transparent 1.6px);
+    background-size: 7px 7px;
+  }
+  .ed-lines {
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgba(23, 20, 27, 0.07) 0 1px,
+      transparent 1px 4px
+    );
+  }
+  .ed-sunburst {
+    background: repeating-conic-gradient(from 0deg, var(--accent-amber) 0 6deg, #ef9f18 6deg 12deg);
+  }
+
+  /* ---- ink boxes (47's grammar): 2px ink border + hard offset shadow ---- */
+  /* The cover / section stage: the heaviest frame. */
+  .ed-stage,
+  [data-surface='stage'] {
+    position: relative;
+    border: 4px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: 6px 6px 0 var(--text-primary);
+  }
+  .ed-corner {
+    display: none;
+  }
+  .ed-card,
+  .ed-panel,
+  [data-surface='card'],
+  [data-surface='panel'] {
+    position: relative;
+    border: 2px solid var(--text-primary);
+    background: var(--ed-white);
+    box-shadow: var(--ed-shadow);
+    border-radius: 0;
+  }
+  .ed-card {
+    padding: 22px 24px;
+  }
+  /* Fill modifiers for boxes / cards (inert in SCREEN). */
+  .ed-red {
+    background: var(--accent-signal);
+    color: var(--ed-white);
+  }
+  .ed-yellow {
+    background: var(--accent-amber);
+    color: var(--text-primary);
+  }
+  .ed-blue {
+    background: var(--accent-electron);
+    color: var(--ed-white);
+  }
+  .ed-ink {
+    background: var(--text-primary);
+    color: var(--ed-white);
+  }
+  .ed-chip,
+  [data-surface='chip'] {
+    border: 2px solid var(--text-primary);
+    border-radius: 0;
+    background: var(--ed-white);
+    color: var(--text-primary);
+    box-shadow: 3px 3px 0 var(--text-primary);
+  }
+  .ed-console-area {
+    background: var(--ed-white);
+  }
+  .ed-kbd {
+    display: inline-block;
+    padding: 3px 7px;
+    border: 2px solid var(--text-primary);
+    border-bottom-width: 3px;
+    border-radius: 3px;
+    font: 600 10.5px/1 var(--font-mono);
+    color: var(--text-primary);
+    background: var(--ed-white);
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  /* Comic title: yellow Bangers with an ink stroke and red/ink offsets. */
+  .ed-disp,
+  [data-surface='title'] {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 0.9;
+    color: var(--accent-amber);
+    -webkit-text-stroke: 0.045em var(--text-primary);
+    paint-order: stroke fill;
+    text-shadow:
+      0.06em 0.06em 0 var(--accent-signal),
+      0.1em 0.1em 0 var(--text-primary);
+  }
+  .ed-disp.is-red {
+    color: var(--accent-signal);
+    text-shadow:
+      0.06em 0.06em 0 var(--accent-amber),
+      0.1em 0.1em 0 var(--text-primary);
+  }
+  .ed-disp.is-white {
+    color: var(--ed-white);
+    text-shadow: 0.06em 0.06em 0 var(--text-primary);
+  }
+  /* The metal name becomes flat ink here (PRINT stamps it in Bangers). */
+  .ed-metal {
+    color: var(--text-primary);
+  }
+  /* Slab heading inside panels. */
+  .ed-h {
+    font-family: var(--font-slab);
+    line-height: 1.1;
+  }
+  .ed-bang {
+    font-family: var(--font-display);
+    letter-spacing: 0.05em;
+  }
+  /* Caption box under a comic panel. */
+  .ed-cap {
+    background: var(--ed-white);
+    border: 2px solid var(--text-primary);
+    padding: 8px 12px;
+    font: 600 12.5px/1.45 var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    box-shadow: var(--ed-shadow);
+  }
+  .ed-label,
+  .ed-label-xs,
+  [data-surface='kicker'],
+  [data-surface='label'] {
+    font: 600 10px/1.4 var(--font-mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ed-ink2);
+  }
+  .ed-body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+  .ed-mono {
+    font: 500 12px/1.6 var(--font-mono);
+    color: var(--text-primary);
+  }
+  .ed-live {
+    color: var(--accent-signal);
+  }
+  .ed-soft {
+    color: var(--accent-electron);
+  }
+
+  /* ---- speech bubble + SFX burst (SFX only; never for boasting copy) ---- */
+  .ed-bubble {
+    position: relative;
+    background: var(--ed-white);
+    border: 2px solid var(--text-primary);
+    border-radius: 18px;
+    padding: 10px 14px;
+    box-shadow: var(--ed-shadow);
+  }
+  .ed-bubble::after {
+    content: '';
+    position: absolute;
+    left: 24px;
+    bottom: -14px;
+    border: 8px solid transparent;
+    border-top: 10px solid var(--text-primary);
+    border-bottom: 0;
+  }
+  .ed-sfx {
+    display: inline-grid;
+    place-items: center;
+    background: var(--accent-amber);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    clip-path: polygon(
+      50% 0%,
+      61% 12%,
+      76% 6%,
+      78% 22%,
+      94% 26%,
+      86% 40%,
+      100% 50%,
+      86% 60%,
+      94% 74%,
+      78% 78%,
+      76% 94%,
+      61% 88%,
+      50% 100%,
+      39% 88%,
+      24% 94%,
+      22% 78%,
+      6% 74%,
+      14% 60%,
+      0% 50%,
+      14% 40%,
+      6% 26%,
+      22% 22%,
+      24% 6%,
+      39% 12%
+    );
+  }
+  .ed-sfx.is-red {
+    background: var(--accent-signal);
+    color: var(--ed-white);
+  }
+  .ed-sfx.is-blue {
+    background: var(--accent-electron);
+    color: var(--ed-white);
+  }
+
+  /* ---- buttons + pills + stamps ------------------------------------------ */
+  .ed-btn,
+  [data-surface='btn-primary'],
+  [data-surface='btn-live'] {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 2px solid var(--text-primary);
+    border-radius: 0;
+    box-shadow: var(--ed-shadow);
+    font-family: var(--font-display);
+    font-size: 19px;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--ed-white);
+    cursor: pointer;
+    transition: transform var(--dur-micro) var(--ease-swift);
+  }
+  .ed-btn:active,
+  [data-surface='btn-primary']:active,
+  [data-surface='btn-live']:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--text-primary);
+  }
+  /* Comic red = pressable / the primary. */
+  .ed-btn-primary,
+  [data-surface='btn-primary'] {
+    background: var(--ed-btn);
+    color: var(--ed-btn-ink);
+  }
+  /* Live state = yellow with ink. */
+  .ed-btn-live,
+  [data-surface='btn-live'] {
+    background: var(--accent-amber);
+    color: var(--text-primary);
+  }
+  .ed-pill {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    border: 2px solid var(--text-primary);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--ed-white);
+  }
+  /* The red rubber stamp (TRIED, No. 1, …). */
+  .ed-stamp {
+    display: inline-block;
+    border: 3px solid var(--accent-signal);
+    color: var(--accent-signal);
+    font: 700 11px/1 var(--font-mono);
+    letter-spacing: 0.14em;
+    padding: 5px 8px;
+    transform: rotate(-6deg);
+    border-radius: 3px;
+    opacity: 0.9;
+  }
+
+  /* ---- print-shop details (decorative, aria-hidden) --------------------- */
+  .ed-regmark {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--text-primary);
+    border-radius: 50%;
+  }
+  .ed-cmyk {
+    display: flex;
+    gap: 4px;
+  }
+  .ed-cmyk i {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--text-primary);
+  }
+
+  /* ---- logos: colour on white die-cut stickers ---------------------------- */
+  .ed-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ed-logo img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+  .ed-sticker {
+    display: inline-grid;
+    place-items: center;
+    background: var(--ed-white);
+    border: 2.5px solid var(--text-primary);
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 var(--text-primary);
+    padding: 6px;
+  }
+  .ed-sticker img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+  }
+  /* Mono ink version of a colour logo. */
+  .ed-ink-logo img {
+    filter: brightness(0);
+  }
+
+  /* ---- the edition toggle (components/edition/EditionToggle.client) ----- */
+  .ed-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    border: 2px solid var(--text-primary);
+    border-radius: 0;
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+  }
+  .ed-toggle > button {
+    min-height: 26px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: var(--ed-ink2);
+    cursor: pointer;
+  }
+  .ed-toggle > button:hover {
+    color: var(--text-primary);
+  }
+  .ed-toggle > [data-ed='print'] {
+    background: var(--ed-btn);
+    color: var(--ed-btn-ink);
+  }
+}
+
+/* ---- section rules (C1–C6 append below, one block per section) ---------- */

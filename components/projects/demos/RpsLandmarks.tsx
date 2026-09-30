@@ -142,14 +142,14 @@ export default function RpsLandmarks() {
           textAnchor="middle"
           fill="var(--text-secondary)"
           fontSize="9"
-          fontFamily="var(--font-jbmono), monospace"
+          fontFamily="var(--font-mono), monospace"
         >
           {`> ${label}`}
         </text>
       </svg>
       <figcaption className="type-label-xs text-secondary">
-        hand-landmark constellation cycling rock → paper → scissors — pre-baked keyframes, no
-        camera, no mediapipe on the client
+        The hand tracking, replayed: rock, paper, scissors from the 21 points the app reads on a
+        hand
       </figcaption>
     </figure>
   )

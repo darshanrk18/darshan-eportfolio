@@ -195,9 +195,9 @@ export default function ArcadeSnake() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="type-label-sm text-secondary" aria-live="off">
-          a* replans: {replans} · length: {snake.length}
-          {!autopilot && <span className="text-tertiary"> · arrows / wasd</span>}
-          {!autopilot && <span className="arcade-kbd-note text-amber"> · keyboard required</span>}
+          Replans {replans} · Length {snake.length}
+          {!autopilot && <span className="text-tertiary"> · Arrow keys or WASD</span>}
+          {!autopilot && <span className="arcade-kbd-note text-amber"> · Keyboard needed</span>}
         </p>
         <button
           type="button"
@@ -205,7 +205,7 @@ export default function ArcadeSnake() {
           aria-pressed={autopilot}
           onClick={toggleAutopilot}
         >
-          autopilot: {autopilot ? 'on' : 'off'}
+          Autopilot {autopilot ? 'on' : 'off'}
         </button>
       </div>
     </div>

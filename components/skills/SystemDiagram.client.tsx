@@ -1,185 +1,218 @@
 'use client'
 
 /**
- * §4.5 interactive system diagram.
- * SSRs the complete diagram markup (nodes are real <button>s, edges are an
- * aria-hidden SVG layer), then hydrates: node focus/dim states, packet dots
- * paused off-screen via IntersectionObserver, the kubectl-describe Inspector,
- * and the SIGNAL_EVENTS.inspectSkill palette deep-link.
- * Desktop (≥1024): absolute layout from ./layout. Below: vertical pipeline.
+ * v3 system diagram — the Skills island (S3 "INSTRUMENTS" / P3 "THE TOOLKIT").
+ * SSRs the complete markup (tiles are real <button>s, the wire layers are
+ * aria-hidden SVGs, the usage map is a list of real controls), then hydrates:
  *
- * v2 §7.1 — `$ deploy --all`: a prompt-line button (JS-only, height reserved)
- * runs the cluster-wave build in CLUSTER_FLOW_ORDER with a typed status line,
- * REAL performance.now() elapsed, a derived module count, packet speed-up,
- * a Prometheus/Grafana finale pulse, and ONE aria-live announcement. Also
- * triggered by SIGNAL_EVENTS.deployAll (palette/terminal `deploy-all`).
- * Reduced motion: instant final state. State classes live in
- * styles/v2/experience.css.
+ * - selection: a tile click selects a skill (aria-pressed); hover / focus
+ *   previews it; the inspector beside the diagram shows the shown skill and
+ *   the leader (SCREEN) / callout (PRINT) re-routes to its tile. Python is
+ *   selected at rest (S3 §4). `SIGNAL_EVENTS.inspectSkill` (palette
+ *   `skill-<id>`) selects too, consuming the palette's store focus.
+ * - "Light up the toolkit": the tray-by-tray sequence (LIGHT_ORDER per
+ *   edition, ≈ 180 ms a tray, ≈ 2.4 s), also fired by SIGNAL_EVENTS.deployAll
+ *   (palette / terminal `deploy-all`, the guide). Dispatches the guide's
+ *   `light-toolkit` completion at start; ONE aria-live announcement at the
+ *   end. Reduced motion: the final state at once.
+ * - both window events are heard by the always-mounted SystemDiagramIsland
+ *   wrapper and arrive here as the `request` prop (director call (m)): a
+ *   dispatch before this chunk mounted still lands.
+ * - "Where I've used them": choosing a row lights that place's tools in the
+ *   diagram and dims the rest; chips select their skill.
+ * - store.focusedSkills (the Experience panel's hover, the palette) marks
+ *   tiles [data-blamed]; this island never writes [] to it on mount, so the
+ *   two focus sources coexist (v3 gotcha).
+ *
+ * Geometry: ./layout (SCREEN 826 × 492, PRINT 880 × 664; both plans on one
+ * DOM via CSS custom properties). Skins: styles/v3/skills.css.
  */
 
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
-  allSkillNodes,
-  getSkillNode,
+  USAGE_PLACES,
+  getSkill,
+  languages,
   skillClusters,
+  skillsUsedAt,
+  usageRows,
+  type Skill,
   type SkillCluster,
-  type SkillNode,
+  type SkillTrayId,
+  type UsagePlaceId,
 } from '@/lib/data/skills'
-import { SIGNAL_EVENTS } from '@/lib/commands/context'
+import { EDITION_ATTR, getCurrentEdition } from '@/lib/commands/context'
 import { useSignalStore } from '@/lib/state/store'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { trackEvent } from '@/lib/utils/analytics'
+import EdLogo from './EdLogo'
 import Inspector from './Inspector'
-import { CLUSTER_FLOW_ORDER, CLUSTER_RECTS, DIAGRAM_H, DIAGRAM_W, EDGES } from './layout'
+import { DEFAULT_SKILL_ID, SKILLS_COPY } from './copy'
+import { markGuideTried, type DiagramRequest } from './guide'
+import {
+  DIAGRAM_H,
+  DIAGRAM_W,
+  LANG_ROW,
+  LANG_ROW_PRINT,
+  LEADER_REACH,
+  LIGHT_ORDER,
+  LIGHT_SETTLE_MS,
+  LIGHT_STEP_MS,
+  PRINT_CALLOUT,
+  PRINT_DIAGRAM_H,
+  PRINT_DIAGRAM_W,
+  TRAY_COLS,
+  TRAY_RECTS,
+  TRAY_RECTS_PRINT,
+  TRAY_STACK_ORDER,
+  WIRES,
+  WIRES_PRINT,
+  leaderPath,
+  stickerTilt,
+  type DiagramWire,
+  type TrayRect,
+} from './layout'
 
-/** Clusters in flow order (frontend → api → data → testing → infra → observability). */
-const orderedClusters: readonly SkillCluster[] = CLUSTER_FLOW_ORDER.map((id) =>
-  skillClusters.find((c) => c.id === id),
+/** Trays in DOM / stack order (desktop positions come from the rects). */
+const orderedClusters: readonly SkillCluster[] = TRAY_STACK_ORDER.map((id) =>
+  skillClusters.find((c) => c.id === id)
 ).filter((c): c is SkillCluster => c !== undefined)
 
-const pct = (v: number) => `${((v / DIAGRAM_W) * 100).toFixed(4)}%`
+const rows = usageRows()
 
-const accentVar = (accent: string) => `var(--accent-${accent})`
+/** Both plans' boxes as CSS custom properties on one element. */
+function planVars(screen: TrayRect, print: TrayRect): CSSProperties {
+  return {
+    ['--sx' as string]: `${screen.x}px`,
+    ['--sy' as string]: `${screen.y}px`,
+    ['--sw' as string]: `${screen.w}px`,
+    ['--sh' as string]: `${screen.h}px`,
+    ['--px' as string]: `${print.x}px`,
+    ['--py' as string]: `${print.y}px`,
+    ['--pw' as string]: `${print.w}px`,
+    ['--ph' as string]: `${print.h}px`,
+  }
+}
 
-/* ------------------------------------------------------------------------- */
-/* v2 §7.1 — `$ deploy --all`                                                 */
-/* ------------------------------------------------------------------------- */
-
-/** §7.1/§0.3 — module count is DERIVED from the data, never hardcoded. */
-const MODULE_COUNT = allSkillNodes.length
-/** Status line typing speed (caret-motif prompt line). */
-const DEPLOY_TYPE_MS = 24
-/** Cluster-wave stagger along CLUSTER_FLOW_ORDER. */
-const DEPLOY_WAVE_MS = 120
-/** Gap between the last wave landing and the finale/settled status line. */
-const DEPLOY_FINALE_LAG_MS = 360
-
-const deployFinalLine = (elapsedS: string) =>
-  `system healthy ✓ · ${MODULE_COUNT}/${MODULE_COUNT} in ${elapsedS}s`
-
-function NodeButton({
-  node,
-  selected,
+function Tile({
+  skill,
+  index,
+  active,
+  shown,
+  lit,
   blamed,
   onSelect,
+  onPreview,
 }: {
-  node: SkillNode
-  selected: boolean
-  /** v2 §9.1 — in store.focusedSkills via the blame toggle, inspector NOT
-   *  open on it (blame ≠ inspector-open): 2px electron ring, stays bright. */
+  skill: Skill
+  index: number
+  active: boolean
+  /** Selected or previewed — the colour logo + champagne outline. */
+  shown: boolean
+  /** Lit by the light-up sequence or a usage row. */
+  lit: boolean
+  /** In store.focusedSkills (the Experience panel / palette), not selected. */
   blamed: boolean
   onSelect: (id: string) => void
+  onPreview: (id: string | null) => void
 }) {
   return (
     <button
       type="button"
-      data-skill-id={node.id}
-      data-selected={selected ? 'true' : undefined}
+      className="sk-tile"
+      data-skill-id={skill.id}
+      data-tray={skill.cluster}
+      data-shown={shown ? 'true' : undefined}
+      data-lit={lit ? 'true' : undefined}
       data-blamed={blamed ? 'true' : undefined}
-      aria-expanded={selected}
-      aria-haspopup="dialog"
-      aria-label={`${node.label} — view usage`}
-      className="skills-node type-label-sm"
-      onClick={() => onSelect(node.id)}
+      aria-pressed={active}
+      style={{ ['--i' as string]: index, ['--r' as string]: `${stickerTilt(skill.id)}deg` }}
+      onClick={() => onSelect(skill.id)}
+      onPointerEnter={() => onPreview(skill.id)}
+      onPointerLeave={() => onPreview(null)}
+      onFocus={() => onPreview(skill.id)}
+      onBlur={() => onPreview(null)}
     >
-      <span className="truncate">{node.label}</span>
+      <EdLogo id={skill.id} size={18} />
+      <span className="sk-tile-name">{skill.label}</span>
+      <span className="sr-only">{SKILLS_COPY.tileHint}</span>
     </button>
   )
 }
 
-function ClusterPanel({
-  cluster,
-  abs,
-  focusedIds,
-  activeId,
-  deployed,
-  onSelect,
+function WireLayer({
+  plan,
+  width,
+  height,
+  lit,
+  hotTray,
+  className,
+  junctionR,
 }: {
-  cluster: SkillCluster
-  abs: boolean
-  focusedIds: readonly string[]
-  /** v2 §9.1 — the inspector-open node (selected), vs. blame focus. */
-  activeId: string | null
-  /** v2 §7.1 — this cluster's deploy wave has landed (nodes show ✓). */
-  deployed: boolean
-  onSelect: (id: string) => void
+  plan: readonly DiagramWire[]
+  width: number
+  height: number
+  lit: ReadonlySet<SkillTrayId>
+  hotTray: SkillTrayId | null
+  className: string
+  /** Junction dot radius (SCREEN 2.25, PRINT 4). */
+  junctionR: number
 }) {
-  const rect = CLUSTER_RECTS[cluster.id]
-  const style: CSSProperties = {
-    ...(abs
-      ? { left: pct(rect.x), top: rect.y, width: pct(rect.w), height: rect.h }
-      : undefined),
-    ['--cluster-accent' as string]: accentVar(cluster.accent),
-  }
-  const listClass = abs
-    ? cluster.id === 'infra'
-      ? 'grid grid-cols-3 gap-2'
-      : 'flex flex-col gap-2'
-    : 'grid grid-cols-2 gap-2 md:grid-cols-3'
   return (
-    <div
-      role="group"
-      aria-label={`${cluster.label} cluster`}
-      className={abs ? 'skills-cluster skills-cluster--abs' : 'skills-cluster'}
-      data-deployed={deployed ? 'true' : undefined}
-      style={style}
+    <svg
+      className={`sk-wires ${className}`}
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      aria-hidden="true"
+      focusable="false"
     >
-      <p className="skills-cluster-label type-label-xs">{cluster.label}</p>
-      <div className={listClass}>
-        {cluster.nodes.map((node) => (
-          <NodeButton
-            key={node.id}
-            node={node}
-            selected={node.id === activeId}
-            blamed={focusedIds.includes(node.id) && node.id !== activeId}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function PipeConnector({ accent, index }: { accent: string; index: number }) {
-  return (
-    <div className="skills-pipe-connector" aria-hidden="true">
-      <svg width="2" height="32" viewBox="0 0 2 32" focusable="false">
+      {plan.map((w) => (
         <g
-          className="skills-edge"
-          style={{ ['--edge-accent' as string]: accentVar(accent) } as CSSProperties}
+          key={w.id}
+          className="sk-wire"
+          data-dashed={w.dashed ? 'true' : undefined}
+          data-lit={lit.has(w.to) ? 'true' : undefined}
+          data-hot={
+            hotTray !== null && (w.from === hotTray || w.to === hotTray) ? 'true' : undefined
+          }
         >
-          <path d="M 1 0 L 1 32" className="skills-edge-base" />
-          <path
-            d="M 1 0 L 1 32"
-            className="skills-packet"
-            pathLength={100}
-            style={{ animationDelay: `${index * -1.3}s` }}
-          />
+          <path className="sk-wire-path" d={w.d} />
+          {/* The lit / hot overlay draws on from the junction (pathLength 1 → dashoffset 1 → 0). */}
+          <path className="sk-wire-lit" d={w.d} pathLength={1} />
+          <circle className="sk-wire-junction" cx={w.junction.x} cy={w.junction.y} r={junctionR} />
+          <path className="sk-wire-arrow" d={w.chevron} />
         </g>
-      </svg>
-    </div>
+      ))}
+    </svg>
   )
 }
 
-export default function SystemDiagram() {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [live, setLive] = useState(false)
-  const focusedSkills = useSignalStore((s) => s.focusedSkills)
-  const setFocusedSkills = useSignalStore((s) => s.setFocusedSkills)
+export interface SystemDiagramProps {
+  /** The latest deploy-all / inspect-skill event the island wrapper heard (null = none yet). */
+  request: DiagramRequest | null
+}
 
-  /* §7.1 deploy sequence state. `mounted` gates the button so no-JS visitors
-     never see a dead control (the diagram markup itself is SSR'd). */
+export default function SystemDiagram({ request }: SystemDiagramProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const diagramRef = useRef<HTMLDivElement>(null)
   const reduced = usePrefersReducedMotion()
   const reducedRef = useRef(reduced)
   reducedRef.current = reduced
+
   const [mounted, setMounted] = useState(false)
-  const [deployedWaves, setDeployedWaves] = useState(0)
-  const [deploying, setDeploying] = useState(false)
-  const [finale, setFinale] = useState(false)
-  const [status, setStatus] = useState('')
+  const [activeId, setActiveId] = useState<string | null>(DEFAULT_SKILL_ID)
+  const [previewId, setPreviewId] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [usagePlace, setUsagePlace] = useState<UsagePlaceId | null>(null)
+  const [lit, setLit] = useState<readonly SkillTrayId[]>([])
+  const [lighting, setLighting] = useState(false)
   const [announce, setAnnounce] = useState('')
+  const [leader, setLeader] = useState<{ d: string; y: number } | null>(null)
+  const [calloutY, setCalloutY] = useState<number | null>(null)
+  const focusedSkills = useSignalStore((s) => s.focusedSkills)
+
   const timersRef = useRef<number[]>([])
   const runningRef = useRef(false)
 
@@ -192,7 +225,49 @@ export default function SystemDiagram() {
     }
   }, [])
 
-  const runDeploy = useCallback(() => {
+  const shownId = previewId ?? activeId
+  const shownSkill = shownId ? (getSkill(shownId) ?? null) : null
+  const shownTray: SkillTrayId | null = shownSkill?.cluster ?? null
+  const litSet = new Set<SkillTrayId>(lit)
+  const usageSkills = new Set(usagePlace ? skillsUsedAt(usagePlace).map((s) => s.id) : [])
+
+  /* ---- selection ------------------------------------------------------- */
+
+  const select = useCallback((id: string) => {
+    if (!getSkill(id)) return
+    setActiveId(id)
+    setPreviewId(null)
+    setUsagePlace(null)
+    setLit([])
+    setSheetOpen(true)
+  }, [])
+
+  const preview = useCallback((id: string | null) => {
+    setPreviewId(id)
+  }, [])
+
+  const close = useCallback(() => {
+    setSheetOpen(false)
+    setPreviewId(null)
+    setActiveId((current) => {
+      if (current) {
+        const btn = rootRef.current?.querySelector<HTMLButtonElement>(
+          `[data-skill-id="${current}"]`
+        )
+        window.setTimeout(() => btn?.focus({ preventScroll: true }), 0)
+      }
+      return null
+    })
+  }, [])
+
+  const toggleRow = useCallback((place: UsagePlaceId) => {
+    setUsagePlace((current) => (current === place ? null : place))
+    setLit([])
+  }, [])
+
+  /* ---- "Light up the toolkit" ------------------------------------------ */
+
+  const runLightUp = useCallback(() => {
     if (runningRef.current || typeof window === 'undefined') return
     runningRef.current = true
     timersRef.current.forEach((id) => window.clearTimeout(id))
@@ -200,225 +275,421 @@ export default function SystemDiagram() {
     const later = (fn: () => void, ms: number) => {
       timersRef.current.push(window.setTimeout(fn, ms))
     }
-    /* Types `text` into the status line at 24ms/char (instant when reduced). */
-    const typeStatus = (text: string, done?: () => void) => {
-      if (reducedRef.current) {
-        setStatus(text)
-        done?.()
-        return
-      }
-      let i = 0
-      const step = () => {
-        i += 1
-        setStatus(text.slice(0, i))
-        if (i < text.length) later(step, DEPLOY_TYPE_MS)
-        else done?.()
-      }
-      setStatus('')
-      later(step, DEPLOY_TYPE_MS)
-    }
 
-    /* GA fires at sequence start — covers the on-diagram button AND the
-       palette/terminal `deploy-all` command path (§7.1 / prep contract). */
+    markGuideTried('light-toolkit')
     trackEvent('deploy_all')
 
-    /* Reset classes first so a re-run replays the CSS animations (§7.1.5). */
-    setDeployedWaves(0)
-    setDeploying(false)
-    setFinale(false)
+    const order = LIGHT_ORDER[getCurrentEdition()]
+    setLit([])
+    setUsagePlace(null)
+    setPreviewId(null)
+    setActiveId(null)
     setAnnounce('')
-    setStatus('')
 
-    const start = () => {
-      const t0 = performance.now()
-      /* §7.1 reduced motion: instant final state — all ✓, settled status
-         line, no packet change, no pulse. The elapsed figure stays REAL. */
-      if (reducedRef.current) {
-        setDeployedWaves(orderedClusters.length)
-        setStatus(deployFinalLine(((performance.now() - t0) / 1000).toFixed(1)))
-        setAnnounce(`deploy complete — ${MODULE_COUNT} services healthy`)
-        runningRef.current = false
-        return
-      }
-      setDeploying(true)
-      typeStatus(`building ${MODULE_COUNT} modules…`, () => {
-        orderedClusters.forEach((_, i) => {
-          later(() => {
-            setDeployedWaves(i + 1)
-            if (i === orderedClusters.length - 1) {
-              later(() => {
-                /* Finale: Prometheus + Grafana pulse once; the elapsed time
-                   is measured, not asserted (§7.1.4). */
-                const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
-                setDeploying(false)
-                setFinale(true)
-                setAnnounce(`deploy complete — ${MODULE_COUNT} services healthy`)
-                typeStatus(deployFinalLine(elapsed), () => {
-                  runningRef.current = false
-                })
-              }, DEPLOY_FINALE_LAG_MS)
-            }
-          }, i * DEPLOY_WAVE_MS)
-        })
-      })
+    const finish = () => {
+      setActiveId(DEFAULT_SKILL_ID)
+      setLighting(false)
+      setAnnounce(SKILLS_COPY.lightUpDone)
+      runningRef.current = false
     }
-    /* One frame with classes reset, then start — replayed animations rearm. */
-    later(start, 40)
-  }, [])
 
-  /* §7.1 — the `deploy-all` registry command fires this window event; the
-     listener attaches on mount and must tolerate firing while off-screen
-     (state updates land; the command's own scrollTo brings it into view). */
-  useEffect(() => {
-    const onDeployAll = () => runDeploy()
-    window.addEventListener(SIGNAL_EVENTS.deployAll, onDeployAll)
-    return () => window.removeEventListener(SIGNAL_EVENTS.deployAll, onDeployAll)
-  }, [runDeploy])
-
-  // Palette / terminal deep-link: `skills > docker` → open this inspector.
-  useEffect(() => {
-    const onInspect = (event: Event) => {
-      const id = (event as CustomEvent<{ id?: string }>).detail?.id
-      if (id && getSkillNode(id)) setActiveId(id)
-    }
-    window.addEventListener(SIGNAL_EVENTS.inspectSkill, onInspect)
-    return () => window.removeEventListener(SIGNAL_EVENTS.inspectSkill, onInspect)
-  }, [])
-
-  // The store carries the focus state (shared with the STRETCH blame toggle).
-  useEffect(() => {
-    setFocusedSkills(activeId ? [activeId] : [])
-  }, [activeId, setFocusedSkills])
-
-  // Packet dots run only while the diagram is on screen.
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    if (typeof IntersectionObserver === 'undefined') {
-      setLive(true)
+    if (reducedRef.current) {
+      setLit([...order])
+      finish()
       return
     }
-    const io = new IntersectionObserver(
-      (entries) => setLive(entries.some((e) => e.isIntersecting)),
-      { threshold: 0.05 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-
-  const handleSelect = useCallback((id: string) => {
-    setActiveId(id)
-  }, [])
-
-  const handleClose = useCallback((restoreFocus: boolean) => {
-    setActiveId((current) => {
-      if (restoreFocus && current) {
-        const btn = containerRef.current?.querySelector<HTMLButtonElement>(
-          `[data-skill-id="${current}"]`,
-        )
-        setTimeout(() => btn?.focus(), 0)
-      }
-      return null
+    setLighting(true)
+    order.forEach((tray, i) => {
+      later(
+        () => setLit((prev) => (prev.includes(tray) ? prev : [...prev, tray])),
+        40 + i * LIGHT_STEP_MS
+      )
     })
+    later(finish, 40 + order.length * LIGHT_STEP_MS + LIGHT_SETTLE_MS)
   }, [])
 
-  const activeNode = activeId ? (getSkillNode(activeId) ?? null) : null
-  const hotClusters = new Set(
-    focusedSkills
-      .map((id) => getSkillNode(id)?.cluster)
-      .filter((c): c is SkillNode['cluster'] => c !== undefined),
-  )
+  /* Requests queued by SystemDiagramIsland: `light` (SIGNAL_EVENTS.deployAll)
+     runs the sequence; `inspect` (the palette's `skill-<id>` deep-link)
+     selects the skill and consumes the store focus the command wrote (it is
+     the same skill), so the Experience panel's focus source stays separate. */
+  useEffect(() => {
+    if (!request) return
+    if (request.kind === 'light') {
+      runLightUp()
+      return
+    }
+    const id = request.id
+    if (!getSkill(id)) return
+    const store = useSignalStore.getState()
+    if (store.focusedSkills.length === 1 && store.focusedSkills[0] === id)
+      store.setFocusedSkills([])
+    select(id)
+  }, [request, runLightUp, select])
+
+  /* ---- leader (SCREEN) / callout (PRINT): measured from the shown tile --- */
+
+  useEffect(() => {
+    const diagram = diagramRef.current
+    if (!diagram) return
+    const measure = () => {
+      if (!shownId || !window.matchMedia('(min-width: 1200px)').matches) {
+        setLeader(null)
+        setCalloutY(null)
+        return
+      }
+      const tile = diagram.querySelector<HTMLElement>(`[data-skill-id="${shownId}"]`)
+      if (!tile) return
+      const box = diagram.getBoundingClientRect()
+      const r = tile.getBoundingClientRect()
+      const rect = { x: r.left - box.left, y: r.top - box.top, w: r.width, h: r.height }
+      const tray = getSkill(shownId)?.cluster
+      if (!tray) return
+      if (getCurrentEdition() === 'print') {
+        setLeader(null)
+        setCalloutY(rect.y + rect.h / 2)
+      } else {
+        setCalloutY(null)
+        setLeader(leaderPath(tray, rect))
+      }
+    }
+    measure()
+    const observer = new MutationObserver(measure)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: [EDITION_ATTR],
+    })
+    window.addEventListener('resize', measure)
+    if ('fonts' in document) document.fonts.ready.then(measure).catch(() => {})
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [shownId])
+
+  const hotTray = previewId ? (getSkill(previewId)?.cluster ?? null) : null
+  const rootStyle: CSSProperties = {
+    ['--leader-y' as string]: leader ? `${leader.y}px` : '0px',
+  }
 
   return (
     <div
-      ref={containerRef}
-      role="group"
-      aria-label="Skills system diagram"
-      className="skills-diagram"
+      ref={rootRef}
+      className="sk-diagram-root"
       data-component="SystemDiagram"
       data-island="client"
-      data-live={live ? 'true' : 'false'}
-      data-focused={focusedSkills.length > 0 ? 'true' : 'false'}
-      data-deploying={deploying ? 'true' : undefined}
-      data-finale={finale ? 'true' : undefined}
+      data-lighting={lighting ? 'true' : undefined}
+      data-lit={lit.length > 0 ? 'true' : undefined}
+      data-usage={usagePlace ? 'true' : undefined}
+      data-shown-tray={shownTray ?? undefined}
+      style={rootStyle}
     >
-      {/* §7.1 deploy bar — button only exists once JS runs (no-JS: absent);
-          the container reserves both lines' height so nothing shifts. */}
-      <div className="skills-deploy">
-        {mounted ? (
-          <button type="button" className="skills-deploy-btn type-code" onClick={runDeploy}>
-            $ deploy --all ▸
-          </button>
-        ) : null}
-        <p className="skills-deploy-status type-code" aria-hidden="true">
-          {status}
-          {status !== '' ? <span className="caret" aria-hidden="true" /> : null}
-        </p>
-        {/* One polite announcement per sequence (§7.1.5 / rails §0.3). */}
-        <p className="sr-only" role="status">
-          {announce}
-        </p>
-      </div>
-
-      {/* Desktop: absolute layout over the stretched SVG edge layer */}
-      <div className="relative hidden lg:block" style={{ height: DIAGRAM_H }}>
-        <svg
-          className="pointer-events-none absolute inset-0 h-full w-full"
-          viewBox={`0 0 ${DIAGRAM_W} ${DIAGRAM_H}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          {EDGES.map((edge, i) => (
-            <g
-              key={edge.id}
-              className={
-                edge.clusters.some((c) => hotClusters.has(c)) ? 'skills-edge is-hot' : 'skills-edge'
-              }
-              style={{ ['--edge-accent' as string]: accentVar(edge.accent) } as CSSProperties}
+      <div className="sk-stage-wrap">
+        {/* The ONE primary action. JS-only (no-JS never sees a dead control);
+            its slot is absolute in both editions, so nothing shifts. */}
+        <div className="sk-light-slot">
+          {mounted ? (
+            <button
+              type="button"
+              className="sk-light-up ed-btn ed-btn-primary"
+              data-surface="btn-primary"
+              data-guide-anchor="light-toolkit"
+              onClick={runLightUp}
+              disabled={lighting}
             >
-              <path d={edge.d} className="skills-edge-base" vectorEffect="non-scaling-stroke" />
-              <path
-                d={edge.d}
-                className="skills-packet"
-                pathLength={100}
-                vectorEffect="non-scaling-stroke"
-                style={{ animationDelay: `${i * -1.1}s` }}
+              <span aria-hidden="true" className="sk-light-bolt ed-print-only">
+                <svg width="14" height="18" viewBox="0 0 14 18" focusable="false">
+                  <path
+                    d="M8 1 2 10h4l-1 7 7-10H8l1-6z"
+                    fill="var(--accent-amber)"
+                    stroke="var(--text-primary)"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              {SKILLS_COPY.lightUp}
+              <svg
+                className="sk-light-arrow ed-screen-only"
+                width="14"
+                height="10"
+                viewBox="0 0 14 10"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M0 5h12M8 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </button>
+          ) : null}
+          <p className="sr-only" role="status">
+            {announce}
+          </p>
+        </div>
+
+        <div className="sk-stage" data-surface="stage">
+          {/* SCREEN stage decor (S3 §6): dot grid, top light, floor, vignette, rim. */}
+          <div aria-hidden="true" className="sk-grid ed-screen-only" />
+          <div aria-hidden="true" className="sk-toplight ed-screen-only" />
+          <div aria-hidden="true" className="sk-floor ed-screen-only" />
+          <div aria-hidden="true" className="sk-vignette ed-screen-only" />
+          <div aria-hidden="true" className="sk-rim ed-screen-only" />
+
+          <div className="sk-schem">
+            {/* PRINT narrator caption pinned to the schematic's corner. */}
+            <p className="sk-caption ed-cap ed-print-only" aria-hidden="true">
+              {SKILLS_COPY.printCaption}
+            </p>
+            <div
+              ref={diagramRef}
+              className="sk-diagram"
+              role="group"
+              aria-label={SKILLS_COPY.diagramLabel}
+              style={{
+                ...planVars(
+                  { x: 0, y: 0, w: DIAGRAM_W, h: DIAGRAM_H },
+                  { x: 0, y: 0, w: PRINT_DIAGRAM_W, h: PRINT_DIAGRAM_H }
+                ),
+              }}
+            >
+              <WireLayer
+                plan={WIRES}
+                width={DIAGRAM_W}
+                height={DIAGRAM_H}
+                lit={litSet}
+                hotTray={hotTray}
+                className="sk-wires--screen ed-screen-only"
+                junctionR={2.25}
               />
-            </g>
-          ))}
-        </svg>
-        {orderedClusters.map((cluster, i) => (
-          <ClusterPanel
-            key={cluster.id}
-            cluster={cluster}
-            abs
-            focusedIds={focusedSkills}
-            activeId={activeId}
-            deployed={i < deployedWaves}
-            onSelect={handleSelect}
-          />
-        ))}
+              <WireLayer
+                plan={WIRES_PRINT}
+                width={PRINT_DIAGRAM_W}
+                height={PRINT_DIAGRAM_H}
+                lit={litSet}
+                hotTray={hotTray}
+                className="sk-wires--print ed-print-only"
+                junctionR={4}
+              />
+
+              {orderedClusters.map((cluster) => (
+                <div
+                  key={cluster.id}
+                  className="sk-tray"
+                  role="group"
+                  aria-label={cluster.label}
+                  data-tray={cluster.id}
+                  data-lit={litSet.has(cluster.id) ? 'true' : undefined}
+                  data-hot={hotTray === cluster.id ? 'true' : undefined}
+                  style={{
+                    ...planVars(TRAY_RECTS[cluster.id], TRAY_RECTS_PRINT[cluster.id]),
+                    ['--cols' as string]: TRAY_COLS[cluster.id],
+                  }}
+                >
+                  <p className="sk-tray-label" aria-hidden="true">
+                    {cluster.label}
+                  </p>
+                  <div className="sk-tray-tiles">
+                    {cluster.nodes.map((node, i) => (
+                      <Tile
+                        key={node.id}
+                        skill={node}
+                        index={i}
+                        active={node.id === activeId}
+                        shown={node.id === shownId}
+                        lit={usageSkills.has(node.id)}
+                        blamed={focusedSkills.includes(node.id) && node.id !== activeId}
+                        onSelect={select}
+                        onPreview={preview}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div
+                className="sk-tray sk-tray--lang"
+                role="group"
+                aria-label={SKILLS_COPY.languages}
+                data-tray="languages"
+                data-lit={litSet.has('languages') ? 'true' : undefined}
+                data-hot={hotTray === 'languages' ? 'true' : undefined}
+                style={{
+                  ...planVars(LANG_ROW, LANG_ROW_PRINT),
+                  ['--cols' as string]: languages.length,
+                }}
+              >
+                <p className="sk-tray-label" aria-hidden="true">
+                  {SKILLS_COPY.languages}
+                </p>
+                <div className="sk-tray-tiles">
+                  {languages.map((lang, i) => (
+                    <Tile
+                      key={lang.id}
+                      skill={lang}
+                      index={i}
+                      active={lang.id === activeId}
+                      shown={lang.id === shownId}
+                      lit={usageSkills.has(lang.id)}
+                      blamed={focusedSkills.includes(lang.id) && lang.id !== activeId}
+                      onSelect={select}
+                      onPreview={preview}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* SCREEN leader: the shown tile → the inspector's edge (steel; champagne while lit). */}
+              <svg
+                className="sk-leader ed-screen-only"
+                width={DIAGRAM_W + LEADER_REACH}
+                height={DIAGRAM_H}
+                viewBox={`0 0 ${DIAGRAM_W + LEADER_REACH} ${DIAGRAM_H}`}
+                aria-hidden="true"
+                focusable="false"
+                data-on={leader ? 'true' : undefined}
+              >
+                {leader ? (
+                  <>
+                    <path key={leader.d} className="sk-leader-path" d={leader.d} pathLength={1} />
+                    <circle
+                      className="sk-leader-dot"
+                      cx={DIAGRAM_W + LEADER_REACH}
+                      cy={leader.y}
+                      r={3}
+                    />
+                  </>
+                ) : null}
+              </svg>
+
+              {/* PRINT callout: red dot, line, arrowhead into the close-up. */}
+              <svg
+                className="sk-callout ed-print-only"
+                width={PRINT_CALLOUT.w}
+                height={PRINT_CALLOUT.h}
+                viewBox={`0 0 ${PRINT_CALLOUT.w} ${PRINT_CALLOUT.h}`}
+                aria-hidden="true"
+                focusable="false"
+                data-on={calloutY !== null ? 'true' : undefined}
+                style={calloutY !== null ? { top: calloutY - PRINT_CALLOUT.h / 2 } : undefined}
+              >
+                <path
+                  d="M6 12H42"
+                  stroke="var(--text-primary)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <path d="M41 4L55 12L41 20Z" fill="var(--text-primary)" />
+                <circle
+                  cx="6"
+                  cy="12"
+                  r="5"
+                  fill="var(--accent-signal)"
+                  stroke="var(--text-primary)"
+                  strokeWidth="2"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* The inspector column sits OUTSIDE the glass stage in the DOM: on the
+            desktop plan CSS places it over the stage's right column; below
+            1200 it is a fixed bottom sheet, which the stage's backdrop-filter
+            would otherwise contain (a filtered ancestor is the containing
+            block of fixed descendants). */}
+        <div className="sk-side">
+          <Inspector skill={shownSkill} sheetOpen={sheetOpen} onClose={close} />
+        </div>
       </div>
 
-      {/* Tablet/mobile: vertical pipeline, edges vertical */}
-      <div className="flex flex-col lg:hidden">
-        {orderedClusters.map((cluster, i) => (
-          <Fragment key={cluster.id}>
-            {i > 0 ? <PipeConnector accent={cluster.accent} index={i} /> : null}
-            <ClusterPanel
-              cluster={cluster}
-              abs={false}
-              focusedIds={focusedSkills}
-              activeId={activeId}
-              deployed={i < deployedWaves}
-              onSelect={handleSelect}
-            />
-          </Fragment>
-        ))}
-      </div>
-
-      <Inspector node={activeNode} onClose={handleClose} />
+      {/* ---- "Where I've used them" — derived from the verified map ------- */}
+      <section className="sk-usage" aria-label={SKILLS_COPY.usageTitle}>
+        <div className="sk-usage-head">
+          <h3 className="sk-usage-title">
+            <span className="ed-screen-only">{SKILLS_COPY.usageTitle}</span>
+            <span className="ed-print-only">{SKILLS_COPY.printUsageTitle}</span>
+          </h3>
+          <p className="sk-usage-lede ed-print-only">{SKILLS_COPY.printUsageLede}</p>
+        </div>
+        <ul className="sk-usage-rows">
+          {rows.map((row, i) => {
+            const place = USAGE_PLACES[row.place.id]
+            const firstProject =
+              row.place.kind !== 'experience' && rows[i - 1]?.place.kind === 'experience'
+            const on = usagePlace === row.place.id
+            return (
+              <li
+                key={row.place.id}
+                className="sk-urow"
+                data-place={row.place.id}
+                data-kind={row.place.kind}
+                data-on={on ? 'true' : undefined}
+                data-empty={row.skills.length === 0 ? 'true' : undefined}
+                data-first={i === 0 || firstProject ? 'true' : undefined}
+              >
+                {i === 0 ? (
+                  <p className="sk-usage-cap ed-screen-only" aria-hidden="true">
+                    {SKILLS_COPY.usageExperience}
+                  </p>
+                ) : null}
+                {firstProject ? (
+                  <p className="sk-usage-cap ed-screen-only" aria-hidden="true">
+                    {SKILLS_COPY.usageProjects}
+                  </p>
+                ) : null}
+                <div className="sk-urow-grid">
+                  <button
+                    type="button"
+                    className="sk-urow-who"
+                    aria-pressed={on}
+                    onClick={() => toggleRow(row.place.id)}
+                  >
+                    <b className="sk-urow-name">
+                      <span className="ed-screen-only">{place.name}</span>
+                      <span className="ed-print-only">{place.printName}</span>
+                    </b>
+                    <span className="sk-urow-year">
+                      <span className="ed-screen-only">{place.year}</span>
+                      <span className="ed-print-only">{place.printMeta}</span>
+                    </span>
+                    <span className="sr-only">{SKILLS_COPY.rowHint}</span>
+                  </button>
+                  {row.skills.length > 0 ? (
+                    <ul
+                      className="sk-urow-tools"
+                      aria-label={SKILLS_COPY.rowTools(
+                        place.name,
+                        row.skills.map((s) => s.label)
+                      )}
+                    >
+                      {row.skills.map((skill) => (
+                        <li key={skill.id}>
+                          <button
+                            type="button"
+                            className="sk-uchip"
+                            data-skill-id={skill.id}
+                            data-on={skill.id === shownId ? 'true' : undefined}
+                            aria-pressed={skill.id === activeId}
+                            onClick={() => select(skill.id)}
+                            onPointerEnter={() => preview(skill.id)}
+                            onPointerLeave={() => preview(null)}
+                            onFocus={() => preview(skill.id)}
+                            onBlur={() => preview(null)}
+                          >
+                            <EdLogo id={skill.id} size={18} />
+                            <span>{skill.label}</span>
+                            <span className="sr-only">{SKILLS_COPY.tileHint}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="sk-urow-none">{SKILLS_COPY.coreStack}</span>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
     </div>
   )
 }

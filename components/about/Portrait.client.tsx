@@ -1,30 +1,34 @@
 'use client'
 
 /**
- * V2_SPEC §2.1 — THE DECOMPILED PORTRAIT (About's asset pane, client island).
+ * The Decompiled Portrait (v3 S2 / P2; V2_SPEC §2.1 machinery kept), the
+ * About section's portrait island. ONE DOM, two reveals:
  *
- * Three stacked layers inside a terminal-chrome frame: the 32-row ASCII
- * portrait (bottom), the phosphor-duotone photo hidden by a CSS mask, and a
- * scanline texture overlay. On first scroll-enter the mask sweeps top→bottom
- * over 900ms --ease-out-expo while a 2px signal scanline rides the edge — the
- * face compiles from glyphs into the photograph. Hover/:focus-visible (tap on
- * touch) crossfades in the true-color 880px asset, loaded on first intent only.
+ *   SCREEN — on first view the portrait resolves from mist-silver characters
+ *   (PHOTO_ASCII in --ed-steel2) to the -41 photograph over ~1.2 s, top to
+ *   bottom (key light and hair first, then the face, then the blazer),
+ *   easing out; the rim light along the top edge warms as the photo lands.
+ *   "Replay the portrait" (and hovering the resolved portrait) runs it
+ *   again. Reduced motion: the photograph shows at once, no character pass,
+ *   the replay control is hidden.
+ *   PRINT — the panel prints as a halftone (the -paper grade under the CSS
+ *   dot screen). Hover / focus / tap dissolves the dots into the
+ *   continuous-tone photograph over 600 ms; leaving reverses. The whole
+ *   panel is the control (`aria-pressed`) and the "Try: Reveal the portrait"
+ *   tag is its label. Reduced motion: a crossfade (the global rule).
  *
- * State machine (the "no-JS = finished" pattern): the server renders the
- * FINISHED state (image visible, ASCII hidden, caption shown). JS only ADDS
- * the armed start state (`is-armed`) after hydration when motion is allowed,
- * then `is-sweeping` on viewport entry; class removal is the finish. Reduced
- * motion / no-JS never leave the finished state. All animation CSS lives in
- * styles/v2/portrait.css (incl. the §10.1 CRT crossover: color layer locked
- * off, scanline drift).
+ * "No-JS = finished" (§2.1): the server renders the FINISHED SCREEN state
+ * (photo visible, characters hidden) and the RESTING PRINT state (halftone).
+ * JS only ADDS `is-armed` after hydration (SCREEN, motion allowed, not yet
+ * in view), then `is-sweeping` on viewport entry; class removal finishes.
  *
- * `variant="static"` is the <1024px placement in the rendered flow: duotone
- * frame + caption, no ASCII sweep, tap toggles color.
+ * Guide (§2.6 item 3): the first completed reveal on a page — the automatic
+ * sweep, a replay, or a PRINT dissolve — dispatches `signal:guide-tried`
+ * with id `reveal-portrait` once. Other islands run the reveal by
+ * dispatching PORTRAIT_REVEAL_EVENT (components/about/portrait.ts).
  *
- * Wormhole participation (§2.1 correction): the wrapper carries
- * data-pane="rendered" (a second rendered-pane root — Wormhole's idFrom uses
- * closest()) and the frame data-line="photo", so hover/focus highlights the
- * `![darshan](./darshan.webp)` row in SourcePane.
+ * Copy (narration, labels, alt) comes in as props from the About RSC so this
+ * chunk carries only the character rows and the photo manifest.
  */
 
 import {
@@ -35,212 +39,318 @@ import {
   type AnimationEvent,
   type FocusEvent,
   type PointerEvent,
+  type ReactNode,
 } from 'react'
-import Image from 'next/image'
 import clsx from 'clsx'
+import { getCurrentEdition } from '@/lib/commands/context'
 import { PHOTO_ASCII } from '@/lib/data/photoAscii'
+import { PHOTOS } from '@/lib/data/photos'
 import { useInViewOnce } from '@/lib/motion/useInViewOnce'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
-
-const CAPTION_DEFAULT = 'rendered from source ✓'
-const CAPTION_COLOR = 'syntax highlighting: on'
-/** 6-frame mono-label decode (sanctioned: captions are mono labels). */
-const DECODE_CHARS = '#{}[]<>/\\|+=*%$&'
-const DECODE_FRAMES = 6
-const DECODE_FRAME_MS = 30
-/** Safety net if the sweep's animationend never fires (lost while hidden). */
-const SWEEP_FALLBACK_MS = 1200
-
-const IMAGE_SIZES = '(min-width: 1024px) 440px, 100vw'
+import {
+  GUIDE_TRIED_EVENT,
+  PORTRAIT_DISSOLVE_MS,
+  PORTRAIT_GUIDE_ID,
+  PORTRAIT_HOLD_MS,
+  PORTRAIT_REVEAL_EVENT,
+  PORTRAIT_SWEEP_MS,
+} from './portrait'
 
 type Phase = 'finished' | 'armed' | 'sweep'
 
-/** Decode-settle a mono label over 6 frames on target change (instant when disabled). */
-function useDecodedText(target: string, enabled: boolean): string {
-  const [text, setText] = useState(target)
-  const prevRef = useRef(target)
-
+/**
+ * The character rows, drawn on a canvas. Decorative art, not reading text:
+ * as canvas pixels it stays out of the page's text (find-in-page, copy, the
+ * legible-font-size audit) as it is out of the a11y tree. Same geometry as
+ * the v2 <pre> it replaces: characters at 2.594 % of the frame width
+ * (64 columns fill it), line height 1, the block centred; the face, colour
+ * and opacity come from CSS (.pf-chars canvas), so the edition's mono face
+ * and steel tone apply. Redrawn on resize and once the fonts are ready.
+ */
+function CharacterRows({ rows }: { rows: readonly string[] }) {
+  const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
-    if (prevRef.current === target) return
-    prevRef.current = target
-    if (!enabled) {
-      setText(target)
-      return
-    }
+    const canvas = ref.current
+    const box = canvas?.parentElement
+    if (!canvas || !box) return
     let frame = 0
-    const id = setInterval(() => {
-      frame += 1
-      if (frame >= DECODE_FRAMES) {
-        setText(target)
-        clearInterval(id)
-        return
-      }
-      const settled = Math.floor((target.length * frame) / DECODE_FRAMES)
-      let out = target.slice(0, settled)
-      for (let i = settled; i < target.length; i++) {
-        out +=
-          target[i] === ' ' ? ' ' : DECODE_CHARS[Math.floor(Math.random() * DECODE_CHARS.length)]
-      }
-      setText(out)
-    }, DECODE_FRAME_MS)
-    return () => clearInterval(id)
-  }, [target, enabled])
+    const draw = () => {
+      frame = 0
+      const w = box.clientWidth
+      const h = box.clientHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx || w === 0 || h === 0) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, w, h)
+      const style = getComputedStyle(canvas)
+      const size = w * 0.02594
+      ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`
+      ctx.fillStyle = style.color
+      ctx.textBaseline = 'top'
+      const advance = ctx.measureText('M').width
+      const longest = rows.reduce((n, row) => Math.max(n, row.length), 0)
+      const x = (w - longest * advance) / 2
+      const y = (h - rows.length * size) / 2
+      rows.forEach((row, i) => ctx.fillText(row, x, y + i * size))
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(draw)
+    }
+    schedule()
+    void document.fonts?.ready.then(schedule)
+    const observer = new ResizeObserver(schedule)
+    observer.observe(box)
+    return () => {
+      observer.disconnect()
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [rows])
+  return <canvas ref={ref} />
+}
 
-  return text
+/** Once per page load, whichever edition completes a reveal first. */
+let guideReported = false
+function reportTried(): void {
+  if (guideReported) return
+  guideReported = true
+  window.dispatchEvent(new CustomEvent(GUIDE_TRIED_EVENT, { detail: { id: PORTRAIT_GUIDE_ID } }))
 }
 
 export interface PortraitProps {
-  /**
-   * 'sweep' (default): the desktop asset pane with the ASCII compile reveal.
-   * 'static': the <lg rendered-flow block — plain duotone, tap toggles color.
-   */
-  variant?: 'sweep' | 'static'
+  className?: string
+  /** figure aria-label ("Portrait of Darshan Konnur"). */
+  label: string
+  /** The photograph's alt text. */
+  alt: string
+  /** SCREEN live control. */
+  replayLabel: string
+  /** PRINT tag: the red prefix and the label ("Try:" / "Reveal the portrait"). */
+  tryPrefix: string
+  tryLabel: string
+  /** PRINT panel narration (About P1), rendered by the RSC. */
+  narration?: ReactNode
 }
 
-export default function Portrait({ variant = 'sweep' }: PortraitProps) {
-  const isSweep = variant === 'sweep'
+export default function Portrait({
+  className,
+  label,
+  alt,
+  replayLabel,
+  tryPrefix,
+  tryLabel,
+  narration,
+}: PortraitProps) {
   const reduced = usePrefersReducedMotion()
-  const { ref: inViewRef, inView } = useInViewOnce<HTMLDivElement>({
-    threshold: 0.35,
-    disabled: !isSweep,
-  })
+  const { ref: inViewRef, inView } = useInViewOnce<HTMLElement>({ threshold: 0.3 })
   const [phase, setPhase] = useState<Phase>('finished')
-  const [colorOn, setColorOn] = useState(false)
-  /** True after first hover/focus/tap — mounts the 880px color layer. */
-  const [colorRequested, setColorRequested] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const holdRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dissolveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rootRef = useRef<HTMLElement | null>(null)
 
-  const setFrameRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isSweep) inViewRef(node)
+  const setRefs = useCallback(
+    (node: HTMLElement | null) => {
+      rootRef.current = node
+      inViewRef(node)
     },
-    [isSweep, inViewRef]
+    [inViewRef],
   )
 
-  // Arm the start state only after hydration, only with motion allowed.
+  // Arm the start state only after hydration, only in SCREEN with motion.
   useEffect(() => {
-    if (!isSweep) return
     if (reduced) {
       setPhase('finished')
       return
     }
+    if (getCurrentEdition() !== 'screen') return
     setPhase((p) => (p === 'finished' && !inView ? 'armed' : p))
-    // `inView` intentionally read once at arm time via the updater guard: if
-    // reduced-motion flips off mid-session after the section was already seen,
-    // stay finished rather than re-hiding the photo.
+    // `inView` is read once at arm time (updater guard): if reduced motion
+    // flips off after the section was seen, stay finished.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSweep, reduced])
+  }, [reduced])
 
   useEffect(() => {
-    if (!isSweep || reduced || !inView) return
+    if (reduced || !inView) return
     setPhase((p) => (p === 'armed' ? 'sweep' : p))
-  }, [isSweep, reduced, inView])
+  }, [reduced, inView])
+
+  // The section's entrance (PRINT: the page settles panel by panel, about.css)
+  // keys off attributes this island writes on its section: `data-armed` after
+  // hydration while still off-screen, `data-in` on first view. No JS = final.
+  useEffect(() => {
+    const section = rootRef.current?.closest('section')
+    if (!section) return
+    if (reduced || inView) {
+      section.setAttribute('data-in', '1')
+    } else {
+      section.setAttribute('data-armed', '1')
+    }
+  }, [inView, reduced])
 
   // animationend can be lost (tab hidden mid-sweep) — settle regardless.
   useEffect(() => {
     if (phase !== 'sweep') return
-    const t = setTimeout(() => setPhase('finished'), SWEEP_FALLBACK_MS)
+    const t = setTimeout(() => {
+      setPhase('finished')
+      reportTried()
+    }, PORTRAIT_SWEEP_MS + 200)
     return () => clearTimeout(t)
   }, [phase])
 
-  const onSweepEnd = (e: AnimationEvent<HTMLDivElement>) => {
-    if (e.animationName === 'portrait-sweep') setPhase('finished')
+  const onSweepEnd = (e: AnimationEvent<HTMLElement>) => {
+    if (e.animationName !== 'pf-sweep') return
+    setPhase('finished')
+    reportTried()
   }
 
-  const requestColor = () => setColorRequested(true)
+  /** SCREEN: run the character → photograph pass again. */
+  const replay = useCallback(() => {
+    if (reduced) return
+    setPhase((p) => (p === 'finished' ? 'sweep' : p))
+  }, [reduced])
 
-  const onPointerEnter = (e: PointerEvent<HTMLDivElement>) => {
-    requestColor()
-    if (e.pointerType === 'mouse') setColorOn(true)
+  /** PRINT: dissolve the dots (true) or print them back (false). */
+  const setDissolved = useCallback((on: boolean) => {
+    setRevealed(on)
+    if (dissolveRef.current !== null) clearTimeout(dissolveRef.current)
+    dissolveRef.current = null
+    if (on) dissolveRef.current = setTimeout(reportTried, PORTRAIT_DISSOLVE_MS)
+  }, [])
+
+  // The guide / palette run the reveal from outside.
+  useEffect(() => {
+    const run = () => {
+      if (getCurrentEdition() === 'print') {
+        setDissolved(true)
+        if (holdRef.current !== null) clearTimeout(holdRef.current)
+        holdRef.current = setTimeout(() => setDissolved(false), PORTRAIT_HOLD_MS)
+      } else {
+        replay()
+      }
+    }
+    window.addEventListener(PORTRAIT_REVEAL_EVENT, run)
+    return () => {
+      window.removeEventListener(PORTRAIT_REVEAL_EVENT, run)
+      if (holdRef.current !== null) clearTimeout(holdRef.current)
+      if (dissolveRef.current !== null) clearTimeout(dissolveRef.current)
+    }
+  }, [replay, setDissolved])
+
+  const onPointerEnter = (e: PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (getCurrentEdition() === 'print') setDissolved(true)
+    else replay()
   }
-  const onPointerLeave = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'mouse') setColorOn(false)
+  const onPointerLeave = (e: PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (getCurrentEdition() === 'print') setDissolved(false)
   }
-  /** Coarse pointers: tap toggles true color (§2.1). */
-  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'mouse') return
-    requestColor()
-    setColorOn((v) => !v)
-  }
-  const onFocus = (e: FocusEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget) return
-    requestColor()
+  /** PRINT tag button: tap / Enter toggles; focus-visible reveals. */
+  const onTryClick = () => setDissolved(!revealed)
+  const onTryFocus = (e: FocusEvent<HTMLButtonElement>) => {
     try {
-      if (e.currentTarget.matches(':focus-visible')) setColorOn(true)
+      if (e.currentTarget.matches(':focus-visible')) setDissolved(true)
     } catch {
-      setColorOn(true)
+      setDissolved(true)
     }
   }
-  const onBlur = (e: FocusEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget) return
-    setColorOn(false)
-  }
+  const onTryBlur = () => setDissolved(false)
 
-  const caption = useDecodedText(colorOn ? CAPTION_COLOR : CAPTION_DEFAULT, !reduced)
+  const portrait = PHOTOS.portrait
 
   return (
-    <div
+    <figure
+      ref={setRefs}
+      className={clsx(
+        'pf',
+        className,
+        phase === 'armed' && 'is-armed',
+        phase === 'sweep' && 'is-sweeping',
+        revealed && 'is-revealed',
+      )}
+      aria-label={label}
       data-component="Portrait"
       data-island="client"
-      {...(isSweep ? { 'data-pane': 'rendered' } : {})}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onAnimationEnd={onSweepEnd}
     >
-      <div
-        ref={setFrameRef}
-        {...(isSweep ? { 'data-line': 'photo' } : {})}
-        tabIndex={0}
-        role="figure"
-        aria-label="Portrait of Darshan Konnur — focus to view in color"
-        data-color={colorOn ? '1' : undefined}
-        className={clsx(
-          'portrait-frame bg-panel hairline elev-window reg-marks',
-          phase === 'armed' && 'is-armed',
-          phase === 'sweep' && 'is-sweeping'
-        )}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
-        onPointerUp={onPointerUp}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onAnimationEnd={isSweep ? onSweepEnd : undefined}
-      >
-        <div className="portrait-titlebar type-label-xs text-tertiary">
-          assets/darshan.webp · 879×880 · duotone
+      <i aria-hidden="true" className="pf-rim ed-screen-only" />
+      <div className="pf-body">
+        {/* SCREEN: the character rows the photograph resolves from (a canvas —
+            see CharacterRows). */}
+        <div className="pf-chars ed-screen-only" aria-hidden="true">
+          <CharacterRows rows={PHOTO_ASCII} />
         </div>
-        <div className="portrait-body">
-          {isSweep ? (
-            <div className="portrait-ascii" aria-hidden="true">
-              <pre>{PHOTO_ASCII.join('\n')}</pre>
-            </div>
-          ) : null}
-          <Image
-            src="/photo/darshan-duotone.webp"
-            alt="Darshan Konnur"
-            fill
-            sizes={IMAGE_SIZES}
-            className="portrait-duotone"
-          />
-          {colorRequested ? (
-            <Image
-              src="/photo/darshan-880.webp"
-              alt=""
-              fill
-              sizes={IMAGE_SIZES}
-              className="portrait-color"
-            />
-          ) : null}
-          {isSweep && phase !== 'finished' ? (
-            <div className="portrait-scanline" aria-hidden="true" />
-          ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="pf-photo pf-photo-screen ed-screen-only"
+          src={portrait.screen}
+          alt={alt}
+          width={portrait.width}
+          height={portrait.height}
+          loading="lazy"
+          fetchPriority="low"
+          decoding="async"
+        />
+        <i aria-hidden="true" className="pf-g pf-g-room ed-screen-only" />
+        <i aria-hidden="true" className="pf-g pf-g-key ed-screen-only" />
+        <i aria-hidden="true" className="pf-g pf-g-rim ed-screen-only" />
+        <i aria-hidden="true" className="pf-g pf-g-spill ed-screen-only" />
+        <i aria-hidden="true" className="pf-g pf-g-edge ed-screen-only" />
+        <i aria-hidden="true" className="pf-scan ed-screen-only" />
+
+        {/* PRINT: the continuous-tone photograph under the dot screen. */}
+        <i aria-hidden="true" className="pf-ink ed-print-only" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="pf-photo pf-photo-print ed-print-only"
+          src={portrait.print}
+          alt={alt}
+          width={portrait.width}
+          height={portrait.height}
+          loading="lazy"
+          fetchPriority="low"
+          decoding="async"
+        />
+        <div className="ed-ht pf-ht ed-print-only" aria-hidden="true">
+          <div className="ed-ht-in">
+            <i className="pf-ht-bg" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={portrait.print} alt="" width={portrait.width} height={portrait.height} loading="lazy" fetchPriority="low" decoding="async" />
+            <i className="ed-ht-scr" />
+          </div>
         </div>
       </div>
-      <p className="portrait-caption type-label-xs text-tertiary">
-        {caption === CAPTION_DEFAULT ? (
-          <>
-            rendered from source <span className="text-signal">✓</span>
-          </>
-        ) : (
-          caption
-        )}
-      </p>
-    </div>
+
+      {narration !== undefined ? (
+        <figcaption className="ab-nar pf-nar ed-print-only">{narration}</figcaption>
+      ) : null}
+
+      {/* SCREEN live control. */}
+      <button type="button" className="pf-replay ed-screen-only" onClick={replay}>
+        <i aria-hidden="true" className="pf-rc">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11.6 5.2A5 5 0 1 0 12 8.2" />
+            <path d="M12.4 1.8v3.8H8.6" />
+          </svg>
+        </i>
+        {replayLabel}
+      </button>
+      {/* PRINT: the panel's try tag is the control. */}
+      <button
+        type="button"
+        className="pf-try ab-tag ed-print-only"
+        aria-pressed={revealed}
+        onClick={onTryClick}
+        onFocus={onTryFocus}
+        onBlur={onTryBlur}
+      >
+        <b className="pf-trylbl">{tryPrefix}</b> {tryLabel}
+      </button>
+    </figure>
   )
 }

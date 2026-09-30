@@ -1,21 +1,20 @@
 /* ============================================================================
-   SIGNAL v2 — projects.css
-   OWNER: projects agent — exclusively. No other agent edits this file.
-   SPEC: V2_SPEC §8.1 functional traffic lights (hover glyphs × − +, 60%
-   accent tints, ≥24px hit areas), §8.2 selection row-pulse keyframe +
-   title-bar dip, §8.3 maximize lightbox (backdrop, inset frame, touch
-   ⤢ maximize chip, reserved-placeholder rules for zero CLS).
-   Rules are unlayered on purpose so they win ties against v1 @layer rules.
+   SIGNAL v2 — projects.css (kept for v3)
+   OWNER: C4 work + contact — exclusively.
+   WHAT SURVIVES FROM v2: §8.1 the functional traffic lights (24 px hit areas,
+   hover glyphs × − +, decorative on touch) and §8.3 the maximize lightbox
+   (backdrop, fixed frame, reserved-placeholder rule for zero CLS). The v2
+   case-file collapse (`.pw-collapse`) and the explorer-tree row pulse are
+   gone: the v3 window collapses its case column in styles/v3/work.css and
+   the tree became the rack. Colours per edition live in work.css; this file
+   is geometry + behaviour only. Unlayered on purpose (wins ties against v1).
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   §8.1 Traffic lights — 8px visual discs inside 24×24 button hit areas.
+   §8.1 Traffic lights — small discs inside 24×24 button hit areas. The disc
+   size and colours are the edition's (work.css); SCREEN reveals glyphs on
+   window hover / focus, PRINT keeps them as the comic's three lights.
    -------------------------------------------------------------------------- */
-.pw-lights {
-  display: flex;
-  align-items: center;
-  margin-left: -8px; /* keep the first disc aligned where v1's trio started */
-}
 .pw-light {
   display: grid;
   place-items: center;
@@ -31,8 +30,9 @@
 }
 .pw-light-disc {
   position: relative;
-  width: 8px;
-  height: 8px;
+  display: block;
+  width: 10px;
+  height: 10px;
   border-radius: 9999px;
   border: 1px solid var(--border-hairline);
   transition:
@@ -41,7 +41,7 @@
 }
 .pw-light-glyph {
   position: absolute;
-  inset: -4px; /* 16px box centered on the 8px disc */
+  inset: -4px;
   display: grid;
   place-items: center;
   font-family: var(--font-mono);
@@ -54,35 +54,37 @@
   pointer-events: none;
 }
 .pw-light:disabled .pw-light-glyph {
-  color: var(--text-tertiary); /* decorative: the control is inert */
+  color: var(--text-tertiary);
 }
 
-/* Fine pointers: window hover reveals the macOS-grammar glyphs + 60% tints
-   (§8.1 — control tint, not a message; hairline at rest). */
+/* Fine pointers: window hover reveals the glyphs + 60% tints (SCREEN). */
 @media (hover: hover) and (pointer: fine) {
-  [data-component='ProjectWindow']:hover .pw-light-glyph,
-  .pw-light:focus-visible .pw-light-glyph {
+  html[data-edition='screen'] [data-component='ProjectWindow']:hover .pw-light-glyph,
+  html[data-edition='screen'] .pw-light:focus-visible .pw-light-glyph {
     opacity: 1;
   }
-  [data-component='ProjectWindow']:hover .pw-light[data-light='red']:not(:disabled) .pw-light-disc,
-  .pw-light[data-light='red']:focus-visible:not(:disabled) .pw-light-disc {
+  html[data-edition='screen']
+    [data-component='ProjectWindow']:hover
+    .pw-light[data-light='red']:not(:disabled)
+    .pw-light-disc,
+  html[data-edition='screen'] .pw-light[data-light='red']:focus-visible:not(:disabled) .pw-light-disc {
     border-color: color-mix(in srgb, var(--accent-error) 60%, transparent);
     background-color: color-mix(in srgb, var(--accent-error) 60%, transparent);
   }
-  [data-component='ProjectWindow']:hover .pw-light[data-light='yellow'] .pw-light-disc,
-  .pw-light[data-light='yellow']:focus-visible .pw-light-disc {
+  html[data-edition='screen'] [data-component='ProjectWindow']:hover .pw-light[data-light='yellow'] .pw-light-disc,
+  html[data-edition='screen'] .pw-light[data-light='yellow']:focus-visible .pw-light-disc {
     border-color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
     background-color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
   }
-  [data-component='ProjectWindow']:hover .pw-light[data-light='green'] .pw-light-disc,
-  .pw-light[data-light='green']:focus-visible .pw-light-disc {
+  html[data-edition='screen'] [data-component='ProjectWindow']:hover .pw-light[data-light='green'] .pw-light-disc,
+  html[data-edition='screen'] .pw-light[data-light='green']:focus-visible .pw-light-disc {
     border-color: color-mix(in srgb, var(--accent-signal) 60%, transparent);
     background-color: color-mix(in srgb, var(--accent-signal) 60%, transparent);
   }
 }
 
 /* Touch: the discs stay decorative (§8.1) — too small for touch targets;
-   every function has another affordance (■ stop, the ⤢ footer chip). */
+   every function has another affordance (the tab strip's buttons). */
 @media (pointer: coarse) {
   .pw-light {
     pointer-events: none;
@@ -90,49 +92,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   §8.1 Yellow — collapse the case file + footer strip. Animating
-   grid-template-rows 1fr → 0fr needs no measured heights (smooth, no CLS).
-   Reduced motion: the global html[data-motion='reduced'] rules collapse the
-   transition to an opacity-only 120ms, i.e. effectively instant.
-   -------------------------------------------------------------------------- */
-.pw-collapse {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 300ms var(--ease-structural);
-}
-.pw-collapse[data-collapsed] {
-  grid-template-rows: 0fr;
-}
-.pw-collapse-inner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* --------------------------------------------------------------------------
-   §8.2 Selection feedback — the newly-selected explorer row's signal left
-   border pulses once (600ms --ease-out-expo box-shadow, class removed on
-   animationend). No FLIP morph — killed (§0.1).
-   -------------------------------------------------------------------------- */
-@keyframes pw-row-pulse {
-  from {
-    box-shadow: var(--glow-signal);
-  }
-  to {
-    box-shadow:
-      0 0 0 0 transparent,
-      0 0 0 0 transparent;
-  }
-}
-.pw-row-pulse {
-  animation: pw-row-pulse 600ms var(--ease-out-expo) both;
-}
-
-/* --------------------------------------------------------------------------
-   §8.3 Green — maximize lightbox. The frame flips to a fixed full-viewport
-   window (inset 24px desktop / 0 mobile) one step under the palette; the
-   backdrop is --bg-overlay + 12px blur. The in-flow slot keeps a reserved
-   height (inline style set from the measured frame) so the page never
-   reflows behind the lightbox — zero CLS.
+   §8.3 Maximize lightbox. The frame flips to a fixed full-viewport window
+   (inset 24px desktop / 0 phone) one step under the palette; the backdrop is
+   --bg-overlay + 12px blur. The in-flow slot keeps a reserved height (inline
+   style set from the measured frame) so the page never reflows behind the
+   lightbox — zero CLS. Shared by the project window and the console.
    -------------------------------------------------------------------------- */
 .pw-backdrop {
   position: fixed;
@@ -149,15 +113,13 @@
   display: flex;
   flex-direction: column;
 }
-/* Maximized content column: mobile scrolls (stage keeps its aspect at full
-   width); desktop gives the stage every spare pixel — demos fill their
-   container unaware (§8.3). */
 .pw-max .pw-body {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
   overflow-y: auto;
+}
+.pw-max .pw-stage {
+  min-height: 100%;
 }
 @media (min-width: 1024px) {
   .pw-max {
@@ -166,22 +128,13 @@
   .pw-max .pw-body {
     overflow-y: visible;
   }
+  .pw-max .pw-demo {
+    display: flex;
+    flex-direction: column;
+  }
   .pw-max .pw-stage {
     flex: 1;
     min-height: 0;
     aspect-ratio: auto;
-  }
-}
-
-/* Touch affordance: green light is inactive on coarse pointers, so the
-   footer strip shows a 44px ⤢ maximize chip instead (§8.3). */
-.pw-max-chip {
-  display: none;
-}
-@media (pointer: coarse) {
-  .pw-max-chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
   }
 }

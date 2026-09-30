@@ -35,3 +35,7 @@ yarn-error.log*
 next-env.d.ts
 
 .env*.local
+.claude/settings.local.json
+
+# design workshop (owner-private: photos, briefs, frames) — never committed
+design-workshop/

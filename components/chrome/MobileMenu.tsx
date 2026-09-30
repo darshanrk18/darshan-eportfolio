@@ -1,21 +1,29 @@
 'use client'
 
 /**
- * Mobile menu (spec §4.2): full-screen --bg-panel sheet (structural ease,
- * 500ms) rendered as a file tree — the 5 section entries staggered in at
- * 50ms, plus `cv ↗`, `resume.pdf ↓`, `email` rows and the theme toggle.
+ * Mobile menu (v2 §4.2; v3 §3 "Mobile"): the full-screen sheet behind the
+ * top bar's "Menu" control (< 768). Both skins via styles/v3/chrome.css
+ * (`.sig-menu*`): SCREEN = near-black glass sheet, Cinzel section rows;
+ * PRINT = paper sheet, Bangers section rows, ink rules.
+ *
+ * Rows: the five section names (About · Skills · Work · Experience ·
+ * Contact) staggered in at 50ms, a rule, then CV · Download résumé · Copy
+ * email · GitHub · LinkedIn, and the edition toggle in the foot. Visitor
+ * language only — no file names (`resume.pdf`), no command syntax.
  * Focus-trapped, Esc closes, body scroll locked while open.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, LazyMotion, domAnimation, m, type Variants } from 'motion/react'
 import { profile } from '@/lib/data/profile'
-import { sectionTabs } from '@/lib/commands/sections'
 import { copyEmailAction, scrollToAnchor } from '@/lib/commands/context'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { EASE_OUT_EXPO, EASE_STRUCTURAL, STAGGER_ITEMS } from '@/lib/motion/tokens'
 import { trackCvViewed, trackResumeDownloaded } from '@/lib/utils/analytics'
-import ThemeToggle from './ThemeToggle'
+import EditionToggle from '@/components/edition/EditionToggle.client'
+import DkSeal from '@/components/chrome/DkSeal'
+import Logo from '@/components/skills/Logo'
+import { NAV_ITEMS, SOCIAL_LINKS, TOP_ANCHOR } from './navItems'
 
 export interface MobileMenuProps {
   open: boolean
@@ -103,9 +111,6 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
     },
   }
 
-  const rowClass =
-    'flex min-h-11 w-full items-center gap-3 px-4 text-left type-code text-secondary hover:bg-raised hover:text-primary'
-
   return (
     <LazyMotion features={domAnimation} strict>
       <AnimatePresence>
@@ -119,23 +124,32 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             data-component="MobileMenu"
             data-island="client"
             onKeyDown={handleKeyDown}
-            className="fixed inset-0 flex flex-col bg-panel"
-            style={{ zIndex: 'var(--z-nav)' }}
+            className="sig-menu"
             initial={reduced ? { opacity: 0 } : { y: '-100%' }}
             animate={reduced ? { opacity: 1 } : { y: 0 }}
             exit={reduced ? { opacity: 0 } : { y: '-100%' }}
             transition={reduced ? { duration: 0.12 } : { duration: 0.5, ease: EASE_STRUCTURAL }}
           >
-            <div className="flex h-12 items-center justify-between border-b border-hairline px-4">
-              <span className="type-label-sm text-secondary">~/darshan-konnur</span>
+            <div className="sig-menu-head">
+              <a
+                href={TOP_ANCHOR}
+                className="sig-menu-ident"
+                onClick={(e) => {
+                  e.preventDefault()
+                  goToSection(TOP_ANCHOR)
+                }}
+              >
+                <DkSeal variant="mark" size={26} />
+                <span className="sr-only">Darshan Konnur, home</span>
+              </a>
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
                 aria-label="Close menu"
-                className="type-label-sm min-h-11 px-3 text-secondary hover:text-primary"
+                className="sig-menu-close"
               >
-                close ✕
+                Close ✕
               </button>
             </div>
 
@@ -143,68 +157,78 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
               variants={listVariants}
               initial="hidden"
               animate="show"
-              className="flex-1 overflow-y-auto py-4"
+              className="sig-menu-list"
             >
-              <m.li variants={itemVariants} aria-hidden="true">
-                <span className="flex min-h-11 items-center px-4 type-code text-tertiary">
-                  ~/darshan-konnur
-                </span>
-              </m.li>
-              {sectionTabs.map((tab) => (
-                <m.li key={tab.anchor} variants={itemVariants}>
+              {NAV_ITEMS.map((item) => (
+                <m.li key={item.anchor} variants={itemVariants}>
                   <a
-                    href={tab.anchor}
-                    className={rowClass}
+                    href={item.anchor}
+                    className="sig-menu-row is-section"
                     onClick={(e) => {
                       e.preventDefault()
-                      goToSection(tab.anchor)
+                      goToSection(item.anchor)
                     }}
                   >
-                    <span className="pl-4">{tab.tab}</span>
+                    {item.label}
                   </a>
                 </m.li>
               ))}
 
               <m.li variants={itemVariants} aria-hidden="true">
-                <span className="mx-4 my-3 block border-t border-hairline" />
+                <span className="sig-menu-rule" />
               </m.li>
 
               <m.li variants={itemVariants}>
                 <a
                   href="/cv"
-                  className={rowClass}
+                  className="sig-menu-row"
                   onClick={() => {
                     trackCvViewed()
                     onClose()
                   }}
                 >
-                  <span className="pl-4">cv ↗</span>
+                  CV
                 </a>
               </m.li>
               <m.li variants={itemVariants}>
                 <a
                   href={profile.resumePdf}
                   download="darshan-konnur.pdf"
-                  className={rowClass}
+                  className="sig-menu-row"
                   onClick={() => {
                     trackResumeDownloaded('mobile-menu')
                     onClose()
                   }}
                 >
-                  <span className="pl-4">resume.pdf ↓</span>
+                  Download résumé
                 </a>
               </m.li>
               <m.li variants={itemVariants}>
-                <button type="button" className={rowClass} onClick={copyEmail}>
-                  <span className={`pl-4 ${emailCopied ? 'text-signal' : ''}`}>
-                    {emailCopied ? 'copied ✓' : 'email'}
+                <button type="button" className="sig-menu-row" onClick={copyEmail}>
+                  <span className={emailCopied ? 'is-live' : undefined} aria-live="polite">
+                    {emailCopied ? 'Copied ✓' : 'Copy email'}
                   </span>
                 </button>
               </m.li>
+              {SOCIAL_LINKS.map((link) => (
+                <m.li key={link.id} variants={itemVariants}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sig-menu-row"
+                    onClick={onClose}
+                  >
+                    <Logo id={link.id} mono size={18} />
+                    {link.label} ↗
+                  </a>
+                </m.li>
+              ))}
             </m.ul>
 
-            <div className="border-t border-hairline p-4">
-              <ThemeToggle />
+            <div className="sig-menu-foot">
+              <span className="sig-menu-hint">Edition</span>
+              <EditionToggle />
             </div>
           </m.div>
         ) : null}

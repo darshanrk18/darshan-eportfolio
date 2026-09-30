@@ -8,10 +8,12 @@
  */
 
 import dynamic from 'next/dynamic'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const ArcadeSnake = dynamic(() => import('./ArcadeSnake.client'), {
-  ssr: false,
-  loading: () => <p className="type-code text-secondary">booting autopilot…</p>,
+// Server-rendered like the Connect Four window (no layout shift on hydration):
+// the sim is seeded and deterministic, the ticker starts in an effect.
+const ArcadeSnake = dynamic(() => import('./ArcadeSnake.client').catch(islandUnavailable<typeof import('./ArcadeSnake.client')>), {
+  loading: () => <p className="type-code text-secondary">Starting the autopilot…</p>,
 })
 
 export default function ArcadeSnakeIsland() {

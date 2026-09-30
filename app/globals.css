@@ -1,7 +1,14 @@
 /* ============================================================================
-   SIGNAL — design tokens + base styles (spec §2, §3)
+   SIGNAL — design tokens + base styles (spec §2, §3; v3 §2.2 / §2.2a / §2.3)
    Single source of truth for every design value on the site.
-   Dark is the default theme (:root); light lives under html[data-theme='light'].
+   v3: two EDITIONS replace v2's dark/light theme. SCREEN (the cinema cut,
+   design 41) is the default (:root); PRINT (the comic) lives under
+   html[data-edition='print']. The v2 token API (--bg-* --border-* --text-*
+   --accent-* --grid-dot* --selection-bg --glow-* --elev-window, radii,
+   easings, durations, z-index) is KEPT so every v2 component recolours;
+   only the values change per edition. Edition-specific looks (glass,
+   paper, ink boxes, atmosphere) are the .ed-* classes in styles/v3/*.css —
+   see styles/v3/README.md before touching a section.
    Tailwind v4, CSS-first: utilities are generated from @theme inline below.
    ========================================================================== */
 
@@ -10,14 +17,15 @@
 /* ----------------------------------------------------------------------------
    Tailwind v4 theme mapping — tokens → utilities.
    `inline` keeps utilities pointing at the live CSS vars so the
-   html[data-theme] switch re-colors everything without a rebuild.
+   html[data-edition] switch re-colors everything without a rebuild.
    Utilities produced (examples):
      bg-page  bg-panel  bg-raised  bg-overlay
      text-primary  text-secondary  text-tertiary
      text-signal / bg-signal / border-signal … same for electron|amber|magenta|error
      bg-signal-dim (+ electron|amber|magenta)
      border-hairline  border-hairline-strong
-     font-mono  font-sans  font-serif
+     font-mono (IBM Plex Mono)  font-sans (= the edition's BODY face)
+     font-serif (= the edition's DISPLAY face: Cinzel / Bangers)
      rounded-card (8px)  rounded-btn (6px)  rounded-chip (6px)
    -------------------------------------------------------------------------- */
 @theme inline {
@@ -41,9 +49,11 @@
   --color-magenta-dim: var(--accent-magenta-dim);
   --color-selection: var(--selection-bg);
 
-  --font-mono: var(--font-jbmono), ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-serif: var(--font-instrument), Georgia, 'Times New Roman', serif;
+  /* v3 §2.3 — the three Tailwind font slots repoint at the edition faces
+     (--font-display / --font-body are switched by the attribute below). */
+  --font-mono: var(--font-plexmono), ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-sans: var(--font-body), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: var(--font-display), Georgia, 'Times New Roman', serif;
 
   --radius-card: 8px;
   --radius-btn: 6px;
@@ -51,37 +61,136 @@
 }
 
 /* ----------------------------------------------------------------------------
-   §2.1 Color — dark theme (default), "phosphor on obsidian"
+   §2.2 Color — SCREEN edition (default), design 41 "Title Sequence":
+   black field with a volumetric champagne/steel top light, silver-to-
+   champagne metal name, steel labels, champagne ONLY for primary actions
+   and live states (never a wash). Values from
+   design-workshop/screen-print/r3/palette-41.css.
    -------------------------------------------------------------------------- */
 :root {
+  color-scheme: dark;
+
   --bg-page: #050607;
-  --bg-panel: #0a0c0e;
-  --bg-raised: #10141a;
+  --bg-panel: #0d0f13; /* rgba(14,16,20,.92) on black, solid */
+  --bg-raised: #14171c;
   --bg-overlay: rgba(5, 6, 7, 0.85);
-  --border-hairline: #1c2229;
-  --border-strong: #2a323c;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-tertiary: #4d5761; /* DECORATIVE ONLY — never content text */
-  --accent-signal: #3fe0a0;
-  --accent-electron: #58a6ff;
-  --accent-amber: #f0b72f;
-  --accent-magenta: #e36397;
-  --accent-error: #f85149; /* terminal errors ONLY */
-  --accent-signal-dim: rgba(63, 224, 160, 0.15);
-  --accent-electron-dim: rgba(88, 166, 255, 0.15);
-  --accent-amber-dim: rgba(240, 183, 47, 0.15);
-  --accent-magenta-dim: rgba(227, 99, 151, 0.15);
+  --border-hairline: rgba(146, 160, 180, 0.14);
+  --border-strong: rgba(154, 165, 179, 0.35);
+  --text-primary: #d9dde4;
+  --text-secondary: #aab3c0;
+  --text-tertiary: #8b96a4; /* DECORATIVE ONLY — never content text */
+  --accent-signal: #d8c49a; /* champagne — the ONE live accent */
+  --accent-electron: #c9d2dc; /* steel secondary */
+  --accent-amber: #c9b688; /* prompt */
+  --accent-magenta: #b9c6d6; /* code keyword steel-blue; never a colour accent */
+  --accent-error: #f0a8a0; /* terminal errors ONLY */
+  --accent-signal-dim: rgba(216, 196, 154, 0.12);
+  --accent-electron-dim: rgba(201, 210, 220, 0.1);
+  --accent-amber-dim: rgba(201, 182, 136, 0.12);
+  --accent-magenta-dim: rgba(185, 198, 214, 0.1);
   --grid-dot: rgba(255, 255, 255, 0.025);
   --grid-dot-awake: rgba(255, 255, 255, 0.06);
-  --selection-bg: rgba(63, 224, 160, 0.28);
+  --selection-bg: rgba(216, 196, 154, 0.28);
 
-  /* Only permitted glow (per accent) + only permitted shadow */
-  --glow-signal: 0 0 0 1px rgba(63, 224, 160, 0.25), 0 0 24px 0 rgba(63, 224, 160, 0.15);
-  --glow-electron: 0 0 0 1px rgba(88, 166, 255, 0.25), 0 0 24px 0 rgba(88, 166, 255, 0.15);
-  --glow-amber: 0 0 0 1px rgba(240, 183, 47, 0.25), 0 0 24px 0 rgba(240, 183, 47, 0.15);
+  /* Only permitted glow (per accent, champagne ≤ .25) + only permitted shadow */
+  --glow-signal: 0 0 0 1px rgba(216, 196, 154, 0.25), 0 0 24px 0 rgba(216, 196, 154, 0.12);
+  --glow-electron: 0 0 0 1px rgba(201, 210, 220, 0.22), 0 0 24px 0 rgba(201, 210, 220, 0.1);
+  --glow-amber: 0 0 0 1px rgba(201, 182, 136, 0.25), 0 0 24px 0 rgba(201, 182, 136, 0.12);
   --elev-window: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-hairline);
 
+  /* ---- v3 SCREEN tokens (palette-41) ----------------------------------- */
+  /* The field: black + the volumetric top light + a faint steel corner. */
+  --ed-field:
+    radial-gradient(
+      ellipse 44% 56% at 50% -8%,
+      rgba(214, 196, 158, 0.16) 0%,
+      rgba(140, 155, 175, 0.07) 42%,
+      rgba(5, 6, 7, 0) 72%
+    ),
+    radial-gradient(ellipse 30% 36% at 0% 104%, rgba(90, 110, 140, 0.08) 0%, rgba(5, 6, 7, 0) 70%),
+    #050607;
+  /* The volumetric light ellipse (.ed-light), its halo and the top beam. */
+  --ed-light: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(214, 196, 158, 0.16) 0%,
+    rgba(140, 155, 175, 0.07) 42%,
+    rgba(5, 6, 7, 0) 72%
+  );
+  --ed-halo: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(214, 196, 158, 0.14) 0%,
+    rgba(214, 196, 158, 0.05) 40%,
+    rgba(5, 6, 7, 0) 72%
+  );
+  --ed-beam: radial-gradient(
+    ellipse 50% 60% at 50% 0%,
+    rgba(214, 196, 158, 0.16) 0%,
+    rgba(140, 155, 175, 0.07) 42%,
+    rgba(5, 6, 7, 0) 72%
+  );
+  /* Panel gradients (pre-glass; floats and the console text area use them). */
+  --ed-stage: linear-gradient(160deg, rgba(18, 21, 26, 0.85) 0%, rgba(10, 12, 15, 0.85) 100%);
+  --ed-glass: linear-gradient(160deg, rgba(18, 21, 26, 0.92), rgba(10, 12, 15, 0.92));
+  --ed-line-hi: rgba(200, 212, 228, 0.08);
+  --ed-glow: rgba(216, 196, 154, 0.1);
+  /* The name: silver → champagne metal, animated as a sheen by .ed-metal. */
+  --ed-metal: linear-gradient(
+    100deg,
+    #8e9099 0%,
+    #d9dde4 18%,
+    #f5eeda 32%,
+    #b9bec8 47%,
+    #85878f 60%,
+    #d9dde4 78%,
+    #9a9da5 100%
+  );
+  /* Primary action + the ON pill of the edition toggle. */
+  --ed-btn: linear-gradient(175deg, #e9dfc8, #c6b78f);
+  --ed-btn-ink: #0b0d10;
+  --ed-btn-shadow: 0 10px 30px rgba(198, 183, 143, 0.18);
+  /* Named colours. */
+  --ed-champ: #d8c49a;
+  --ed-champ2: #d6ccb4;
+  --ed-champ3: #d8ccb2;
+  --ed-steel: #9aa5b3;
+  --ed-steel2: #a3adbb;
+  --ed-steel3: #8b96a4;
+  --ed-body: #aab3c0;
+  --ed-bright: #ccd4de;
+  --ed-link: #c9d2dc;
+  --ed-link-hi: #f0e7d4;
+  --ed-prompt: #c9b688;
+  --ed-string: #cdb98f;
+  --ed-code-cm: #6f7d90;
+  --ed-code-kw: #b9c6d6;
+  --ed-term: #93a2b5;
+  --ed-term-dim: #7c8a9c;
+  /* Soft drop for anything that asks for the edition's shadow. */
+  --ed-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  /* ---- v3 §2.2a GLASS (owner: "make the blocks more glassy") ----------- */
+  /* Smoked, frosted glass: translucent tinted fill so the field, floats and
+     light show through; crisp top edge; faint diagonal sheen; soft drop.
+     Never a milky wash. Used by .ed-stage / .ed-card / .ed-panel / .ed-kbd. */
+  --ed-glass-fill: linear-gradient(180deg, rgba(30, 32, 38, 0.34) 0%, rgba(16, 18, 22, 0.34) 100%);
+  --ed-glass-blur: blur(28px) saturate(1.6);
+  --ed-glass-blur-stage: blur(24px) saturate(1.5);
+  --ed-glass-edge: rgba(255, 255, 255, 0.1);
+  --ed-glass-edge-top: rgba(255, 255, 255, 0.14);
+  --ed-glass-hi: rgba(255, 255, 255, 0.18);
+  --ed-glass-rim: rgba(255, 255, 255, 0.05);
+  --ed-glass-radius: 12px;
+  --ed-glass-radius-stage: 14px;
+  --ed-glass-lo: rgba(0, 0, 0, 0.35);
+  --ed-glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0) 60%);
+  --ed-glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.5);
+  /* Chips / logo tiles are NOT glass: thin tint, edge only. */
+  --ed-tint: rgba(200, 212, 228, 0.03);
+
+  /* ---- v3 §2.3 faces (SCREEN) ------------------------------------------ */
+  --font-display: var(--font-cinzel), Georgia, serif;
+  --font-body: var(--font-marcellus), Georgia, serif;
+  --font-slab: var(--font-marcellus), Georgia, serif;
   /* §3.1 easings (the only three) + §3.2 durations */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-swift: cubic-bezier(0.3, 0, 0, 1);
@@ -90,7 +199,8 @@
   --dur-enter: 600ms;
   --dur-slow: 900ms;
 
-  /* §2.4 z-index ladder */
+  /* §2.4 z-index ladder (v3: --z-boot → --z-intro; the picker sits above
+     the intro so its PRINT choice can cross-fade into the intro's first beat) */
   --z-grid: 0;
   --z-canvas: 1;
   --z-content: 10;
@@ -98,7 +208,8 @@
   --z-inspector: 55;
   --z-palette: 60;
   --z-toast: 70;
-  --z-boot: 80;
+  --z-intro: 80;
+  --z-picker: 90;
 
   /* Cursor halo position (written by <CursorHalo/> via rAF; parked off-screen) */
   --mx: -999px;
@@ -106,42 +217,65 @@
 }
 
 /* ----------------------------------------------------------------------------
-   §2.2 Color — light theme (v2 §6.2 "paper terminal" — chrome agent).
-   Warm paper page, print-like window stack (inner highlight + soft drop +
-   hairline ring), signal deepened to #14855c for AA on white chips.
-   Electron/amber/magenta/error keep their v1 values (already AA on white).
+   §2.2 Color — PRINT edition, the comic (frame 47's bones in frame 29's
+   palette): cream paper, ink lines (2px where the frames draw boxes), comic
+   red = pressable/live, yellow, blue, hard offset shadows. Values from
+   design-workshop/screen-print/r2/kit-print.css.
    -------------------------------------------------------------------------- */
-html[data-theme='light'] {
-  --bg-page: #fafaf7; /* warm paper */
-  --bg-panel: #ffffff;
-  --bg-raised: #f3f4f0;
-  --bg-overlay: rgba(250, 250, 247, 0.85); /* derived from --bg-page */
-  --border-hairline: #d8dee4;
-  --border-strong: #afb8c1;
-  --text-primary: #1f2328;
-  --text-secondary: #59636e;
-  --text-tertiary: #818b98; /* decorative only */
-  --accent-signal: #14855c; /* deepened for AA on white chips */
-  --accent-electron: #0969da;
-  --accent-amber: #9a6700;
-  --accent-magenta: #bf3989;
-  --accent-error: #cf222e;
-  --accent-signal-dim: rgba(20, 133, 92, 0.1);
-  --accent-electron-dim: rgba(9, 105, 218, 0.12);
-  --accent-amber-dim: rgba(154, 103, 0, 0.12);
-  --accent-magenta-dim: rgba(191, 57, 137, 0.12);
-  --grid-dot: rgba(0, 0, 0, 0.05);
-  --grid-dot-awake: rgba(0, 0, 0, 0.1);
-  --selection-bg: rgba(20, 133, 92, 0.22);
+html[data-edition='print'] {
+  color-scheme: light;
 
-  /* Light mode: glows drop the 24px blur layer (border ring only);
-     the signal ring follows the deepened accent. */
-  --glow-signal: 0 0 0 1px rgba(20, 133, 92, 0.35);
-  --glow-electron: 0 0 0 1px rgba(9, 105, 218, 0.35);
-  --glow-amber: 0 0 0 1px rgba(154, 103, 0, 0.35);
-  /* Structure replaces glow: crisp print-like stack (§6.2). */
-  --elev-window:
-    inset 0 1px 0 #fff, 0 8px 24px rgba(31, 35, 40, 0.08), 0 0 0 1px var(--border-hairline);
+  --bg-page: #f3e8cf; /* paper */
+  --bg-panel: #fffaf0;
+  --bg-raised: #e8dab8;
+  --bg-overlay: rgba(243, 232, 207, 0.9);
+  --border-hairline: #17141b; /* ink — PRINT lines are ink */
+  --border-strong: #17141b;
+  --text-primary: #17141b;
+  --text-secondary: #3a3340;
+  --text-tertiary: #6b6272; /* decorative only */
+  --accent-signal: #d7262d; /* comic red = pressable / live */
+  --accent-electron: #1e6fd6; /* blue */
+  --accent-amber: #f6c21c; /* yellow */
+  --accent-magenta: #b11e25;
+  --accent-error: #b11e25;
+  --accent-signal-dim: rgba(215, 38, 45, 0.12);
+  --accent-electron-dim: rgba(30, 111, 214, 0.12);
+  --accent-amber-dim: rgba(246, 194, 28, 0.3);
+  --accent-magenta-dim: rgba(177, 30, 37, 0.12);
+  --grid-dot: rgba(23, 20, 27, 0.07);
+  --grid-dot-awake: rgba(23, 20, 27, 0.14);
+  --selection-bg: rgba(246, 194, 28, 0.5);
+
+  /* Print has no glow: rings are ink-weight flat colour; windows get the
+     hard comic offset instead of a blurred elevation. */
+  --glow-signal: 0 0 0 2px #d7262d;
+  --glow-electron: 0 0 0 2px #1e6fd6;
+  --glow-amber: 0 0 0 2px #f6c21c;
+  --elev-window: 6px 6px 0 #17141b;
+
+  /* ---- v3 PRINT tokens (kit-print) ------------------------------------- */
+  --ed-paper2: #e8dab8;
+  --ed-white: #fffaf0;
+  --ed-ink2: #3a3340;
+  --ed-red2: #b11e25;
+  --ed-yellow2: #e0a80c;
+  --ed-blue2: #1656a8;
+  /* The hard comic shadow (boxes, cards, buttons, bubbles). */
+  --ed-shadow: 4px 4px 0 var(--text-primary);
+  /* Primary action + the ON pill of the edition toggle = comic red. */
+  --ed-btn: #d7262d;
+  --ed-btn-ink: #fffaf0;
+  --ed-btn-shadow: 4px 4px 0 #17141b;
+  /* The field is plain paper; the SCREEN light/halo/beam tokens stay defined
+     but their nodes are display:none under PRINT (styles/v3/print.css). */
+  --ed-field: #f3e8cf;
+  --ed-tint: #fffaf0;
+
+  /* ---- v3 §2.3 faces (PRINT) ------------------------------------------- */
+  --font-display: var(--font-bangers), Impact, 'Arial Black', sans-serif;
+  --font-slab: var(--font-alfa), Georgia, serif;
+  --font-body: var(--font-archivo), system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 /* ----------------------------------------------------------------------------
@@ -203,7 +337,7 @@ html[data-theme='light'] {
     color: var(--text-primary);
   }
 
-  /* §2.4 focus ring — never removed */
+  /* §2.4 focus ring — never removed (SCREEN champagne; PRINT overrides to ink) */
   :focus-visible {
     outline: 2px solid var(--accent-signal);
     outline-offset: 2px;
@@ -444,15 +578,6 @@ html[data-theme='light'] {
   .skip-link:focus-visible {
     transform: translateY(0);
   }
-
-  /* §4.1 boot overlay is visible ONLY when the inline head script marked
-     this session eligible (html[data-boot='1']). Styled by its component. */
-  .boot-overlay {
-    display: none;
-  }
-  html[data-boot='1'] .boot-overlay {
-    display: block;
-  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -573,15 +698,18 @@ html[data-motion='reduced'] body::after {
 /* ============================================================================
    SIGNAL v2 feature styles (V2_SPEC §3 index) — one file per feature area.
 
-   OWNERSHIP CONTRACT (v2 prep): app/globals.css itself belongs to the prep
-   agent. The chrome agent may additionally edit ONLY the
-   html[data-theme='light'] token block above (§6.2 paper terminal). Every
-   other v2 rule goes in that feature's own file below — each file has
-   exactly one owner agent, named in its header.
+   OWNERSHIP CONTRACT (v3): app/globals.css belongs to the foundation agent
+   (Phase A). Every other rule goes in that feature's own file below — each
+   file has exactly one owner agent, named in its header. Section agents
+   APPEND their edition rules to styles/v3/screen.css / print.css under
+   their own section comment; the shared .ed-* recipes at the top of those
+   files are the integrator's.
 
    Import order is load-bearing and fixed: Tailwind's PostCSS pipeline
    inlines these here, AFTER every v1 rule, so v2 rules win specificity ties
-   against v1 and later files win ties against earlier ones. Do not reorder.
+   against v1 and later files win ties against earlier ones. The v3 edition
+   files come LAST so their skins win ties against every v2 rule. Do not
+   reorder.
    ========================================================================== */
 @import '../styles/v2/portrait.css';
 @import '../styles/v2/chrome.css';
@@ -589,3 +717,8 @@ html[data-motion='reduced'] body::after {
 @import '../styles/v2/scroll.css';
 @import '../styles/v2/projects.css';
 @import '../styles/v2/experience.css';
+
+/* v3 — the two editions + the switch (V3_SPEC §2.2, §2.4, §3). */
+@import '../styles/v3/screen.css';
+@import '../styles/v3/print.css';
+@import '../styles/v3/switch.css';

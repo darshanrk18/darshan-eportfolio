@@ -1,0 +1,48 @@
+[
+ {
+  "viewport": [
+   375,
+   812
+  ]
+ },
+ {
+  "seed": {
+   "edition": "screen",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/arcade",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-arcade-screen"
+ },
+ {
+  "shot": "design-workshop/v3/qa/ARCADE-screen-375.png"
+ },
+ {
+  "seed": {
+   "edition": "print",
+   "intro": true
+  }
+ },
+ {
+  "goto": "/arcade",
+  "settle": 2500
+ },
+ {
+  "wait": 800
+ },
+ {
+  "eval": "document.documentElement.scrollWidth + ' vs ' + window.innerWidth",
+  "label": "hscroll-arcade-print"
+ },
+ {
+  "shot": "design-workshop/v3/qa/ARCADE-print-375.png"
+ }
+]
