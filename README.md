@@ -279,8 +279,10 @@ The CI token is read-only, every action in both workflows is pinned to a full co
 - **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)): npm updates weekly and GitHub Actions updates monthly, grouped. Major versions of Next.js, React, Tailwind and Vite are left for a manual migration. Security alerts and security-fix pull requests are on.
 - **Vercel** builds every pull request as a preview deployment.
 
-> [!NOTE]
-> Branch rulesets, CodeQL code scanning, dependency review, secret-scanning push protection and private vulnerability reporting are not available for a private repository on GitHub's free plan. They can be switched on if the repository is made public.
+- **Dependency review** on every pull request: a change that adds a dependency with a known high-severity vulnerability fails.
+- **CodeQL** code scanning (GitHub's default setup) for the TypeScript and the workflows, on every push to `main` and every pull request.
+- **Secret scanning** with push protection: a push that contains a key or token is blocked.
+- **A ruleset on `main`**: no force pushes or deletion; changes arrive through pull requests that pass `verify`.
 
 ## Working on the code
 

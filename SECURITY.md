@@ -2,8 +2,9 @@
 
 ## Reporting a problem
 
-Please report security problems privately, by email to
-**konnur.d@northeastern.edu**, and not in an issue or a pull request.
+Please report security problems privately, not in an issue or a pull request:
+use GitHub's **Report a vulnerability** button on the repository's Security tab
+(private vulnerability reporting), or email **konnur.d@northeastern.edu**.
 
 A useful report includes:
 
@@ -51,10 +52,14 @@ replays a recording and never opens the camera.
 - Workflow tokens are read-only by default; each action is pinned to a full
   commit SHA.
 
-These GitHub features are not available while the repository is private on the
-free plan, and can be switched on if it becomes public: code scanning (CodeQL),
-secret scanning push protection, private vulnerability reporting, the
-dependency review action, and branch rulesets.
+- **Secret scanning** and **push protection** are on: a push that contains a
+  key or token is blocked.
+- **Code scanning** runs CodeQL (GitHub's default setup) on the TypeScript and
+  the workflows.
+- **Dependency review** fails a pull request that adds a dependency with a
+  known high-severity vulnerability.
+- A **ruleset** protects `main`: no force pushes or deletion, and changes
+  arrive through pull requests that pass `verify`.
 
 ## Supported versions
 
