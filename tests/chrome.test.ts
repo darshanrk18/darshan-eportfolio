@@ -214,6 +214,18 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
     // every Tab is handled by the trap, not left to the browser
     expect(menu).toMatch(/if \(e\.key !== 'Tab'\) return\s*e\.preventDefault\(\)/)
   })
+
+  it('the open menu sheet covers the reduced-motion offer and the guide, under the palette', () => {
+    expect(css).toMatch(/\.sig-menu \{[^}]*z-index: calc\(var\(--z-palette\) - 1\);/)
+    const banner = read('components/chrome/ReducedMotionBanner.tsx')
+    expect(banner).toContain("zIndex: 'var(--z-nav)'")
+    const guide = read('styles/v3/guide.css')
+    const guideZ = [...guide.matchAll(/z-index: (\d+);/g)].map((m) => Number(m[1]))
+    expect(guideZ.length).toBeGreaterThan(0)
+    // --z-palette is 60 (app/globals.css): the sheet at 59 is above every guide layer
+    expect(read('app/globals.css')).toMatch(/--z-palette: 60;/)
+    expect(Math.max(...guideZ)).toBeLessThan(59)
+  })
 })
 
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {

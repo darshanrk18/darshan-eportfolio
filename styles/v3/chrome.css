@@ -644,12 +644,16 @@ html[data-edition='print'] {
 /* ============================================================================
    MOBILE MENU (components/chrome/MobileMenu.tsx) — full-screen sheet
    ========================================================================== */
+/* The open sheet covers everything below the palette: the reduced-motion
+   "/cv" offer (on the nav layer, later in the page) and the guide's coach
+   mark, scrim and checklist (56-58) otherwise sat over its rows. The
+   palette, opened from the sheet's Search / Jump, still comes on top. */
 .sig-menu {
   position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
-  z-index: var(--z-nav);
+  z-index: calc(var(--z-palette) - 1);
 }
 .sig-menu-head {
   display: flex;
