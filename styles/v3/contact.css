@@ -1518,20 +1518,28 @@ html[data-edition='print'] {
     overflow-x: auto;
     scrollbar-width: none;
     scroll-padding-inline: 40px;
+    scroll-snap-type: x mandatory;
   }
   .ct-sugs::-webkit-scrollbar {
     display: none;
+  }
+  /* Keyboard focus: the focused chip is the strip's one snap point, so the
+     strip centres it, clear of the fades (a browser does not scroll to a chip
+     that already shows 32 px). A click or a tap sets no snap point. */
+  .ct-sug:focus-visible {
+    scroll-snap-align: center;
   }
   /* The cue: an edge that has chips beyond it fades into the paper. The
      fade grows with what is hidden (2.5 px per px, up to 40 px), so it shows
      only when a chip is cut off; nothing overflows → no timeline, no fade. */
   @supports (animation-timeline: scroll()) {
     .ct-sugs {
+      --ct-cap: 40px;
       mask-image: linear-gradient(
         90deg,
         transparent,
-        #000 var(--ct-fl),
-        #000 calc(100% - var(--ct-fr)),
+        #000 min(var(--ct-fl), var(--ct-cap)),
+        #000 calc(100% - min(var(--ct-fr), var(--ct-cap))),
         transparent
       );
       animation:
@@ -1541,6 +1549,13 @@ html[data-edition='print'] {
       animation-range:
         0px 16px,
         calc(100% - 16px) 100%;
+    }
+    /* up to 359 px the strip is narrower than a chip and two 40 px fades:
+       while a chip has keyboard focus the fades stop at 24 px */
+    @media (max-width: 359px) {
+      .ct-sugs:has(.ct-sug:focus-visible) {
+        --ct-cap: 24px;
+      }
     }
   }
   .ct-sugs li {
