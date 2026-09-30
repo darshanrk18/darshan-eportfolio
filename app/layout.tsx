@@ -104,8 +104,10 @@ export const metadata: Metadata = {
   },
 }
 
-/* v3 §2.2 — the meta stays SCREEN-dark on the server; the EditionToggle
-   island (and every applyEdition) rewrites it to the edition in force. */
+/* v3 §2.2 — the metas stay SCREEN-dark on the server (link previews read
+   them too); the pre-paint script puts its own lead meta first in <head>
+   (PRINT's paper for a stored PRINT visit, on every route) and every
+   applyEdition rewrites them all to the edition in force. */
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: dark)', color: '#050607' },

@@ -55,7 +55,7 @@ import {
  *     document has parsed — the shortest possible fallback-font window at
  *     the first paint. A return visit never fetches them from here.
  *
- * Separate from the ≤ 460 B pre-paint script (lib/edition/prepaint.ts):
+ * Separate from the ≤ 580 B pre-paint script (lib/edition/prepaint.ts):
  * scripts/check-prepaint.mjs identifies that one by its storage key AND its
  * reduced-motion query, so this script's fallback may name the key. Plain
  * ES5, no template literals (the same minifier caveat as the pre-paint

@@ -24,7 +24,8 @@
  * hydration flash; React state only drives the ARIA. A MutationObserver on
  * data-edition keeps that state in sync when the palette, the terminal or
  * the picker switch editions elsewhere. On mount it also mirrors the
- * edition into the store and corrects the theme-color meta.
+ * edition into the store and re-syncs the theme-color metas (a safety net:
+ * the pre-paint script's lead meta already carries a stored PRINT visit's).
  */
 
 import { useEffect, useRef, useState } from 'react'

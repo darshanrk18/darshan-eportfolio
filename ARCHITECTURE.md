@@ -10,7 +10,11 @@ interactive.
 - `html[data-edition="screen" | "print"]` is the single switch. An inline
   pre-paint script (`lib/edition/prepaint.ts`, injected by `app/layout.tsx`)
   reads `localStorage['signal.edition']` and writes the attribute before the
-  first paint, so there is no flash. With nothing stored it also sets
+  first paint, so there is no flash. It also puts a `theme-color` meta of its
+  own first in `<head>` (PRINT's paper for a stored PRINT visit, no colour
+  otherwise); every switch rewrites it with the server's metas, and it
+  outlives client-side navigations, so a phone's browser bar matches the
+  page on every route. With nothing stored it also sets
   `data-pick="1"`; the picker's face is server-rendered
   (`components/edition/PickerShell.tsx`, shown by CSS only under that
   attribute, with a small inline script that queues an early tap) and the lazy

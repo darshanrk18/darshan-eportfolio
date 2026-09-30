@@ -99,14 +99,28 @@ function makeMeta(): Meta {
   return meta
 }
 
-/** Run the pre-paint script against fakes; returns the resulting root. */
+/** An element made by the fake document's createElement (the theme-color meta). */
+type FakeEl = { tagName: string; name?: string; content?: string }
+
+/**
+ * Run the pre-paint script against fakes; returns the resulting root, with
+ * `prepended` = what the script put at the start of <head>, in order.
+ */
 function runPrepaint(input: {
   local?: ReturnType<typeof makeStorage>
   session?: ReturnType<typeof makeStorage>
   systemReduced?: boolean
 }) {
-  const root = makeRoot()
-  const doc = { documentElement: root }
+  const root = Object.assign(makeRoot(), { prepended: [] as FakeEl[] })
+  const doc = {
+    documentElement: root,
+    createElement: (tag: string): FakeEl => ({ tagName: tag.toUpperCase() }),
+    head: {
+      prepend: (el: FakeEl) => {
+        root.prepended.unshift(el)
+      },
+    },
+  }
   const local = input.local ?? makeStorage()
   const session = input.session ?? makeStorage()
   const matchMedia = (q: string) => ({ matches: q.includes('reduce') ? !!input.systemReduced : false })
@@ -146,9 +160,35 @@ describe('pre-paint script (V3_SPEC §2.1)', () => {
     expect(PREPAINT_SCRIPT).toContain(`'${MOTION_STORAGE_KEY}'`)
     expect(PREPAINT_SCRIPT).toContain(`'${PICK_ATTR}'`)
     expect(PREPAINT_SCRIPT).toContain(`'${INTRO_ATTR}'`)
+    expect(PREPAINT_SCRIPT).toContain(`'${EDITION_THEME_COLOR.print}'`)
     expect(PREPAINT_SCRIPT).not.toMatch(/data-theme|signal\.theme|data-boot|signal\.boot/)
-    // "stays ≤ ~450 B" (§2.1) — 457 B as written; a jump past this needs a look.
-    expect(Buffer.byteLength(PREPAINT_SCRIPT, 'utf8')).toBeLessThanOrEqual(460)
+    // "stays small" (§2.1) — 574 B as written (457 B before the lead
+    // theme-color meta); a jump past this needs a look.
+    expect(Buffer.byteLength(PREPAINT_SCRIPT, 'utf8')).toBeLessThanOrEqual(580)
+  })
+
+  it('prepends one lead theme-color meta: paper for a stored PRINT visit, else no content', () => {
+    const print = runPrepaint({ local: makeStorage({ [EDITION_STORAGE_KEY]: 'print' }) })
+    expect(print.prepended).toEqual([
+      { tagName: 'META', name: 'theme-color', content: EDITION_THEME_COLOR.print },
+    ])
+    // the intro having run, or reduced motion, changes nothing about the colour
+    const seen = runPrepaint({
+      local: makeStorage({ [EDITION_STORAGE_KEY]: 'print', [MOTION_STORAGE_KEY]: 'reduced' }),
+      session: makeStorage({ [INTRO_SESSION_KEY]: '1' }),
+    })
+    expect(seen.prepended.map((m) => m.content)).toEqual([EDITION_THEME_COLOR.print])
+    // SCREEN, a first visit, garbage and blocked storage get the meta with no
+    // content (no theme colour: the server's SCREEN metas apply) — never a
+    // copy of the server's colour, which React would adopt while hydrating
+    for (const local of [
+      makeStorage({ [EDITION_STORAGE_KEY]: 'screen' }),
+      makeStorage(),
+      makeStorage({ [EDITION_STORAGE_KEY]: 'garbage' }),
+      makeStorage({}, { throws: true }),
+    ]) {
+      expect(runPrepaint({ local }).prepended).toEqual([{ tagName: 'META', name: 'theme-color' }])
+    }
   })
 
   it('sets data-pick (and screen) when nothing valid is stored', () => {
@@ -254,6 +294,8 @@ describe('pre-paint script (V3_SPEC §2.1)', () => {
             expect(root.getAttribute(PICK_ATTR) === '1', label).toBe(expected.pick)
             expect(root.getAttribute('data-motion'), label).toBe(expected.motion)
             expect(root.getAttribute(INTRO_ATTR) === '1', label).toBe(expected.intro)
+            expect(root.prepended.length, label).toBe(1)
+            expect(root.prepended[0].content ?? null, label).toBe(expected.themeColor)
           }
         }
       }
