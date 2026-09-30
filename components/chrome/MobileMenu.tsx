@@ -2,7 +2,7 @@
 
 /**
  * Mobile menu (v2 §4.2; v3 §3 "Mobile"): the full-screen sheet behind the
- * top bar's "Menu" control (< 1100). Both skins via styles/v3/chrome.css
+ * top bar's "Menu" control (bar < 1130). Both skins via styles/v3/chrome.css
  * (`.sig-menu*`): SCREEN = near-black glass sheet, Cinzel section rows;
  * PRINT = paper sheet, Bangers section rows, ink rules.
  *

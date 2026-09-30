@@ -158,6 +158,14 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
 describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion label', () => {
   const css = read('styles/v3/chrome.css')
 
+  it('switches compact / full on the header width (scrollbar counted), not the viewport', () => {
+    expect(css).toMatch(/\.sig-nav \{[^}]*container: sig-nav \/ inline-size;/)
+    expect(css).toMatch(
+      /@container sig-nav \(width < 1130px\) \{\s*\.sig-nav-links,\s*\.sig-nav-desk,\s*\.sig-nav-vr,\s*\.sig-nav-issue-wrap \{\s*display: none !important;/
+    )
+    expect(css).not.toMatch(/@media \(max-width: 1099\.98px\)/)
+  })
+
   it('shows the PRINT issue box only where it fits (wrapper takes the room left, clips the rest)', () => {
     const nav = read('components/chrome/Navbar.tsx')
     expect(nav).toMatch(
