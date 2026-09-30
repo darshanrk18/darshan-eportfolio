@@ -593,6 +593,13 @@ html[data-edition='print'] {
   .skip-link:focus-visible {
     transform: translateY(0);
   }
+  /* The skip link's target is also where focus lands when the picker or the
+     intro closes (lib/utils/focusMain): a landmark that briefly takes focus
+     (tabindex=-1), not a control, so it draws no ring — the ring would be a
+     stray line at the foot of the page. */
+  #main:focus {
+    outline: none;
+  }
 }
 
 /* ----------------------------------------------------------------------------

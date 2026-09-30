@@ -56,6 +56,9 @@
  * `onDone` tells the gate to unmount after the fade — and that
  * unmount's cleanup does NOT release the page again: by then the intro
  * owns the scroll lock and the overlay flag (C6's hand-off contract).
+ * Focus, at the end of the fade: left on the intro's Skip when the intro
+ * took it, else back on what had it before the picker, else on the main
+ * landmark (lib/utils/focusMain) — never dropped to <body>.
  *
  * One photograph, one cut: both halves draw the portrait through the same
  * silhouette clip at the same page position, so the features meet at the
@@ -69,6 +72,7 @@ import { PICK_ATTR, applyEdition, type Edition } from '@/lib/commands/context'
 import { getLenis } from '@/lib/motion/lenis'
 import { useSignalStore } from '@/lib/state/store'
 import { INTRO_START_EVENT } from '@/lib/intro/events'
+import { focusMain } from '@/lib/utils/focusMain'
 import PickerFace from './PickerFace'
 import {
   PICKER_COPY,
@@ -274,6 +278,23 @@ export default function EditionPickerSurface({ onDone }: EditionPickerSurfacePro
     }
   }, [])
 
+  /* After a choice the picker's two buttons leave with it: focus goes back
+     to what held it before the picker (a re-pick opened from elsewhere), else
+     to the page's main landmark — never to <body>. When the intro runs it has
+     already taken focus (its Skip), and that is left alone. */
+  const handFocusOn = useCallback(() => {
+    const active = document.activeElement
+    const inPicker = (el: Element | null) =>
+      !!el && (!!rootRef.current?.contains(el) || !!el.closest(`[${PICKER_SHELL_ATTR}]`))
+    if (active && active !== document.body && !inPicker(active)) return
+    const el = restoreFocus.current
+    if (el && el.isConnected && !inPicker(el)) {
+      el.focus({ preventScroll: true })
+      if (document.activeElement === el) return
+    }
+    focusMain()
+  }, [])
+
   const choose = useCallback(
     (edition: Edition) => {
       if (chosen.current) return
@@ -288,7 +309,10 @@ export default function EditionPickerSurface({ onDone }: EditionPickerSurfacePro
       const reduced = document.documentElement.dataset.motion === 'reduced'
       const fade = (ms: number) => {
         setLeaving(edition)
-        window.setTimeout(onDone, ms + 40)
+        window.setTimeout(() => {
+          handFocusOn()
+          onDone()
+        }, ms + 40)
       }
       if (edition !== 'print') {
         fade(400)
@@ -309,7 +333,7 @@ export default function EditionPickerSurface({ onDone }: EditionPickerSurfacePro
       }
       tick()
     },
-    [onDone]
+    [onDone, handFocusOn]
   )
   chooseRef.current = choose
 
