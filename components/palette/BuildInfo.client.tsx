@@ -12,8 +12,9 @@
 
 import dynamic from 'next/dynamic'
 import { useSignalStore } from '@/lib/state/store'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const BuildInfoPanel = dynamic(() => import('./BuildInfoPanel.client'), { ssr: false })
+const BuildInfoPanel = dynamic(() => import('./BuildInfoPanel.client').catch(islandUnavailable<typeof import('./BuildInfoPanel.client')>), { ssr: false })
 
 export default function BuildInfo() {
   const open = useSignalStore((s) => s.buildInfoOpen)

@@ -44,11 +44,12 @@ import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { trackMinimaxGame } from '@/lib/utils/analytics'
 import { useEdition } from '../useEdition'
 import { coachLine, engineBubble, newGameLine, statusLabel, type C4Status } from './c4Copy'
+import { islandUnavailable } from '@/lib/utils/island'
 
 import '@/styles/v3/work.css'
 
-const AStarSnake = dynamic(() => import('./AStarSnake'), { ssr: false })
-const RpsLandmarks = dynamic(() => import('./RpsLandmarks'), { ssr: false })
+const AStarSnake = dynamic(() => import('./AStarSnake').catch(islandUnavailable<typeof import('./AStarSnake')>), { ssr: false })
+const RpsLandmarks = dynamic(() => import('./RpsLandmarks').catch(islandUnavailable<typeof import('./RpsLandmarks')>), { ssr: false })
 
 const DEPTH = 6
 const HUMAN: Player = 1

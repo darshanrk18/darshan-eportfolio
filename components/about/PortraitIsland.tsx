@@ -11,7 +11,8 @@
  */
 
 import dynamic from 'next/dynamic'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const PortraitIsland = dynamic(() => import('./Portrait.client'))
+const PortraitIsland = dynamic(() => import('./Portrait.client').catch(islandUnavailable<typeof import('./Portrait.client')>))
 
 export default PortraitIsland

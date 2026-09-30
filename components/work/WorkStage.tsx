@@ -24,6 +24,7 @@ import {
   type ProjectSlug,
 } from '@/lib/data/projects'
 import { trackProjectRun } from '@/lib/utils/analytics'
+import { islandUnavailable } from '@/lib/utils/island'
 
 import '@/styles/v3/work.css'
 
@@ -34,13 +35,13 @@ interface DemoProps {
 
 // Each demo chunk loads only when its project is first run (§6.4 rule 4).
 const DEMOS: Partial<Record<ProjectSlug, ComponentType<DemoProps>>> = {
-  'ticket-forge': dynamic(() => import('@/components/projects/demos/TicketForgeViz')),
-  trackfolio: dynamic(() => import('@/components/projects/demos/TrackfolioViz')),
-  'triplay-ai': dynamic(() => import('@/components/projects/demos/ConnectFour')),
-  'box-archive': dynamic(() => import('@/components/projects/demos/BoxArchViz')),
-  'expense-share': dynamic(() => import('@/components/projects/demos/ExpenseViz')),
-  'calendar-java': dynamic(() => import('@/components/projects/demos/UmlViz')),
-  'ieee-mip-optimizer': dynamic(() => import('@/components/projects/demos/MipViz')),
+  'ticket-forge': dynamic(() => import('@/components/projects/demos/TicketForgeViz').catch(islandUnavailable<typeof import('@/components/projects/demos/TicketForgeViz')>)),
+  trackfolio: dynamic(() => import('@/components/projects/demos/TrackfolioViz').catch(islandUnavailable<typeof import('@/components/projects/demos/TrackfolioViz')>)),
+  'triplay-ai': dynamic(() => import('@/components/projects/demos/ConnectFour').catch(islandUnavailable<typeof import('@/components/projects/demos/ConnectFour')>)),
+  'box-archive': dynamic(() => import('@/components/projects/demos/BoxArchViz').catch(islandUnavailable<typeof import('@/components/projects/demos/BoxArchViz')>)),
+  'expense-share': dynamic(() => import('@/components/projects/demos/ExpenseViz').catch(islandUnavailable<typeof import('@/components/projects/demos/ExpenseViz')>)),
+  'calendar-java': dynamic(() => import('@/components/projects/demos/UmlViz').catch(islandUnavailable<typeof import('@/components/projects/demos/UmlViz')>)),
+  'ieee-mip-optimizer': dynamic(() => import('@/components/projects/demos/MipViz').catch(islandUnavailable<typeof import('@/components/projects/demos/MipViz')>)),
 }
 
 function Icon({ name }: { name: 'refresh' | 'play' | 'stop' }) {
