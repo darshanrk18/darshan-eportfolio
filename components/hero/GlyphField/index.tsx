@@ -23,15 +23,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { EDITION_ATTR, getCurrentEdition, type Edition } from '@/lib/commands/context'
+import { EDITION_ATTR, PICK_ATTR, getCurrentEdition, type Edition } from '@/lib/commands/context'
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { detectTier, type GlyphTier } from '@/lib/perf/tiers'
 import { useSignalStore } from '@/lib/state/store'
 import { trackGlyphFieldTier } from '@/lib/utils/analytics'
 import StaticConstellation from '../StaticConstellation'
 import type { ActiveTier } from './tiers'
+import { islandUnavailable } from '@/lib/utils/island'
 
-const Scene = dynamic(() => import('./Scene'), { ssr: false })
+const Scene = dynamic(() => import('./Scene').catch(islandUnavailable<typeof import('./Scene')>), { ssr: false })
 
 /** Ladder floor / context loss is permanent for the session (§8.3). */
 let sessionFloor = false
@@ -69,17 +70,34 @@ export default function GlyphField() {
     let cancelled = false
     let idleId: number | null = null
     let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let pickObserver: MutationObserver | null = null
 
     const decide = () => {
       if (cancelled) return
       const detected: GlyphTier = sessionFloor ? 0 : detectTier()
       setTier(detected)
       if (sessionFloor) setFloored(true)
-      if (detected > 0) void import('./Scene') // prefetch the deferred chunk
+      // Prefetch the WebGL chunk only where it will draw: SCREEN (PRINT never
+      // mounts the scene; a later switch to SCREEN loads it on render).
+      if (detected > 0 && getCurrentEdition() === 'screen') void import('./Scene').catch(() => {})
     }
 
     const schedule = () => {
       if (cancelled) return
+      // A first visit opens on the edition picker, which covers the hero:
+      // nothing behind it needs WebGL, and the chunk would compete with the
+      // picker's first paint. Wait for the choice (data-pick cleared).
+      const html = document.documentElement
+      if (html.getAttribute(PICK_ATTR) === '1') {
+        pickObserver = new MutationObserver(() => {
+          if (html.getAttribute(PICK_ATTR) === '1') return
+          pickObserver?.disconnect()
+          pickObserver = null
+          schedule()
+        })
+        pickObserver.observe(html, { attributes: true, attributeFilter: [PICK_ATTR] })
+        return
+      }
       const w = window as Window & {
         requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
       }
@@ -104,6 +122,7 @@ export default function GlyphField() {
         w.cancelIdleCallback(idleId)
       }
       if (timeoutId !== null) clearTimeout(timeoutId)
+      pickObserver?.disconnect()
     }
   }, [])
 

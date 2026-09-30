@@ -25,14 +25,32 @@ interface NavigatorWithMemory extends Navigator {
 
 let webgl2Cache: boolean | null = null
 
-/** WebGL2 availability (probed once, cached). Client-only; false on server. */
+/** Renderer names of CPU (software) WebGL implementations. */
+const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|microsoft basic render/i
+
+/**
+ * HARDWARE WebGL2 availability (probed once, cached). Client-only; false on
+ * the server. A software renderer (SwiftShader, llvmpipe — what a browser
+ * falls back to on a blocklisted GPU, and what headless audits run) counts
+ * as none: the glyph field would run on the CPU and block the main thread,
+ * so those visitors get the static constellation instead. Two checks: the
+ * context is requested with `failIfMajorPerformanceCaveat` (the browser
+ * refuses when it would be software), and the unmasked renderer name is
+ * matched where the browser still exposes it.
+ */
 export function supportsWebGL2(): boolean {
   if (typeof window === 'undefined') return false
   if (webgl2Cache !== null) return webgl2Cache
   try {
     const canvas = document.createElement('canvas')
-    const gl = canvas.getContext('webgl2')
-    webgl2Cache = gl !== null
+    const gl = canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: true })
+    let ok = gl !== null
+    if (gl) {
+      const info = gl.getExtension('WEBGL_debug_renderer_info')
+      const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : ''
+      if (SOFTWARE_RENDERER.test(renderer)) ok = false
+    }
+    webgl2Cache = ok
     // Free the probe context where supported.
     gl?.getExtension('WEBGL_lose_context')?.loseContext()
   } catch {
@@ -43,7 +61,7 @@ export function supportsWebGL2(): boolean {
 
 /**
  * Initial tier per §8.3. Client-only (returns 0 on the server).
- * T0: reduced motion, no WebGL2, or deviceMemory < 4.
+ * T0: reduced motion, no hardware WebGL2 (software GL counts as none), or deviceMemory < 4.
  * T1: coarse pointer OR deviceMemory === 4 OR viewport < 768.
  * T3: fine pointer AND (deviceMemory ≥ 8 OR hardwareConcurrency ≥ 8).
  * T2: default desktop.
