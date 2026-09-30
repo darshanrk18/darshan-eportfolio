@@ -72,6 +72,11 @@ export interface GuideItem {
   coach: Record<Edition, string | null> | null
   /** The coach line on a touch screen, where `coach` names a hover (else `coach` serves both). */
   coachTouch?: Partial<Record<Edition, string>>
+  /**
+   * Editions whose coach points at an animation that reduced motion turns
+   * off, its control hidden with it: no coach mark there under reduced motion.
+   */
+  coachNeedsMotion?: readonly Edition[]
 }
 
 const both = (s: string): Record<Edition, string> => ({ screen: s, print: s })
@@ -121,6 +126,9 @@ export const GUIDE_ITEMS: readonly GuideItem[] = [
     },
     /* A touch never hovers the portrait; the replay control is the way in. */
     coachTouch: { screen: 'Tap replay to watch the portrait resolve.' },
+    /* Reduced motion shows the photograph at once and hides replay: nothing
+       resolves, and there is no control to hover, tap or replay. */
+    coachNeedsMotion: ['screen'],
   },
   {
     id: 'light-toolkit',
@@ -211,14 +219,19 @@ export function guideWhere(id: GuideId, edition: Edition): string {
   return ITEM_BY_ID[id].where[edition]
 }
 
+/** html[data-motion]: 'reduced' when the site runs without animation. */
+export type GuideMotion = 'full' | 'reduced'
+
 export function guideCoach(
   id: GuideId,
   edition: Edition,
-  input: InputKind = 'mouse'
+  input: InputKind = 'mouse',
+  motion: GuideMotion = 'full'
 ): string | null {
   const item = ITEM_BY_ID[id]
   const line = item.coach?.[edition] ?? null
   if (line === null) return null
+  if (motion === 'reduced' && item.coachNeedsMotion?.includes(edition)) return null
   return (input === 'touch' && item.coachTouch?.[edition]) || line
 }
 

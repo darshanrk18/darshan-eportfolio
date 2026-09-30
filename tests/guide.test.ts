@@ -241,6 +241,36 @@ describe('mouse or touch wording', () => {
     }
   })
 
+  it('draws no portrait coach under reduced motion in SCREEN, where replay is hidden', () => {
+    for (const input of ['mouse', 'touch'] as const) {
+      expect(guideCoach('reveal-portrait', 'screen', input, 'reduced')).toBeNull()
+      expect(guideCoach('reveal-portrait', 'screen', input, 'full')).toBe(
+        guideCoach('reveal-portrait', 'screen', input)
+      )
+    }
+    // every other coach line is the same under reduced motion
+    for (const item of GUIDE_ITEMS) {
+      for (const edition of ['screen', 'print'] as const) {
+        if (item.id === 'reveal-portrait' && edition === 'screen') continue
+        for (const input of ['mouse', 'touch'] as const) {
+          expect(guideCoach(item.id, edition, input, 'reduced'), `${item.id} ${edition}`).toBe(
+            guideCoach(item.id, edition, input)
+          )
+        }
+      }
+    }
+    // why: the portrait hides its replay under reduced motion (and replays nothing),
+    // and the coach mark reads the motion setting for both wordings
+    const read = (rel: string) => readFileSync(path.resolve(__dirname, '..', rel), 'utf8')
+    expect(read('styles/v2/portrait.css').replace(/\s+/g, ' ')).toContain(
+      "&[data-motion='reduced'] .pf-replay { display: none; }"
+    )
+    expect(read('components/about/Portrait.client.tsx')).toMatch(/const replay = useCallback\(\(\) => \{\s*if \(reduced\) return/)
+    const coach = read('components/guide/GuideCoach.client.tsx')
+    expect(coach).toContain("guideCoach(id, edition, 'mouse', motion)")
+    expect(coach).toContain("guideCoach(id, edition, 'touch', motion)")
+  })
+
   it('names the keycap per platform, like the top bar (Ctrl K off Apple)', () => {
     expect(paletteKeyFor('MacIntel')).toBe('⌘K')
     expect(paletteKeyFor('iPhone')).toBe('⌘K')
