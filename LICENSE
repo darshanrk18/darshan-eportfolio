@@ -1,0 +1,43 @@
+Copyright (c) 2025–2026 Darshan Ravindra Konnur. All rights reserved.
+
+This repository is not open source. No permission is granted to copy,
+modify, distribute or use the code, text, photographs or other content in
+it, in whole or in part, except as allowed by law or with written
+permission from the copyright holder (konnur.d@northeastern.edu).
+
+Viewing the published site at https://www.darshankonnur.com, and linking to
+it, need no permission.
+
+
+Third-party material
+--------------------
+
+The following are not covered by the notice above. Each stays under its own
+license, and the trademarks in it belong to their owners.
+
+Fonts (SIL Open Font License 1.1, https://openfontlicense.org)
+
+  - Cinzel, Marcellus and IBM Plex Mono (the SCREEN edition)
+  - Bangers, Alfa Slab One and Archivo (the PRINT edition)
+  - Anton (the PRINT intro)
+    These are loaded through next/font/google, which downloads them from
+    Google Fonts at build time and serves them from the site.
+  - Tenor Sans, Copyright (c) 2011 Denis Masharov, Reserved Font Names
+    "Tenor" and "Tenor Sans". A digits-only subset is included as
+    public/fonts/tenor-sans-digits.woff2; its license is in
+    public/fonts/OFL-TenorSans.txt.
+
+Technology logos (public/logos/)
+
+  - The colour files are from Devicon (https://devicon.dev), MIT License,
+    Copyright (c) 2015 konpa.
+  - The single-colour files ("-mono") are from Simple Icons
+    (https://simpleicons.org), CC0 1.0 Universal.
+  The logos are shown only to name the tools they stand for. Each is a
+  trademark of its owner, and showing it implies no endorsement.
+
+Software packages
+
+  The npm packages listed in package.json (Next.js, React, three.js and
+  others) are included in the site's JavaScript under their own licenses,
+  which are distributed with each package.
