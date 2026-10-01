@@ -193,7 +193,9 @@ describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion labe
   it('draws the PRINT bar ink boxes at 2 px, the weight Chrome renders and the fit assumes', () => {
     const print = css.slice(css.indexOf("html[data-edition='print'] {"), css.indexOf('.sig-menu {'))
     for (const sel of ['.sig-nav-issue', '.sig-nav-links a', '.sig-nav-menu']) {
-      const rule = print.match(new RegExp(`${sel.replace(/[.]/g, '\\.')} \\{([^}]*)\\}`))?.[1]
+      const rule = print.match(
+        new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\{([^}]*)\\}`)
+      )?.[1]
       expect(rule, sel).toContain('border: 2px solid var(--text-primary);')
     }
     expect(print).toMatch(/\.sig-nav \.gd-chip \{\s*border-width: 2px;\s*\}/)
