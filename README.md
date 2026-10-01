@@ -251,11 +251,11 @@ Lighthouse 12.8.2 in headless Chrome with the default mobile settings: simulated
 
 | Budget | Limit | Measured | Checked by |
 |---|:---:|:---:|---|
-| First-load JavaScript for `/`, gzipped | 178 KB | 178.0 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
+| First-load JavaScript for `/`, gzipped | 178 KB | 177.8 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
 | `/cv`'s own JavaScript, gzipped | 0.5 KB | 0.2 KB | [`measure-bundle.mjs`](scripts/measure-bundle.mjs) |
-| The inline pre-paint script, after minification | must parse | 457 B | [`check-prepaint.mjs`](scripts/check-prepaint.mjs) |
+| The inline pre-paint script, after minification | must parse | 574 B | [`check-prepaint.mjs`](scripts/check-prepaint.mjs) |
 
-The 178 KB limit was set for 2.0.0 and has not moved since: 1.0.0's measured 166.1 KB plus an itemized list of what 2.0.0 added, smooth scrolling (9 KB) being the largest. 3.0.0 had to fit under the same limit, and the latest build of `main` measures 178.0 KB, so there is no headroom left.
+The 178 KB limit was set for 2.0.0 and has not moved since: 1.0.0's measured 166.1 KB plus an itemized list of what 2.0.0 added, smooth scrolling (9 KB) being the largest. 3.0.0 and 3.1.0 had to fit under the same limit, and the latest build of `main` measures 177.8 KB, so there is almost no headroom left.
 
 `npm run build` measures every route and writes the numbers to [`lib/build/manifest.json`](lib/build/manifest.json), which the palette's **Build info** panel shows. The pre-paint check fails any build, anywhere, unless the prerendered script parses and writes every attribute. The bundle budget fails the build in GitHub Actions and only warns elsewhere, so a Vercel deploy never fails on a measurement.
 
@@ -414,11 +414,12 @@ To change something: edit the data or the copy module, run `npm test`, open a pu
 
 | Version | Date | What changed |
 |---|---|---|
+| **3.1.0** | Sep&nbsp;30,&nbsp;2026 | The site's own domain with share tags per page, the split SCREEN \| PRINT share card, the IEEE citation listing all six authors, SCREEN numerals that read as numbers, `/cv` rebuilt from the résumé, a public repository with CI, CodeQL and Dependabot, and layouts that fit tablets, short screens and phones ([#4](https://github.com/darshanrk18/darshan-eportfolio/pull/4)–[#7](https://github.com/darshanrk18/darshan-eportfolio/pull/7), [#12](https://github.com/darshanrk18/darshan-eportfolio/pull/12)–[#16](https://github.com/darshanrk18/darshan-eportfolio/pull/16)) |
 | **3.0.0** | Sep&nbsp;30,&nbsp;2026 | SCREEN and PRINT: two complete editions, the picker, the PRINT intro, the guide, and a hardening pass (server-rendered picker, islands that fail alone, accessible names, performance) ([#3](https://github.com/darshanrk18/darshan-eportfolio/pull/3)) |
 | **2.0.0** | Sep&nbsp;24,&nbsp;2026 | The elevation: the decompiled portrait, smooth scroll, the kinetic hero name, the theme wipe, the boot sequence, project windows, CRT mode, the hidden `/arcade`, the palette narrator ([#2](https://github.com/darshanrk18/darshan-eportfolio/pull/2)) |
 | **1.0.0** | Sep&nbsp;23,&nbsp;2026 | The terminal-styled rebuild: `/cv` and `/work` case files, the command palette, the contact terminal ([#1](https://github.com/darshanrk18/darshan-eportfolio/pull/1)) |
 
-Since 3.0.0, on `main`: the site's own domain, share tags per page, the IEEE citation listing all six authors, a plain-language 404 page and new icons ([#4](https://github.com/darshanrk18/darshan-eportfolio/pull/4)); the split SCREEN | PRINT share card ([#5](https://github.com/darshanrk18/darshan-eportfolio/pull/5)); a longer description for link previews ([#6](https://github.com/darshanrk18/darshan-eportfolio/pull/6)); SCREEN numerals that read as numbers ([#7](https://github.com/darshanrk18/darshan-eportfolio/pull/7)); `/cv` rebuilt from the résumé, with its own print layout ([#12](https://github.com/darshanrk18/darshan-eportfolio/pull/12)); every open Dependabot alert fixed without moving to Next.js 16 ([#13](https://github.com/darshanrk18/darshan-eportfolio/pull/13)). The full list is in [CHANGELOG.md](CHANGELOG.md).
+The full list is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 

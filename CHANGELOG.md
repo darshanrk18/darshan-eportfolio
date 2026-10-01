@@ -6,12 +6,17 @@ new design of the whole site; the numbers in parentheses are pull requests.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-09-30
+
+The site's own address, a new share card, a rebuilt `/cv`, a public
+repository, and layouts that fit tablets, short screens and phones.
+
 ### Added
 
 - The repository is public: the palette's "Open repository" row and Build
   info's "Source on GitHub" link are back. Pull requests also run GitHub's
   dependency review; CodeQL, secret scanning with push protection, private
-  vulnerability reporting and a ruleset on `main` are switched on.
+  vulnerability reporting and a ruleset on `main` are switched on. (#15)
 
 - The site's own address, <https://www.darshankonnur.com>, used everywhere:
   canonical links, share links, the sitemap, robots.txt and structured data.
@@ -24,7 +29,7 @@ new design of the whole site; the numbers in parentheses are pull requests.
 - Repository setup: Dependabot for npm and GitHub Actions, a hardened CI
   workflow with a browser smoke test, a weekly check of every link on the live
   site, issue forms, a pull request template, a security policy, a license
-  notice and this changelog.
+  notice and this changelog. (#14)
 
 ### Changed
 
@@ -207,7 +212,8 @@ The terminal-styled rebuild: the site rewritten from the ground up on Next.js
 - The first version of the site (October–November 2025), including its
   contact form and the old résumé files.
 
-[Unreleased]: https://github.com/darshanrk18/darshan-eportfolio/compare/v3.0.0...main
+[Unreleased]: https://github.com/darshanrk18/darshan-eportfolio/compare/v3.1.0...main
+[3.1.0]: https://github.com/darshanrk18/darshan-eportfolio/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/darshanrk18/darshan-eportfolio/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/darshanrk18/darshan-eportfolio/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/darshanrk18/darshan-eportfolio/releases/tag/v1.0.0
