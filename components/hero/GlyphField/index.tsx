@@ -51,7 +51,9 @@ export default function GlyphField() {
   const [ready, setReady] = useState(false)
   const [swapped, setSwapped] = useState(false)
 
-  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  // A callback ref: PRINT unmounts the wrapper and SCREEN renders a new one,
+  // so the visibility observer must follow whichever node is current.
+  const [wrapper, setWrapper] = useState<HTMLDivElement | null>(null)
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const trackedTierRef = useRef<GlyphTier | null>(null)
 
@@ -128,7 +130,7 @@ export default function GlyphField() {
 
   // Unmount the scene while the hero is ≥1 viewport away (§5.5).
   useEffect(() => {
-    const node = wrapperRef.current
+    const node = wrapper
     if (!node || typeof IntersectionObserver === 'undefined') return
     const observer = new IntersectionObserver(
       (entries) => {
@@ -143,8 +145,15 @@ export default function GlyphField() {
       { rootMargin: '100% 0px 100% 0px' }
     )
     observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      observer.disconnect()
+      // The node is gone (a switch to PRINT): when SCREEN brings a new one
+      // back, start from the SVG and wait for its first visibility report.
+      setVisible(false)
+      setReady(false)
+      setSwapped(false)
+    }
+  }, [wrapper])
 
   // Report the effective tier to the store (Build info) + analytics, once per
   // value. The mounted tier is the detected tier capped at DENSITY_CAP.
@@ -194,7 +203,7 @@ export default function GlyphField() {
 
   return (
     <div
-      ref={wrapperRef}
+      ref={setWrapper}
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
       style={{ zIndex: 'var(--z-canvas)' }}
