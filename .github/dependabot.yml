@@ -60,6 +60,12 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@types/react-dom'
         update-types: ['version-update:semver-major']
+      # ESLint 10 waits for the Next 16 move: eslint-config-next 15 (and the
+      # react, jsx-a11y and import plugins it brings) accept ESLint 9 at most,
+      # and its legacy config does not load under 10. Move Next on ESLint 9
+      # first; lift this once those plugins accept ESLint 10.
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
       # Vite 8's native bindings are left out of package-lock.json by an npm bug
       # (npm/cli#4828), which breaks the tests; moving to it is its own change (#13).
       - dependency-name: vite
