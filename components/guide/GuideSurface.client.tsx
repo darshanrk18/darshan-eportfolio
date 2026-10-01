@@ -269,9 +269,10 @@ export default function GuideSurface({ anchor, onClose }: GuideSurfaceProps) {
               <>
                 {/* "Jump" names the masthead's Jump chip, so these words
                     carry the chip's own hides: touch (.mouse-only) and the
-                    compact bar (.sig-nav-desk, chrome.css). The plain words
-                    show where the chip is not drawn: with the compact bar's
-                    Menu (.sig-nav-phone) and on touch (guide.css). */}
+                    compact bar (.sig-nav-desk; guide.css mirrors the bar's
+                    1130 px switch by viewport width). The plain words show
+                    where the chip is not drawn: below 1130 px and on touch
+                    (guide.css). */}
                 <span className="mouse-only sig-nav-desk">{GUIDE_MORE_LABEL.print}</span>
                 <span className="sig-nav-phone gd-more-plain">{GUIDE_MORE_TOUCH_LABEL}</span>
               </>

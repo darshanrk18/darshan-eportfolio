@@ -292,6 +292,17 @@ html[data-edition='print'] {
     display: inline;
   }
 }
+/* The bar's compact / full switch is a container query on the header
+   (chrome.css), which cannot reach this panel, so the footer follows the
+   same 1130 px by viewport width (the header spans the viewport). */
+@media (max-width: 1129.98px) {
+  .gd-more .sig-nav-desk {
+    display: none;
+  }
+  .gd-more .gd-more-plain {
+    display: inline;
+  }
+}
 
 /* phone: a bottom sheet with a handle, no notch */
 .gd[data-sheet] {

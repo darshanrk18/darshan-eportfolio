@@ -351,11 +351,19 @@ describe('mouse or touch words (§4a)', () => {
     )
     const nav = css('styles/v3/chrome.css')
     expect(nav).toContain('.sig-nav-phone { display: none; }')
-    expect(nav).toMatch(
-      /@media \(max-width: [\d.]+px\) \{ [^}]*\.sig-nav-desk,[^}]*\{ display: none !important; \} \.sig-nav-phone \{ display: inline-flex; \}/
+    const compact = nav.match(
+      /@container sig-nav \(width < ([\d.]+)px\) \{ [^}]*\.sig-nav-desk,[^}]*\{ display: none !important; \} \.sig-nav-phone \{ display: inline-flex; \}/
     )
-    expect(css('styles/v3/guide.css')).toContain(
+    expect(compact).not.toBeNull()
+    const guide = css('styles/v3/guide.css')
+    expect(guide).toContain(
       `@media ${media(TOUCH_MEDIA)} { .gd-more .gd-more-plain { display: inline; } }`
+    )
+    // the panel sits outside the header's container, so it mirrors the
+    // compact switch by viewport width, at the same number
+    const limit = Number(compact![1]) - 0.02
+    expect(guide).toContain(
+      `@media (max-width: ${limit}px) { .gd-more .sig-nav-desk { display: none; } .gd-more .gd-more-plain { display: inline; } }`
     )
   })
 

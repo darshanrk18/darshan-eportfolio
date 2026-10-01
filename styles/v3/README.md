@@ -185,8 +185,10 @@ Words that name a control on screen carry that control's own hides, so
 they can never point at something that is not drawn. PRINT's guide footer
 "More under Jump" names the masthead's Jump chip: its span is `.mouse-only
 sig-nav-desk`, like the chip, and the plain "More things to try" is
-`.sig-nav-phone gd-more-plain` (with the compact bar's Menu, and on touch
-by `styles/v3/guide.css`).
+`.sig-nav-phone gd-more-plain` (on touch, and below 1130 px, by
+`styles/v3/guide.css`: the bar's compact switch is a container query on
+the header, which cannot reach the guide panel, so the panel mirrors it by
+viewport width).
 
 ## 5. Switching (switch.css)
 
