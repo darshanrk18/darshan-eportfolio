@@ -502,3 +502,16 @@ describe('the picker shell paints from HTML + CSS and the surface replaces it in
     })
   })
 })
+
+describe('SCREEN-only islands come back after a switch through PRINT', () => {
+  it('the hero field observes whichever wrapper is current, not the first one', () => {
+    const src = readFileSync(path.join(root, 'components/hero/GlyphField/index.tsx'), 'utf8')
+    // PRINT renders nothing, so SCREEN brings a NEW wrapper node back: a
+    // callback ref keeps the visibility observer on it (an effect keyed on
+    // a ref read once at mount kept watching the removed node, and the
+    // field stayed the static drawing until a reload).
+    expect(src).toContain('ref={setWrapper}')
+    expect(src).toMatch(/observer\.observe\(node\)[\s\S]*?\}, \[wrapper\]\)/)
+    expect(src).not.toContain('wrapperRef')
+  })
+})
