@@ -8,7 +8,9 @@
  * "Highlight tools in the text" with OFF / ON segments), the three job tabs
  * (PRINT), and — while the switch is on — the chosen job's name and its
  * verified skill tiles (jobSkills from ./blame: skillsUsedAt(place), so the
- * sheet can never list an unverified tool). Off: a one-line prompt.
+ * sheet can never list an unverified tool). Off: a one-line prompt, with a
+ * touch wording ("tap a job" — a touch lands as pointerover + focus on the
+ * entry, so a tap picks it) beside the mouse one (InputWords).
  *
  * While on, ONE delegated listener pair on the graph root ([data-dag-root],
  * the RSC career graph) turns hover / focus over a job entry into the chosen
@@ -31,6 +33,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import InputWords from '@/components/chrome/InputWords'
 import EdLogo from '@/components/skills/EdLogo'
 import { dispatchWhenMounted, markGuideTried } from '@/components/skills/guide'
 import { scrollToAnchor, SIGNAL_EVENTS } from '@/lib/commands/context'
@@ -245,8 +248,12 @@ export default function SkillsPerJob({ request }: SkillsPerJobProps) {
         </div>
       ) : (
         <p className="xp-prompt">
-          <span className="ed-screen-only">{XP_COPY.prompt.screen}</span>
-          <span className="ed-print-only">{XP_COPY.prompt.print}</span>
+          <span className="ed-screen-only">
+            <InputWords mouse={XP_COPY.prompt.screen} touch={XP_COPY.promptTouch.screen} />
+          </span>
+          <span className="ed-print-only">
+            <InputWords mouse={XP_COPY.prompt.print} touch={XP_COPY.promptTouch.print} />
+          </span>
         </p>
       )}
     </section>

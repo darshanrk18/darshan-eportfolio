@@ -14,10 +14,11 @@
  *
  * Overlay contract: full-screen `role="dialog"` above the nav (--z-intro),
  * body scroll locked, Lenis stopped, "Skip" focused on mount (Tab stays on
- * it; Esc skips). Any wheel / touch-move / space / arrow before the lockup
- * fast-forwards to it (everything earlier snaps to its end state, the
- * lockup's own settle still plays). Skip / Esc go to the lockup AND start
- * the hand-off at once.
+ * it; Esc skips); on unmount focus returns to what had it before, else to
+ * the main landmark (lib/utils/focusMain). Any wheel / touch-move / space /
+ * arrow before the lockup fast-forwards to it (everything earlier snaps to
+ * its end state, the lockup's own settle still plays). Skip / Esc go to the
+ * lockup AND start the hand-off at once.
  *
  * Hand-off (X4, five beats — HANDOFF_BEATS): REST on the lockup; the next
  * scroll intent (or REST_IDLE_MS idle) prints it — PRINT: a halftone front
@@ -45,6 +46,7 @@ import { Anton } from 'next/font/google'
 import { INTRO_COPY, INTRO_ASSETS } from '@/lib/data/introAssets'
 import { getLenis } from '@/lib/motion/lenis'
 import { useSignalStore } from '@/lib/state/store'
+import { focusMain } from '@/lib/utils/focusMain'
 import {
   INTRO_HANDOFF_ATTR,
   INTRO_NAME_TARGET_ATTR,
@@ -625,9 +627,19 @@ export default function Intro({ onLand, onDone }: IntroProps) {
       setHandoffAttr(null)
       document.body.style.overflow = previousOverflow
       getLenis()?.start()
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+      /* Focus goes back to what had it before the intro — unless that was
+         <body> (a page-load intro) or is gone (the picker's PRINT button,
+         unmounted during the cross-fade): then to the main landmark, never
+         dropped to <body> with Skip. */
+      if (
+        previousFocus instanceof HTMLElement &&
+        previousFocus !== document.body &&
+        previousFocus.isConnected
+      ) {
         previousFocus.focus({ preventScroll: true })
       }
+      const active = document.activeElement
+      if (!active || active === document.body || root.contains(active)) focusMain()
     }
   }, [kcId, surname])
 

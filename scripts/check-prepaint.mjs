@@ -48,6 +48,10 @@ const required = [
   "a('data-motion',r?'reduced':'full')",
   "a('data-intro','1')",
   'prefers-reduced-motion:reduce',
+  // the lead theme-color meta, first in <head>: paper for a stored PRINT visit
+  "t.name='theme-color'",
+  "if(e=='print')t.content='#f3e8cf'",
+  'document.head.prepend(t)',
 ]
 const missing = required.filter((needle) => !script.includes(needle))
 if (missing.length) {

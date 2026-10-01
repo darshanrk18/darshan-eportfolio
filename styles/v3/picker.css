@@ -76,6 +76,8 @@ html[data-picker-live='1'] .pk-shell {
 html[data-pick='1'] .pk-shell .pk-img {
   background-image: var(--pk-src);
 }
+/* the phone encode under 768 px wide, stacked or held sideways (the same
+   query as PICKER_PHONE_QUERY, so the shell and the surface draw one file) */
 @media (max-width: 767.98px) {
   html[data-pick='1'] .pk-shell .pk-img {
     background-image: var(--pk-src-sm);
@@ -109,6 +111,14 @@ html[data-pick='1'] .pk-shell .pk-img {
   --pk-fig-top: 16.1cqh; /* 129 of 800 */
   --pk-fig-x: calc(var(--pk-seam) - 0.4329 * var(--pk-fig)); /* midline on the seam */
   --pk-gutter: 5cqw; /* 64 of 1280 */
+  /* The seal is 136 px, 8 px from the top (see below for a short frame). */
+  --pk-seal: 136px;
+  --pk-seal-top: 8px;
+  /* Under 480 px high the fixed-px gaps of the two blocks, the caption's
+     and the colour bar's (26, 22, 28, 20, 30 px) scale with the frame too;
+     at 480 and up every value is the frame's own. The SCREEN block keeps
+     clear of the caption: its foot, one line and a 14 px gap. */
+  --pk-cap-room: calc(min(26px, 5.42cqh) + 20px + 14px);
 
   position: fixed;
   inset: 0;
@@ -121,6 +131,16 @@ html[data-pick='1'] .pk-shell .pk-img {
   -webkit-font-smoothing: antialiased;
   opacity: 1;
   transition: opacity 400ms var(--ease-swift, ease);
+}
+/* Under 708 px high the question (20cqh down) would run under the 136 px
+   seal: the seal and its top then scale with the height, as 17 % and 1 %
+   of the 800-high frame, so it keeps 16 px clear of the question at any
+   height. */
+@media (max-height: 707.98px) {
+  .pk {
+    --pk-seal: min(136px, 17cqh);
+    --pk-seal-top: min(8px, 1cqh);
+  }
 }
 .pk[data-leaving='screen'] {
   opacity: 0;
@@ -368,7 +388,8 @@ html[data-pick='1'] .pk-shell .pk-img {
 .pk-rule {
   left: calc(var(--pk-gutter) + 202px);
   top: 9.5cqh;
-  width: calc(var(--pk-seam) - 70px - var(--pk-gutter) - 202px);
+  /* ends 2 px short of the seal, whatever its size */
+  width: calc(var(--pk-seam) - var(--pk-seal) / 2 - 2px - var(--pk-gutter) - 202px);
   height: 1px;
   background: linear-gradient(
     90deg,
@@ -378,14 +399,52 @@ html[data-pick='1'] .pk-shell .pk-img {
     rgba(216, 196, 154, 0)
   );
 }
+/* The blocks sit at 40cqh (SCREEN) and 36cqh (PRINT). Each is a column
+   spanning the room between the question and the foot of its half, its
+   ::before a spacer that holds the text at that height and gives way only
+   when a short frame has no room below — the text then rises toward the
+   question instead of running into the caption / the colour bar. */
+.pk-blk-s,
+.pk-blk-p {
+  top: calc(20cqh + 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.pk-blk-s::before,
+.pk-blk-p::before {
+  content: '';
+  flex: 0 1 calc(20cqh - 24px);
+}
+.pk-blk-p::before {
+  flex-basis: calc(16cqh - 24px);
+}
+.pk-blk-s > *,
+.pk-blk-p > * {
+  flex: none;
+}
 .pk-blk-s {
   left: var(--pk-gutter);
-  top: 40cqh;
-  width: min(440px, calc(var(--pk-seam) - var(--pk-gutter) - 120px));
+  bottom: var(--pk-cap-room);
+  /* clear of the face (its near edge sits 14.5cqh short of the seam) */
+  width: min(
+    440px,
+    max(
+      calc(var(--pk-seam) - var(--pk-gutter) - 120px),
+      calc(var(--pk-seam) - 14.5cqh - var(--pk-gutter) - 8px)
+    )
+  );
 }
 .pk-h-s {
   margin: 0;
-  font: 500 clamp(56px, 6.6cqw, 84px) / 0.95 var(--font-cinzel), Georgia, serif;
+  /* …and so is the title (4.58 em wide): a short or narrow frame sizes it
+     down, never past the face */
+  --pk-hs: min(
+    clamp(56px, 6.6cqw, 84px),
+    14cqh,
+    calc((var(--pk-seam) - 14.5cqh - var(--pk-gutter) - 8px) / 4.58)
+  );
+  font: 500 var(--pk-hs) / 0.95 var(--font-cinzel), Georgia, serif;
   letter-spacing: 0.06em;
   white-space: nowrap;
   color: var(--pk-text);
@@ -394,7 +453,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     0 18px 40px rgba(0, 0, 0, 0.5);
 }
 .pk-body-s {
-  margin: 22px 0 0;
+  margin: min(22px, 4.58cqh) 0 0;
   font: 400 18px/1.5 'Screen Digits', var(--font-marcellus), Georgia, serif;
   color: var(--pk-text2);
 }
@@ -403,7 +462,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   align-items: center;
   gap: 16px;
   height: 44px;
-  margin-top: 28px;
+  margin-top: min(28px, 5.83cqh);
   padding: 0 20px 0 24px;
   font: 500 11.5px/1 var(--font-plexmono), ui-monospace, monospace;
   letter-spacing: 0.26em;
@@ -462,7 +521,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   position: absolute;
   z-index: 2;
   left: var(--pk-gutter);
-  bottom: 26px;
+  bottom: min(26px, 5.42cqh);
   margin: 0;
   font: 400 14px/20px 'Screen Digits', var(--font-marcellus), Georgia, serif;
   color: var(--pk-text3);
@@ -475,10 +534,10 @@ html[data-pick='1'] .pk-shell .pk-img {
    ========================================================================== */
 .pk-seal {
   position: absolute;
-  left: calc(var(--pk-seam) - 68px);
-  top: 8px;
-  width: 136px;
-  height: 136px;
+  left: calc(var(--pk-seam) - var(--pk-seal) / 2);
+  top: var(--pk-seal-top);
+  width: var(--pk-seal);
+  height: var(--pk-seal);
   z-index: 8;
   display: block;
   overflow: visible;
@@ -678,9 +737,12 @@ html[data-pick='1'] .pk-shell .pk-img {
 }
 /* masthead, on the same axis as the screen's */
 .pk-mast-rule {
-  left: 14%;
+  /* 14 % → 61.7 % of the sheet on the frame; its start follows the seal's
+     edge when the seal scales down, and it stops short of the imprint */
+  --pk-mr-l: calc(14% - (136px - var(--pk-seal)) / 2);
+  left: var(--pk-mr-l);
   top: 9.4cqh;
-  width: 47.7%;
+  width: calc(min(61.7%, 100% - var(--pk-gutter) - 165px) - var(--pk-mr-l));
   height: 3px;
   background: var(--pk-ink);
 }
@@ -712,13 +774,14 @@ html[data-pick='1'] .pk-shell .pk-img {
 /* the block */
 .pk-blk-p {
   right: var(--pk-gutter);
-  top: 36cqh;
+  bottom: calc(min(30px, 6.25cqh) + 12px + 14px); /* above the colour bar */
   width: min(360px, calc(100% - 2 * var(--pk-gutter)));
+  align-items: flex-end;
   text-align: right;
 }
 .pk-h-p {
   margin: 0;
-  font: 400 clamp(72px, 9.7cqw, 124px) / 0.9 var(--font-bangers), Impact, sans-serif;
+  font: 400 min(clamp(72px, 9.7cqw, 124px), 20cqh) / 0.9 var(--font-bangers), Impact, sans-serif;
   letter-spacing: 0.02em;
   color: var(--pk-yellow);
   -webkit-text-stroke: 0.045em var(--pk-ink);
@@ -728,7 +791,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     0.1em 0.1em 0 var(--pk-ink);
 }
 .pk-body-p {
-  margin: 20px 0 0;
+  margin: min(20px, 4.17cqh) 0 0;
   font: 500 16.5px/1.45 var(--font-archivo), system-ui, sans-serif;
   color: var(--pk-ink);
 }
@@ -736,7 +799,7 @@ html[data-pick='1'] .pk-shell .pk-img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 30px;
+  margin-top: min(30px, 6.25cqh);
   padding: 8px 16px;
   border: 3px solid var(--pk-ink);
   box-shadow: 4px 4px 0 var(--pk-ink);
@@ -760,22 +823,24 @@ html[data-pick='1'] .pk-shell .pk-img {
 }
 /* printer's marks */
 .pk-reg {
+  /* 18 px in from the corner (see below for a narrow frame) */
+  --pk-reg-in: 18px;
   position: absolute;
   display: block;
   pointer-events: none;
 }
 .pk-reg.is-top {
-  right: 18px;
+  right: var(--pk-reg-in);
   top: 18px;
 }
 .pk-reg.is-bottom {
-  right: 18px;
+  right: var(--pk-reg-in);
   bottom: 18px;
 }
 .pk-cmyk {
   position: absolute;
   right: var(--pk-gutter);
-  bottom: 30px;
+  bottom: min(30px, 6.25cqh);
   display: flex;
   gap: 4px;
   pointer-events: none;
@@ -866,12 +931,126 @@ html[data-pick='1'] .pk-shell .pk-img {
   }
 }
 
+/* Under 880 px wide the gutter (5cqw) is narrower than a mark's 44 px, so
+   a mark 18 px in would sit on the masthead or the colour bar; under 708 px
+   high the PRINT button comes down to the bottom mark. There the marks are
+   centred in the margin instead. */
+@media (max-width: 879.98px), (max-height: 707.98px) {
+  .pk-reg {
+    --pk-reg-in: clamp(6px, (var(--pk-gutter) - 26px) / 2, 18px);
+  }
+}
+
+/* ============================================================================
+   narrow frames, side by side (under 800 px wide: tablets in portrait, and
+   phones held sideways — see below): the caption wraps on its own half
+   instead of running under the tear
+   ========================================================================== */
+@media (max-width: 799.98px) {
+  .pk {
+    --pk-cap-room: calc(min(26px, 5.42cqh) + 40px + 14px); /* two lines */
+  }
+  .pk-cap {
+    max-width: calc(var(--pk-sheet-x) - var(--pk-gutter) - 12px);
+    white-space: normal;
+    /* two even lines, never a last word on its own (set only where it
+       wraps: on the base rule the text-wrap shorthand would undo nowrap) */
+    text-wrap: balance;
+  }
+}
+/* …and on a frame under 480 px high (a phone held sideways) it also wraps
+   before the shoulder, whose edge at the caption's foot sits 15.7cqh short
+   of the seam */
+@media (max-height: 479.98px) {
+  .pk {
+    --pk-cap-room: calc(min(26px, 5.42cqh) + 40px + 14px); /* two lines */
+  }
+  .pk-cap {
+    max-width: min(
+      calc(var(--pk-sheet-x) - var(--pk-gutter) - 12px),
+      calc(var(--pk-seam) - 15.7cqh - var(--pk-gutter) - 8px)
+    );
+    white-space: normal;
+    text-wrap: balance;
+  }
+}
+/* Under 768 px wide the SCREEN call to action keeps its approved tracking
+   (0.26em: 246 px wide) wherever it fits, and tightens (0.16em: 207 px)
+   only where that button would meet the face or the seal. --pk-cta-fit is
+   its room in px, set per layout below (negative: it would not fit). The
+   clamps make a step, not a slope: the room × 1000 lies far past one bound
+   or the other, so the button is always one of the two, never between. */
+@media (max-width: 767.98px) {
+  .pk-cta-s {
+    --pk-cta-step: calc(var(--pk-cta-fit, 1px) * 1000);
+    gap: clamp(10px, 16px + var(--pk-cta-step), 16px);
+    padding: 0 clamp(14px, 20px + var(--pk-cta-step), 20px) 0
+      clamp(16px, 24px + var(--pk-cta-step), 24px);
+    letter-spacing: clamp(0.16em, 0.26em + var(--pk-cta-step), 0.26em);
+    white-space: nowrap;
+  }
+}
+/* A phone held sideways (560–767 px wide, under 480 px high, at least
+   3 : 2 — every phone on its side is 16 : 9 or wider) keeps the frame's
+   side-by-side composition: stacked, neither half would fit. A squarer
+   frame of that size stacks from 400 px high (side by side, its figure
+   fills the paper under the PRINT block); under 400 px it cannot stack.
+   The printer's marks, with no margin left to sit in, are left out. */
+@media (min-width: 560px) and (max-width: 767.98px) and (max-height: 479.98px) and
+    (min-aspect-ratio: 3/2),
+  (min-width: 560px) and (max-width: 767.98px) and (max-height: 399.98px) {
+  /* the PRINT block keeps to the paper right of the sunburst (its edge is
+     35.5cqh into the sheet): the line wraps there instead of crossing it,
+     as two even lines ("An inked, four-" / "color comic."), never with
+     "comic." alone */
+  .pk-blk-p {
+    width: min(360px, calc(100% - 35.5cqh - var(--pk-gutter) - 8px));
+  }
+  .pk-body-p {
+    text-wrap: balance;
+  }
+  .pk-cta-p {
+    white-space: nowrap;
+  }
+  /* the SCREEN button fits its block (which stops 8 px short of the face) */
+  .pk-cta-s {
+    --pk-cta-fit: calc(
+      min(
+          440px,
+          max(
+            calc(var(--pk-seam) - var(--pk-gutter) - 120px),
+            calc(var(--pk-seam) - 14.5cqh - var(--pk-gutter) - 8px)
+          )
+        ) -
+        246.2px
+    );
+  }
+  .pk-reg {
+    display: none;
+  }
+}
+
+/* On a phone on its side (under 480 px high, at least 16 : 10) No. 1
+   keeps its place beside the head as on the 1280 × 800 frame:
+   the sheet's 10 px overlap of the seam (1.25cqh there) scales with the
+   frame, so the star does not reach the hair (a stacked frame sets its own
+   place, below) */
+@media (min-width: 560px) and (max-height: 479.98px) and (min-aspect-ratio: 8/5) {
+  .pk-burst {
+    left: calc(25.15cqh + 10px);
+  }
+}
+
 /* ============================================================================
    phone (< 768): stacked — SCREEN card over the PRINT sheet, horizontal
    tear (director call (h)); the figure is right-aligned with its shoulders
-   on the seam so the face is never cut.
+   on the seam so the face is never cut. Stacked whenever the frame is under
+   560 px wide, at least 480 px high, or squarer than 3 : 2 from 400 px up
+   (an upright frame is all of these); a phone on its side (above) is none.
    ========================================================================== */
-@media (max-width: 767.98px) {
+@media (max-width: 559.98px),
+  (max-width: 767.98px) and (min-height: 480px),
+  (max-width: 767.98px) and (min-height: 400px) and (max-aspect-ratio: 2999/2000) {
   .pk {
     --pk-seam: 50cqh; /* the horizontal seam */
     --pk-sheet-x: 0px;
@@ -881,8 +1060,41 @@ html[data-pick='1'] .pk-shell .pk-img {
        seam, the chin clears the seal, and the seal lands on the collar */
     --pk-fig: 33cqh;
     --pk-fig-top: 24cqh;
-    --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh);
+    --pk-fig-x: calc(100cqw - var(--pk-fig) + 5cqh + var(--pk-fig-shift));
     --pk-gutter: 20px;
+    /* The hair: --pk-cta-hair is the figure's x at which the crown meets
+       the approved SCREEN button's lower corner (246 px wide), measured
+       from the silhouette at every height (the button's foot and the
+       figure both follow the height) and drawn as four lines at most
+       1.5 px past the measure (from 806 px up, below). Where even the
+       tighter button (40 px narrower) would meet the crown, the figure
+       moves 3cqh further right, its ear still in view — a step (× 1000),
+       as for the button. */
+    --pk-cta-hair: min(
+      266.57px - 9.346cqh,
+      381.8px - 25.167cqh,
+      453.3px - 34.694cqh,
+      514.53px - 42.613cqh
+    );
+    --pk-fig-shift: clamp(
+      0px,
+      (var(--pk-cta-hair) - 39.6px - 100cqw + 28cqh) * 1000,
+      3cqh
+    );
+    /* A phone shorter than 692 px (where the PRINT button would meet the
+       imprint) tightens the column by its height — every value here is the
+       phone's own from 692 px up: the seal, the PRINT title, the gaps over
+       the lines and the buttons' height. */
+    --pk-seal: clamp(64px, 13.9cqh, 96px);
+    --pk-hp: clamp(52px, 10.41cqh, 72px);
+    --pk-bm: clamp(6px, 1.74cqh, 12px);
+    --pk-cm: clamp(10px, 2.61cqh, 18px);
+    --pk-cta-h: clamp(38px, 6.36cqh, 44px);
+    /* the imprint's foot: 60 px leaves room for a two-line caption */
+    --pk-mast-b: 60px;
+    /* The PRINT block, in the sheet's coordinates (its top edge is 10 px
+       over the seam): 15cqh down the sheet (see below for a short phone). */
+    --pk-p-top: 15cqh;
   }
   .pk-half-s {
     width: 100%;
@@ -942,18 +1154,36 @@ html[data-pick='1'] .pk-shell .pk-img {
     display: none;
   }
   .pk-blk-s {
-    top: 84px;
+    top: clamp(68px, 12.14cqh, 84px);
+    bottom: auto;
     width: calc(100% - 40px);
   }
+  .pk-blk-s::before {
+    display: none;
+  }
   .pk-h-s {
-    font-size: 52px;
+    font-size: clamp(40px, 7.52cqh, 52px);
   }
   .pk-body-s {
-    margin-top: 14px;
+    margin-top: clamp(8px, 2.03cqh, 14px);
     font-size: 16px;
   }
   .pk-cta-s {
-    margin-top: 18px;
+    /* its room: to the hair (--pk-cta-hair, above), and to the seal — the
+       button's box clears the disc's, across or above */
+    --pk-cta-fit: min(
+      var(--pk-fig-x) - var(--pk-cta-hair),
+      max(
+        50cqw - 0.4584 * var(--pk-seal) - 267.2px,
+        50cqh - 0.4584 * var(--pk-seal) - 1px -
+          (
+            clamp(68px, 12.14cqh, 84px) + 0.95 * clamp(40px, 7.52cqh, 52px) +
+              clamp(8px, 2.03cqh, 14px) + 24px + var(--pk-cm) + var(--pk-cta-h)
+          )
+      )
+    );
+    height: var(--pk-cta-h);
+    margin-top: var(--pk-cm);
   }
   /* the caption prints once, at the foot of the sheet (so above it in z) */
   .pk-cap {
@@ -965,12 +1195,12 @@ html[data-pick='1'] .pk-shell .pk-img {
     font-size: 13px;
     line-height: 18px;
     white-space: normal;
+    text-wrap: wrap;
+    max-width: none;
   }
   .pk-seal {
-    left: calc(50% - 48px);
-    top: calc(var(--pk-seam) - 48px);
-    width: 96px;
-    height: 96px;
+    left: calc(50% - var(--pk-seal) / 2);
+    top: calc(var(--pk-seam) - var(--pk-seal) / 2);
   }
   .pk-seal .pk-seal-l {
     clip-path: var(--pk-clip-t);
@@ -1052,13 +1282,28 @@ html[data-pick='1'] .pk-shell .pk-img {
     width: 37cqh;
     height: 37cqh;
   }
+  /* No. 1 rides on the title's corner, 9cqh down the sheet (6cqh over the
+     title at 15cqh), its lower part behind the title and its words clear
+     of it. When a short phone raises the title (--pk-p-top), the star
+     rises with it only as far as the photograph's cut (6.74cqh + 10 px
+     down the sheet) and the top mark (40 px) allow, 1 px clear of both,
+     and draws smaller to keep its words 2 px over the title's ink (which
+     starts 0.047 of the title's size under its box); where that leaves it
+     under 34 px, too small to read, it is left out. */
   .pk-burst {
+    --pk-bt-fs: clamp(12px, 2.03cqh, 14px);
+    --pk-bt-s0: clamp(48px, 9.25cqh, 64px);
+    /* the lowest the star's centre may sit (its words are 0.98em high) */
+    --pk-bt-c: calc(var(--pk-p-top) + 0.047 * var(--pk-hp) - 0.49 * var(--pk-bt-fs) - 2px);
+    --pk-bt-top: max(6.75cqh + 11px, 41px, min(9cqh, var(--pk-bt-c) - var(--pk-bt-s0) / 2));
+    --pk-bt-fit: min(var(--pk-bt-s0), 2 * (var(--pk-bt-c) - var(--pk-bt-top)));
+    --pk-burst: clamp(0px, (var(--pk-bt-fit) - 34px) * 1000, var(--pk-bt-fit));
     left: auto;
     right: 2cqh;
-    top: 9cqh;
-    width: 64px;
-    height: 64px;
-    font-size: 14px;
+    top: var(--pk-bt-top);
+    width: var(--pk-burst);
+    height: var(--pk-burst);
+    font-size: var(--pk-bt-fs);
   }
   .pk-mast-rule {
     display: none;
@@ -1069,7 +1314,7 @@ html[data-pick='1'] .pk-shell .pk-img {
     right: auto;
     left: 20px;
     top: auto;
-    bottom: 60px;
+    bottom: var(--pk-mast-b);
     flex-direction: row-reverse;
   }
   .pk-word {
@@ -1083,21 +1328,25 @@ html[data-pick='1'] .pk-shell .pk-img {
   .pk-blk-p {
     left: 20px;
     right: 20px;
-    top: 15cqh;
+    top: var(--pk-p-top);
+    bottom: auto;
     width: auto;
   }
+  .pk-blk-p::before {
+    display: none;
+  }
   .pk-h-p {
-    font-size: 72px;
+    font-size: var(--pk-hp);
   }
   .pk-body-p {
-    margin-top: 12px;
+    margin-top: var(--pk-bm);
     font-size: 15px;
   }
   .pk-cta-p {
-    margin-top: 18px;
+    margin-top: var(--pk-cm);
     width: 100%;
     justify-content: center;
-    min-height: 44px;
+    min-height: var(--pk-cta-h);
   }
   .pk-reg.is-top {
     top: 14px;
@@ -1108,7 +1357,69 @@ html[data-pick='1'] .pk-shell .pk-img {
   }
   .pk-cmyk {
     right: 20px;
-    bottom: 66px;
+    bottom: calc(var(--pk-mast-b) + 6px);
+  }
+}
+/* The crown's edge turns at 806 px high (the button's corner meets it past
+   the notch over the brow), and from 836 px the crown sits under the
+   button: the hair leaves the SCREEN button room of its own. */
+@media (max-width: 767.98px) and (min-height: 806px) {
+  .pk {
+    --pk-cta-hair: max(4512.78px - 538.939cqh, 1296.96px - 140.448cqh, 652.8px - 61.386cqh);
+  }
+}
+@media (max-width: 767.98px) and (min-height: 836px) {
+  .pk {
+    --pk-cta-hair: -1000px;
+  }
+}
+/* A phone wide enough for a one-line caption (352 px) closes the imprint
+   down onto it as the phone gets shorter (60 px from 692 px up). */
+@media (min-width: 352px) and (max-width: 767.98px) {
+  .pk {
+    --pk-mast-b: clamp(42px, 12cqh - 23px, 60px);
+  }
+}
+/* On a phone under 692 px high the PRINT block rises only as far as a
+   short sheet needs to keep it over the imprint (its foot, 40 px over the
+   imprint's) — never so far that the line meets the sunburst (its foot is
+   24cqh down the sheet) or the title meets the seal. The block's height is
+   the sum of its parts (the line is one line: it is 180 px wide). */
+@media (max-width: 767.98px) and (max-height: 691.98px) {
+  .pk {
+    --pk-p-h: calc(
+      0.9 * var(--pk-hp) + var(--pk-bm) + 21.75px + var(--pk-cm) + max(var(--pk-cta-h), 41px)
+    );
+    --pk-p-top: clamp(
+      min(15cqh, max(24cqh - 0.9 * var(--pk-hp) - var(--pk-bm), 18px + var(--pk-seal) / 2)),
+      50cqh + 10px - var(--pk-mast-b) - 40px - var(--pk-p-h),
+      15cqh
+    );
+  }
+}
+/* A stacked phone 326–351 px wide wraps the caption with "bar." alone on
+   its second line: there it is balanced into two even lines (narrower, the
+   second line already holds two words or more; wider, it fits on one). */
+@media (min-width: 326px) and (max-width: 351.98px) {
+  .pk-cap {
+    text-wrap: balance;
+  }
+}
+/* A stacked phone too short for the imprint as well (under 550 px, or
+   620 px with a two-line caption): the imprint and the colour bar are left
+   out rather than laid over the button; the block may then run down to
+   the caption. */
+@media (max-width: 559.98px) and (max-height: 549.98px),
+  (max-width: 767.98px) and (min-height: 480px) and (max-height: 549.98px),
+  (max-width: 767.98px) and (min-height: 400px) and (max-height: 479.98px) and
+    (max-aspect-ratio: 2999/2000),
+  (max-width: 351.98px) and (max-height: 619.98px) {
+  .pk-mast,
+  .pk-cmyk {
+    display: none;
+  }
+  .pk {
+    --pk-mast-b: 22px; /* the column now stops over the caption */
   }
 }
 

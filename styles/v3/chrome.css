@@ -14,6 +14,8 @@
                         clears it; ReducedMotionBanner is offset by it below.
      #guide-slot        the empty span in the right cluster the Guide island
                         portals its chip into (styled here, filled by C5).
+     sig-nav            the header's inline-size container; the bar is
+                        compact below 1130 px of it (scrollbar excluded).
    ========================================================================== */
 
 :root {
@@ -46,12 +48,17 @@
 /* ============================================================================
    TOP BAR — shared layout
    ========================================================================== */
+/* The header is the `sig-nav` size container: its width is the viewport's
+   less any desktop scrollbar, so the compact / full switch below reads the
+   room the bar really has. (Its one fixed child, ScrollProgress, sits at the
+   header's own top edge, so containing it here moves nothing.) */
 .sig-nav {
   position: fixed;
   inset-inline: 0;
   top: 0;
   height: var(--nav-h);
   z-index: var(--z-nav);
+  container: sig-nav / inline-size;
   border-bottom: 1px solid transparent;
   transition:
     background-color 200ms var(--ease-swift),
@@ -187,22 +194,46 @@
   }
 }
 
-/* phone / desktop halves of the bar */
+/* compact / full halves of the bar. The full bar (links · guide chip ·
+   toggle · GitHub · LinkedIn · CV · keycap) needs about 1015 px of content
+   with the Mac keycap (⌘K), about 1040 px with the Windows / Linux one
+   (Ctrl K), and up to about 1065 px during the guide's one-time completion
+   label, so below 1130 px of bar width — phones, iPads either way round,
+   phones in landscape, narrow windows — the bar is the compact one: ident ·
+   guide chip · toggle · Menu (the MobileMenu sheet has the rest, the
+   edition toggle included). A container query on the header, so a desktop
+   scrollbar is counted. */
 .sig-nav-phone {
   display: none;
 }
-@media (max-width: 767.98px) {
+@container sig-nav (width < 1130px) {
   .sig-nav-links,
   .sig-nav-desk,
   .sig-nav-vr,
-  .sig-nav-issue {
+  .sig-nav-issue-wrap {
     display: none !important;
   }
   .sig-nav-phone {
     display: inline-flex;
   }
+}
+@media (max-width: 767.98px) {
   .sig-nav-tools {
     gap: 10px;
+  }
+}
+/* No room for the pill under 360, nor under 480 once the guide is complete
+   (the chip then shows its label instead of the count, and for a moment
+   "You've tried everything"): the bar's toggle steps out and the menu's
+   foot, which always carries the same toggle, is the switch. */
+@media (max-width: 359.98px) {
+  .sig-nav-tools > .ed-toggle {
+    display: none !important;
+  }
+}
+@media (max-width: 479.98px) {
+  .sig-nav-tools:has(.gd-chip[data-complete]) > .ed-toggle {
+    display: none !important;
   }
 }
 
@@ -337,6 +368,19 @@ html[data-edition='screen'] {
   .sig-nav-menu:hover {
     color: var(--text-primary);
   }
+  /* Under 390: seal · chip · toggle · Menu fit with the tools a little
+     closer and the pill's halves and Menu a little narrower. */
+  @media (max-width: 389.98px) {
+    .sig-nav-tools {
+      gap: 10px;
+    }
+    .sig-nav .ed-toggle > button {
+      padding: 0 8px;
+    }
+    .sig-nav-menu {
+      padding: 0 6px;
+    }
+  }
 }
 
 /* ============================================================================
@@ -347,6 +391,15 @@ html[data-edition='print'] {
   .sig-nav[data-scrolled='1'] {
     background: var(--bg-page);
     border-bottom: 3px solid var(--text-primary);
+  }
+  /* The bar's ink boxes (issue box, pills, guide chip, icons, CV, keycap,
+     Menu) take a 2 px border, the toggle's. Chrome already draws a 2.5 px
+     border at 2 px at every pixel ratio, and the masthead is fitted to
+     that; Safari on a Retina screen drew the full 2.5 px, which made each
+     box 1 px wider and left the issue box no room. One weight, one fit, in
+     every browser. */
+  .sig-nav .gd-chip {
+    border-width: 2px;
   }
   .sig-nav-ident {
     color: var(--text-primary);
@@ -368,8 +421,10 @@ html[data-edition='print'] {
     align-items: center;
     gap: 8px;
     margin-left: 14px;
+    /* always clear of the ABOUT pill (the pills' auto margin can reach 0) */
+    margin-right: 10px;
     padding: 4px 9px 4px 10px;
-    border: 2.5px solid var(--text-primary);
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     transform: rotate(-2deg);
@@ -393,10 +448,32 @@ html[data-edition='print'] {
     font-variant-numeric: tabular-nums;
     color: var(--text-primary);
   }
-  @media (max-width: 1023.98px) {
-    .sig-nav-issue {
-      display: none;
-    }
+  /* The full masthead carries GitHub · LinkedIn · CV beside P1's toggle ·
+     chip · ⌘K JUMP, so it runs a notch tighter than the frame (pills 8 px
+     in, tools 16 px from the pills and 6 px apart) to fit the 1152 px
+     column. The issue box shows only where it fits: its wrapper takes just
+     the room the masthead has left (it grows from 0 and never past the box,
+     margins included), and a box that does not fit wraps onto a second line
+     the wrapper clips. So a narrower column, a desktop scrollbar, the wider
+     Ctrl K keycap or the guide's completion label drop the box instead of
+     pushing JUMP past the column. */
+  .sig-nav-issue-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    /* the second line starts well below the bar, rotated corner included */
+    row-gap: 24px;
+    align-items: center;
+    align-self: stretch;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: max-content;
+    overflow: hidden;
+    overflow: clip;
+  }
+  /* the first line is the bar's full height, so the box sits centred on it */
+  .sig-nav-issue-wrap::before {
+    content: '';
+    height: 100%;
   }
   .sig-nav-links {
     margin-left: auto;
@@ -404,8 +481,8 @@ html[data-edition='print'] {
   }
   .sig-nav-links a {
     min-height: 32px;
-    padding: 0 9px;
-    border: 2.5px solid var(--text-primary);
+    padding: 0 8px;
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     font: 400 15px/1 var(--font-display);
@@ -444,8 +521,20 @@ html[data-edition='print'] {
     display: none;
   }
   .sig-nav-tools {
-    margin-left: 32px;
+    margin-left: 16px;
     gap: 8px;
+  }
+  @container sig-nav (width >= 1130px) {
+    .sig-nav-tools {
+      gap: 6px;
+    }
+  }
+  /* compact on tablets: the tools sit at the right, as in the full bar
+     (phones keep them beside the bug — the < 768 rule below) */
+  @container sig-nav (width < 1130px) {
+    .sig-nav-tools {
+      margin-left: auto;
+    }
   }
   /* P1 order: toggle · 8 THINGS TO TRY · ⌘K JUMP */
   .sig-nav-tools > * {
@@ -465,7 +554,7 @@ html[data-edition='print'] {
   .sig-nav-kbd,
   .sig-nav-menu {
     min-height: 32px;
-    border: 2.5px solid var(--text-primary);
+    border: 2px solid var(--text-primary);
     background: var(--ed-white);
     box-shadow: 3px 3px 0 var(--text-primary);
     color: var(--text-primary);
@@ -536,12 +625,16 @@ html[data-edition='print'] {
       margin-left: 12px;
     }
   }
-  /* Phones: bug · toggle · chip · MENU must fit 375 — the wordmark goes
-     (the seal bug stays the ident), the tools sit closer together. */
-  @media (max-width: 479.98px) {
+  /* Phones: bug · toggle · chip · MENU must fit — the wordmark goes below
+     560 (from 480 up the chip shows its label, and once "You've tried
+     everything"; the seal bug stays the ident), and below 480 the tools sit
+     closer together. */
+  @media (max-width: 559.98px) {
     .sig-nav-word {
       display: none;
     }
+  }
+  @media (max-width: 479.98px) {
     .sig-nav-tools {
       gap: 6px;
     }
@@ -551,12 +644,16 @@ html[data-edition='print'] {
 /* ============================================================================
    MOBILE MENU (components/chrome/MobileMenu.tsx) — full-screen sheet
    ========================================================================== */
+/* The open sheet covers everything below the palette: the reduced-motion
+   "/cv" offer (on the nav layer, later in the page) and the guide's coach
+   mark, scrim and checklist (56-58) otherwise sat over its rows. The
+   palette, opened from the sheet's Search / Jump, still comes on top. */
 .sig-menu {
   position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
-  z-index: var(--z-nav);
+  z-index: calc(var(--z-palette) - 1);
 }
 .sig-menu-head {
   display: flex;
@@ -618,6 +715,18 @@ html[data-edition='print'] {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+/* On tablets the sheet keeps the bar's 24 px gutters, so the ident and
+   Close sit where the ident and Menu were. */
+@media (min-width: 768px) {
+  .sig-menu-head,
+  .sig-menu-row,
+  .sig-menu-foot {
+    padding-inline: 24px;
+  }
+  .sig-menu-rule {
+    margin-inline: 24px;
+  }
 }
 
 html[data-edition='screen'] {

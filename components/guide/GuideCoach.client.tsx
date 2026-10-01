@@ -25,6 +25,9 @@
  * SCREEN — a small glass callout with a notch, the line and a dismiss ×.
  * PRINT  — a yellow "TRY THIS" panel with a sunburst corner, the speech
  *          bubble and the red button that performs the action.
+ * The line has a touch wording where it names a hover (both render, CSS
+ * shows one — InputWords). Under reduced motion there is no mark for an
+ * animation that motion setting turns off (SCREEN's portrait: no replay).
  * role="note"; the dismiss is a real button named "Dismiss the hint"; the
  * action button carries the item's label. Never under 640 px and never
  * alongside the open guide, the palette or a lightbox (the runtime gates
@@ -33,6 +36,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import InputWords from '@/components/chrome/InputWords'
 import { createCommandCtx, getCurrentEdition } from '@/lib/commands/context'
 import { findCoachAnchor, runGuideAction } from '@/lib/guide/actions'
 import {
@@ -43,6 +47,7 @@ import {
   type GuideId,
 } from '@/lib/guide/guide'
 import { placeBeside, type CoachBox, type CoachPlacement } from '@/lib/guide/place'
+import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { useSignalStore } from '@/lib/state/store'
 
 export interface GuideCoachProps {
@@ -134,6 +139,7 @@ export default function GuideCoach({ id, onDismiss }: GuideCoachProps) {
   const ctx = useMemo(() => createCommandCtx(router), [router])
   const storeEdition = useSignalStore((s) => s.edition)
   const edition = storeEdition ?? getCurrentEdition()
+  const motion = usePrefersReducedMotion() ? 'reduced' : 'full'
   const ref = useRef<HTMLElement>(null)
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const [pos, setPos] = useState<CoachPlacement | null>(null)
@@ -192,7 +198,7 @@ export default function GuideCoach({ id, onDismiss }: GuideCoachProps) {
     void runGuideAction(id, ctx)
   }, [ctx, id, onDismiss])
 
-  const line = guideCoach(id, edition)
+  const line = guideCoach(id, edition, 'mouse', motion)
   if (!anchor || !line) return null
   const item = getGuideItem(id)
 
@@ -218,7 +224,9 @@ export default function GuideCoach({ id, onDismiss }: GuideCoachProps) {
         <span className="gd-coach-kicker" aria-hidden="true">
           {GUIDE_COACH_KICKER}
         </span>
-        <p className="gd-coach-text">{line}</p>
+        <p className="gd-coach-text">
+          <InputWords mouse={line} touch={guideCoach(id, edition, 'touch', motion)} />
+        </p>
         <button type="button" className="gd-coach-try" onClick={tryIt}>
           <span className="gd-try-play" aria-hidden="true" />
           {item.label[edition]}

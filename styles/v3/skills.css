@@ -1736,6 +1736,16 @@ html[data-edition='print'] {
       font-size: 24px;
     }
   }
+  /* Below 405 px the one-line caption (341 px) and its shadow no longer fit
+     inside the panel: it wraps to two lines and the box hugs them (13em holds
+     the longer line, 'EVERY TOOL, WIRED THE'; 30 px is padding + border). */
+  @media (max-width: 404px) {
+    .sk-caption {
+      max-width: min(100%, 13em + 30px);
+      white-space: normal;
+      text-wrap: balance;
+    }
+  }
 }
 
 /* ---- reduced motion: every end state at once ------------------------------ */

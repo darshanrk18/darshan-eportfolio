@@ -111,8 +111,25 @@ describe('Connect Four copy per edition (director call (d))', () => {
   it("the coach mark says You're ivory / You're yellow", () => {
     expect(coachLine('screen', 'engine')).toBe("You're ivory. Engine's move, then yours.")
     expect(coachLine('print', 'human')).toBe("You're yellow. Click a column, or press its number.")
+    expect(coachLine('screen', 'human', 'mouse')).toBe(
+      "You're ivory. Click a column, or press its number."
+    )
     expect(newGameLine('screen')).toContain("You're ivory")
     expect(newGameLine('print')).toContain("You're yellow")
+  })
+
+  it('on a touch screen the coach mark says tap, and names only numbers a phone can see', () => {
+    // SCREEN hides the 1–7 row: its number keys need a keyboard
+    expect(coachLine('screen', 'human', 'touch')).toBe("You're ivory. Tap a column.")
+    // PRINT's 1–7 row is real buttons under the board
+    expect(coachLine('print', 'human', 'touch')).toBe("You're yellow. Tap a column, or its number.")
+    // the engine's turn reads the same either way
+    expect(coachLine('screen', 'engine', 'touch')).toBe(coachLine('screen', 'engine'))
+    for (const edition of ['screen', 'print'] as const) {
+      for (const status of ['human', 'engine', 'won', 'lost', 'draw'] as const) {
+        expect(coachLine(edition, status, 'touch')).not.toMatch(/click|press|hover|key/i)
+      }
+    }
   })
 
   it('status labels and the engine balloon are visitor language', () => {

@@ -20,11 +20,17 @@
  * completion). PRINT's tried marks are the red seal impression; a mark
  * that completes while the surface is open lands with the stamp beat.
  * Footer: "More in ⌘K" / "More under Jump" opens the palette.
+ * On a touch screen (no keys, no ⌘K / Jump chip) the "how" and the footer
+ * use their touch wording — both render, CSS shows one (InputWords); off
+ * Apple platforms the keycap reads "Ctrl K", like the top bar's chip.
+ * PRINT's footer also uses the touch wording beside the compact bar, which
+ * draws no Jump chip either (a narrow window with a mouse).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import DkSeal from '@/components/chrome/DkSeal'
+import InputWords from '@/components/chrome/InputWords'
 import { createCommandCtx, getCurrentEdition } from '@/lib/commands/context'
 import { runGuideAction } from '@/lib/guide/actions'
 import {
@@ -32,17 +38,20 @@ import {
   GUIDE_IDS,
   GUIDE_ITEMS,
   GUIDE_MORE_LABEL,
+  GUIDE_MORE_TOUCH_LABEL,
   GUIDE_NEXT_LABEL,
   GUIDE_THIS_PAGE_LABEL,
   GUIDE_TRIED_LABEL,
   GUIDE_TRY_LABEL,
   GUIDE_UNTRIED_LABEL,
+  guideHow,
   isTried,
   nextUntried,
   progressLabel,
   type GuideId,
 } from '@/lib/guide/guide'
 import { useSignalStore } from '@/lib/state/store'
+import { PALETTE_KEY, paletteKeyFor } from '@/lib/utils/input'
 
 export interface GuideSurfaceProps {
   /** The chip the popover anchors to (null → centred). */
@@ -66,6 +75,9 @@ export default function GuideSurface({ anchor, onClose }: GuideSurfaceProps) {
   const edition = storeEdition ?? getCurrentEdition()
   const setPaletteOpen = useSignalStore((s) => s.setPaletteOpen)
   const setOverlayOpen = useSignalStore((s) => s.setOverlayOpen)
+  // Client-only surface (mounted on open), so the platform is known at render.
+  const paletteKey =
+    typeof navigator === 'undefined' ? PALETTE_KEY : paletteKeyFor(navigator.platform)
 
   const next = nextUntried(tried)
   const [expanded, setExpanded] = useState<GuideId | null>(next)
@@ -224,7 +236,12 @@ export default function GuideSurface({ anchor, onClose }: GuideSurfaceProps) {
                 </button>
                 {isOpen ? (
                   <div className="gd-ex">
-                    <p>{item.how[edition]}</p>
+                    <p>
+                      <InputWords
+                        mouse={guideHow(item.id, edition).replace(PALETTE_KEY, paletteKey)}
+                        touch={guideHow(item.id, edition, 'touch')}
+                      />
+                    </p>
                     <button type="button" className="gd-try" onClick={() => tryIt(item.id)}>
                       <span className="gd-try-play" aria-hidden="true" />
                       {GUIDE_TRY_LABEL}
@@ -239,9 +256,27 @@ export default function GuideSurface({ anchor, onClose }: GuideSurfaceProps) {
           })}
         </ol>
         <footer className="gd-foot">
+          {/* Siblings, not one wrapper: the button's flex gap stays between
+              the words and the keycap. */}
           <button type="button" className="gd-more" onClick={more}>
-            {GUIDE_MORE_LABEL[edition]}
-            {edition === 'screen' ? <kbd className="ed-kbd">⌘K</kbd> : null}
+            {edition === 'screen' ? (
+              <>
+                <span className="mouse-only">{GUIDE_MORE_LABEL.screen}</span>
+                <kbd className="ed-kbd mouse-only">{paletteKey}</kbd>
+                <span className="touch-only">{GUIDE_MORE_TOUCH_LABEL}</span>
+              </>
+            ) : (
+              <>
+                {/* "Jump" names the masthead's Jump chip, so these words
+                    carry the chip's own hides: touch (.mouse-only) and the
+                    compact bar (.sig-nav-desk; guide.css mirrors the bar's
+                    1130 px switch by viewport width). The plain words show
+                    where the chip is not drawn: below 1130 px and on touch
+                    (guide.css). */}
+                <span className="mouse-only sig-nav-desk">{GUIDE_MORE_LABEL.print}</span>
+                <span className="sig-nav-phone gd-more-plain">{GUIDE_MORE_TOUCH_LABEL}</span>
+              </>
+            )}
           </button>
         </footer>
       </section>

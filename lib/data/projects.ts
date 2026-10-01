@@ -290,7 +290,7 @@ export const workCopy = {
     more: 'More projects',
   },
   print: {
-    chapter: 'Ch. III',
+    chapter: 'CH. III',
     /** The chapter is named after the lead project. */
     title: `${projects[0].name} & Co.`,
     rackTitle: 'Back issues',

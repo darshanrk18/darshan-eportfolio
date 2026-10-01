@@ -17,6 +17,7 @@ import {
   routeWeights,
 } from '@/components/palette/buildInfoRoutes'
 import { SECTION_ANCHORS } from '@/lib/commands/sections'
+import { NOT_TOUCH_MEDIA, TOUCH_MEDIA } from '@/lib/utils/input'
 import { profile } from '@/lib/data/profile'
 
 const root = path.resolve(__dirname, '..')
@@ -154,6 +155,81 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
   })
 })
 
+describe('top bar fit — Ctrl K keycap, desktop scrollbars, the completion label', () => {
+  const css = read('styles/v3/chrome.css')
+
+  it('switches compact / full on the header width (scrollbar counted), not the viewport', () => {
+    expect(css).toMatch(/\.sig-nav \{[^}]*container: sig-nav \/ inline-size;/)
+    expect(css).toMatch(
+      /@container sig-nav \(width < 1130px\) \{\s*\.sig-nav-links,\s*\.sig-nav-desk,\s*\.sig-nav-vr,\s*\.sig-nav-issue-wrap \{\s*display: none !important;/
+    )
+    expect(css).not.toMatch(/@media \(max-width: 1099\.98px\)/)
+  })
+
+  it('shows the PRINT issue box only where it fits (wrapper takes the room left, clips the rest)', () => {
+    const nav = read('components/chrome/Navbar.tsx')
+    expect(nav).toMatch(
+      /<span className="sig-nav-issue-wrap ed-print-only" aria-hidden="true">\s*<span className="sig-nav-issue">/
+    )
+    const wrap = css
+      .match(/\.sig-nav-issue-wrap \{([^}]*)\}/g)
+      ?.find((r) => r.includes('flex-wrap'))
+    expect(wrap).toBeDefined()
+    for (const decl of [
+      'flex-wrap: wrap;',
+      'flex: 1 1 0;',
+      'max-width: max-content;',
+      'overflow: clip;',
+    ]) {
+      expect(wrap).toContain(decl)
+    }
+  })
+
+  it('the menu sheet reaches the command palette (the compact bar has no keycap)', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    expect(menu).toMatch(/setPaletteOpen\(true\)\s*\}\}\s*>\s*Search \/ Jump\s*</)
+  })
+
+  it('draws the PRINT bar ink boxes at 2 px, the weight Chrome renders and the fit assumes', () => {
+    const print = css.slice(css.indexOf("html[data-edition='print'] {"), css.indexOf('.sig-menu {'))
+    for (const sel of ['.sig-nav-issue', '.sig-nav-links a', '.sig-nav-menu']) {
+      const rule = print.match(
+        new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\{([^}]*)\\}`)
+      )?.[1]
+      expect(rule, sel).toContain('border: 2px solid var(--text-primary);')
+    }
+    expect(print).toMatch(/\.sig-nav \.gd-chip \{\s*border-width: 2px;\s*\}/)
+    expect(print).not.toMatch(/border: 2\.5px/)
+  })
+
+  it('the menu sheet hands the wheel to the browser, so its rows scroll on a short window', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    const sheet = menu.match(/<m\.div[^>]*className="sig-menu"/)?.[0] ?? ''
+    expect(sheet).toContain('data-lenis-prevent')
+  })
+
+  it('the menu sheet keeps Tab inside in every browser (Safari tabs only to form fields)', () => {
+    const menu = read('components/chrome/MobileMenu.tsx')
+    const sheet = menu.match(/<m\.div[^>]*className="sig-menu"/)?.[0] ?? ''
+    // a click on something Safari does not focus leaves focus on the sheet
+    expect(sheet).toContain('tabIndex={-1}')
+    // every Tab is handled by the trap, not left to the browser
+    expect(menu).toMatch(/if \(e\.key !== 'Tab'\) return\s*e\.preventDefault\(\)/)
+  })
+
+  it('the open menu sheet covers the reduced-motion offer and the guide, under the palette', () => {
+    expect(css).toMatch(/\.sig-menu \{[^}]*z-index: calc\(var\(--z-palette\) - 1\);/)
+    const banner = read('components/chrome/ReducedMotionBanner.tsx')
+    expect(banner).toContain("zIndex: 'var(--z-nav)'")
+    const guide = read('styles/v3/guide.css')
+    const guideZ = [...guide.matchAll(/z-index: (\d+);/g)].map((m) => Number(m[1]))
+    expect(guideZ.length).toBeGreaterThan(0)
+    // --z-palette is 60 (app/globals.css): the sheet at 59 is above every guide layer
+    expect(read('app/globals.css')).toMatch(/--z-palette: 60;/)
+    expect(Math.max(...guideZ)).toBeLessThan(59)
+  })
+})
+
 describe('SCREEN numbers read as numbers (Marcellus draws 1 and 0 like I and O)', () => {
   it('digits 0-9 come from the self-hosted Tenor Sans subset, in front of Marcellus', async () => {
     const { statSync } = await import('node:fs')
@@ -208,5 +284,104 @@ describe('share card and web manifest take the SCREEN look (§2.8, §3)', () => 
     expect(m.background_color).toBe('#050607')
     expect(m.theme_color).toBe('#050607')
     expect(m.icons?.map((i) => i.src)).toEqual(['/favicon.svg', '/favicon-32.png', '/favicon-16.png'])
+  })
+})
+
+/**
+ * Mouse or touch words (styles/v3/README.md §4a): both wordings render and
+ * two unlayered !important rules show one — under complementary queries, so
+ * exactly one shows on every device, and no component's own display rule
+ * can bring the hidden one back (the SCREEN hero pill's inline-flex did).
+ */
+describe('mouse or touch words (§4a)', () => {
+  const css = (rel: string) => read(rel).replace(/\s+/g, ' ')
+  const media = (q: string) => q.replace(/\s+/g, ' ').trim()
+
+  it('globals.css hides .touch-only off touch and .mouse-only on touch, !important', () => {
+    const g = css('app/globals.css')
+    expect(g).toContain(
+      `@media ${media(NOT_TOUCH_MEDIA)} { .touch-only { display: none !important; } }`
+    )
+    expect(g).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .mouse-only { display: none !important; } }`
+    )
+    // unlayered (a layered rule would lose to any unlayered display rule):
+    // the hides sit after the last @layer block has closed
+    let i = g.indexOf('{', g.lastIndexOf('@layer'))
+    for (let depth = 0; ; i++) {
+      if (g[i] === '{') depth++
+      else if (g[i] === '}' && --depth === 0) break
+    }
+    expect(g.indexOf('.touch-only')).toBeGreaterThan(i)
+    expect(g.indexOf('.mouse-only')).toBeGreaterThan(i)
+  })
+
+  it('the two queries are exact complements (hover: none|hover × pointer: none|coarse|fine)', () => {
+    const touch = (hover: string, pointer: string) => hover === 'none' && pointer === 'coarse'
+    const notTouch = (hover: string, pointer: string) =>
+      hover === 'hover' || pointer === 'fine' || pointer === 'none'
+    for (const hover of ['none', 'hover'])
+      for (const pointer of ['none', 'coarse', 'fine'])
+        expect(touch(hover, pointer) !== notTouch(hover, pointer), `${hover}/${pointer}`).toBe(true)
+    expect(NOT_TOUCH_MEDIA).toBe('(hover: hover), (pointer: fine), (pointer: none)')
+  })
+
+  it('touch means what the top bar means: its ⌘K chip hides under the same query', () => {
+    expect(css('styles/v3/chrome.css')).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .sig-nav-kbd { display: none; } }`
+    )
+  })
+
+  it('the hero ⌘K hint is mouse-only, with no losing touch rule left behind', () => {
+    // the wrapper holds only the hint, so no empty flex item is left on touch
+    expect(read('components/hero/Hero.tsx')).toMatch(
+      /<div className="hero-foot-l ed-screen-only mouse-only">\s*<PalettePill \/>\s*<\/div>/
+    )
+    expect(css('styles/v3/hero.css')).not.toMatch(/@media \(hover: none\) \{ \.hero-pill/)
+  })
+
+  it("PRINT's guide footer says Jump only where the bar draws the Jump chip", () => {
+    // the words carry the chip's own hides: touch, and the compact bar's .sig-nav-desk
+    expect(read('components/chrome/Navbar.tsx')).toContain('className="sig-nav-kbd sig-nav-desk"')
+    const surface = read('components/guide/GuideSurface.client.tsx')
+    expect(surface).toContain(
+      '<span className="mouse-only sig-nav-desk">{GUIDE_MORE_LABEL.print}</span>'
+    )
+    // the plain words show with the compact bar's Menu, and on touch
+    expect(surface).toContain(
+      '<span className="sig-nav-phone gd-more-plain">{GUIDE_MORE_TOUCH_LABEL}</span>'
+    )
+    const nav = css('styles/v3/chrome.css')
+    expect(nav).toContain('.sig-nav-phone { display: none; }')
+    const compact = nav.match(
+      /@container sig-nav \(width < ([\d.]+)px\) \{ [^}]*\.sig-nav-desk,[^}]*\{ display: none !important; \} \.sig-nav-phone \{ display: inline-flex; \}/
+    )
+    expect(compact).not.toBeNull()
+    const guide = css('styles/v3/guide.css')
+    expect(guide).toContain(
+      `@media ${media(TOUCH_MEDIA)} { .gd-more .gd-more-plain { display: inline; } }`
+    )
+    // the panel sits outside the header's container, so it mirrors the
+    // compact switch by viewport width, at the same number
+    const limit = Number(compact![1]) - 0.02
+    expect(guide).toContain(
+      `@media (max-width: ${limit}px) { .gd-more .sig-nav-desk { display: none; } .gd-more .gd-more-plain { display: inline; } }`
+    )
+  })
+
+  it('InputWords renders both wordings (server markup too) and a shared wording once', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement } = await import('react')
+    const { default: InputWords } = await import('@/components/chrome/InputWords')
+    expect(
+      renderToStaticMarkup(
+        createElement(InputWords, { mouse: 'Hover a job.', touch: 'Tap a job.' })
+      )
+    ).toBe('<span class="mouse-only">Hover a job.</span><span class="touch-only">Tap a job.</span>')
+    expect(
+      renderToStaticMarkup(
+        createElement(InputWords, { mouse: 'Pick a job.', touch: 'Pick a job.' })
+      )
+    ).toBe('Pick a job.')
   })
 })

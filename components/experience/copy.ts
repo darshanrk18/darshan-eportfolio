@@ -30,6 +30,8 @@ export const XP_COPY = {
   switchOn: 'On',
   /** One-line prompt while the switch is off (S5 §8; P5 coach wording). */
   prompt: { screen: 'Turn this on, then hover a job.', print: 'Switch it on, then pick a job.' },
+  /** The prompt on a touch screen (lib/utils/input.ts): a tap picks the job, nothing hovers. */
+  promptTouch: { screen: 'Turn this on, then tap a job.', print: 'Switch it on, then pick a job.' },
   tabsLabel: 'Pick a job',
   sheetLabel: (company: string) => `Skills used at ${company}`,
   jobName: (company: string) => `${company} — skills highlighted`,

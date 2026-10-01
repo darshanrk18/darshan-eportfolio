@@ -16,10 +16,13 @@ import {
   GUIDE_COMPLETE_LABEL,
   GUIDE_IDS,
   GUIDE_ITEMS,
+  GUIDE_MORE_LABEL,
+  GUIDE_MORE_TOUCH_LABEL,
   GUIDE_SECTION,
   GUIDE_STORAGE_KEY,
   GUIDE_TOTAL,
   GUIDE_TRIED_EVENT,
+  GUIDE_TRY_LABEL,
   chipAriaLabel,
   coachCandidate,
   guideCoach,
@@ -58,6 +61,7 @@ import { SECTION_ANCHORS } from '@/lib/commands/sections'
 import { SIGNAL_EVENTS, type CommandCtx } from '@/lib/commands/context'
 import { SWITCH_EDITION_LABELS } from '@/lib/commands/registry'
 import { useSignalStore } from '@/lib/state/store'
+import { PALETTE_KEY, paletteKeyFor } from '@/lib/utils/input'
 
 function fakeStorage(init: Record<string, string> = {}, opts: { throws?: boolean } = {}) {
   const map = new Map(Object.entries(init))
@@ -153,9 +157,128 @@ describe('the eight (V3_SPEC §2.6)', () => {
       for (const edition of ['screen', 'print'] as const) {
         expect(item.label[edition]).not.toMatch(BANNED)
         expect(item.how[edition]).not.toMatch(BANNED)
+        expect(guideHow(item.id, edition, 'touch')).not.toMatch(BANNED)
         expect(item.where[edition]).not.toMatch(BANNED)
         if (item.coach?.[edition]) expect(item.coach[edition]).not.toMatch(BANNED)
+        expect(guideCoach(item.id, edition, 'touch') ?? '').not.toMatch(BANNED)
       }
+    }
+    expect(GUIDE_MORE_TOUCH_LABEL).not.toMatch(BANNED)
+  })
+})
+
+/**
+ * Mouse or touch (lib/utils/input.ts): on a touch screen there is no key to
+ * press, nothing to hover and no ⌘K / Jump chip in the bar, so every line
+ * the guide shows there says what a tap does. The mouse wording is the
+ * frames' approved copy, unchanged.
+ */
+describe('mouse or touch wording', () => {
+  /** A key, a hover, a click, or the keyboard-only chip's name. */
+  const KEYBOARD_OR_HOVER =
+    /⌘|\bctrl\b|\bpress\b|\bhover|\bclick|\bkeyboard|under jump|\bjump\b(?= control| chip)/i
+
+  it('keeps the approved mouse wording (the default)', () => {
+    expect(guideHow('go-anywhere', 'screen')).toBe('Press ⌘K to search every page and action.')
+    expect(guideHow('go-anywhere', 'print', 'mouse')).toBe(
+      'Press ⌘K to jump to any chapter or action.'
+    )
+    expect(guideHow('skills-per-job', 'screen')).toBe(
+      'Switch it on, then hover a job to see the tools it used.'
+    )
+    expect(guideCoach('reveal-portrait', 'screen')).toBe(
+      'Hover the portrait, or replay it, to watch it resolve.'
+    )
+    expect(guideCoach('skills-per-job', 'screen')).toBe('Switch this on, then hover a job.')
+    expect(GUIDE_MORE_LABEL).toEqual({ screen: 'More in', print: 'More under Jump' })
+  })
+
+  it('never names a key or a hover on a touch screen, in either edition', () => {
+    // the check bites: the mouse wordings it replaces all match it
+    expect(guideHow('go-anywhere', 'screen')).toMatch(KEYBOARD_OR_HOVER)
+    expect(guideHow('skills-per-job', 'screen')).toMatch(KEYBOARD_OR_HOVER)
+    expect(guideCoach('reveal-portrait', 'screen')).toMatch(KEYBOARD_OR_HOVER)
+    expect(GUIDE_MORE_LABEL.print).toMatch(KEYBOARD_OR_HOVER)
+    for (const item of GUIDE_ITEMS) {
+      for (const edition of ['screen', 'print'] as const) {
+        expect(guideHow(item.id, edition, 'touch'), `${item.id} how`).not.toMatch(KEYBOARD_OR_HOVER)
+        const coach = guideCoach(item.id, edition, 'touch')
+        if (coach) expect(coach, `${item.id} coach`).not.toMatch(KEYBOARD_OR_HOVER)
+      }
+    }
+    expect(GUIDE_MORE_TOUCH_LABEL).toBe('More things to try')
+    expect(GUIDE_MORE_TOUCH_LABEL).not.toMatch(/jump|⌘|ctrl/i)
+  })
+
+  it("points a phone at the row's own button to open the palette", () => {
+    expect(guideHow('go-anywhere', 'screen', 'touch')).toBe(
+      `Tap ${GUIDE_TRY_LABEL} to search every page and action.`
+    )
+    expect(guideHow('go-anywhere', 'print', 'touch')).toBe(
+      `Tap ${GUIDE_TRY_LABEL} to jump to any chapter or action.`
+    )
+    expect(guideHow('skills-per-job', 'screen', 'touch')).toBe(
+      'Switch it on, then tap a job to see the tools it used.'
+    )
+    expect(guideCoach('reveal-portrait', 'screen', 'touch')).toBe(
+      'Tap replay to watch the portrait resolve.'
+    )
+    expect(guideCoach('skills-per-job', 'screen', 'touch')).toBe('Switch this on, then tap a job.')
+  })
+
+  it('falls back to the one wording where nothing names a key or a hover', () => {
+    expect(guideHow('play-c4', 'screen', 'touch')).toBe(guideHow('play-c4', 'screen'))
+    expect(guideHow('skills-per-job', 'print', 'touch')).toBe(guideHow('skills-per-job', 'print'))
+    expect(guideCoach('skills-per-job', 'print', 'touch')).toBe('Flip the switch, then pick a job.')
+    // no coach mark stays no coach mark
+    expect(guideCoach('go-anywhere', 'screen', 'touch')).toBeNull()
+    expect(guideCoach('reveal-portrait', 'print', 'touch')).toBeNull()
+    for (const item of GUIDE_ITEMS) {
+      for (const edition of ['screen', 'print'] as const) {
+        if (item.howTouch?.[edition]) expect(item.howTouch[edition]).not.toBe(item.how[edition])
+        if (item.coachTouch?.[edition]) expect(item.coach?.[edition]).toBeTruthy()
+      }
+    }
+  })
+
+  it('draws no portrait coach under reduced motion in SCREEN, where replay is hidden', () => {
+    for (const input of ['mouse', 'touch'] as const) {
+      expect(guideCoach('reveal-portrait', 'screen', input, 'reduced')).toBeNull()
+      expect(guideCoach('reveal-portrait', 'screen', input, 'full')).toBe(
+        guideCoach('reveal-portrait', 'screen', input)
+      )
+    }
+    // every other coach line is the same under reduced motion
+    for (const item of GUIDE_ITEMS) {
+      for (const edition of ['screen', 'print'] as const) {
+        if (item.id === 'reveal-portrait' && edition === 'screen') continue
+        for (const input of ['mouse', 'touch'] as const) {
+          expect(guideCoach(item.id, edition, input, 'reduced'), `${item.id} ${edition}`).toBe(
+            guideCoach(item.id, edition, input)
+          )
+        }
+      }
+    }
+    // why: the portrait hides its replay under reduced motion (and replays nothing),
+    // and the coach mark reads the motion setting for both wordings
+    const read = (rel: string) => readFileSync(path.resolve(__dirname, '..', rel), 'utf8')
+    expect(read('styles/v2/portrait.css').replace(/\s+/g, ' ')).toContain(
+      "&[data-motion='reduced'] .pf-replay { display: none; }"
+    )
+    expect(read('components/about/Portrait.client.tsx')).toMatch(/const replay = useCallback\(\(\) => \{\s*if \(reduced\) return/)
+    const coach = read('components/guide/GuideCoach.client.tsx')
+    expect(coach).toContain("guideCoach(id, edition, 'mouse', motion)")
+    expect(coach).toContain("guideCoach(id, edition, 'touch', motion)")
+  })
+
+  it('names the keycap per platform, like the top bar (Ctrl K off Apple)', () => {
+    expect(paletteKeyFor('MacIntel')).toBe('⌘K')
+    expect(paletteKeyFor('iPhone')).toBe('⌘K')
+    expect(paletteKeyFor('Win32')).toBe('Ctrl K')
+    expect(paletteKeyFor('Linux x86_64')).toBe('Ctrl K')
+    // the surface swaps the keycap inside the mouse wording: it is there once
+    for (const edition of ['screen', 'print'] as const) {
+      expect(guideHow('go-anywhere', edition).split(PALETTE_KEY)).toHaveLength(2)
     }
   })
 })

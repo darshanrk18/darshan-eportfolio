@@ -204,12 +204,10 @@ html:not([data-motion='reduced']) #hero[data-entry='held'] .hero-in {
 #hero[data-off] .hero-name {
   animation-play-state: paused;
 }
-/* The ⌘K hint hides on touch (no keyboard — a dead shortcut is clutter). */
-@media (hover: none) {
-  .hero-pill {
-    display: none;
-  }
-}
+/* The ⌘K hint hides on touch (no keyboard — a dead shortcut is clutter):
+   its wrapper `.hero-foot-l` carries `.mouse-only` (app/globals.css,
+   unlayered !important), so no rule in the SCREEN block below can bring
+   it back. */
 /* The glyph field is a SCREEN device; PRINT never shows even the pre-hydration SVG. */
 html[data-edition='print'] #hero [data-component='GlyphField'] {
   display: none !important;

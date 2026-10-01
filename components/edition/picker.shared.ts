@@ -55,7 +55,7 @@ import {
  *     document has parsed — the shortest possible fallback-font window at
  *     the first paint. A return visit never fetches them from here.
  *
- * Separate from the ≤ 460 B pre-paint script (lib/edition/prepaint.ts):
+ * Separate from the ≤ 580 B pre-paint script (lib/edition/prepaint.ts):
  * scripts/check-prepaint.mjs identifies that one by its storage key AND its
  * reduced-motion query, so this script's fallback may name the key. Plain
  * ES5, no template literals (the same minifier caveat as the pre-paint
@@ -116,14 +116,16 @@ export const SILHOUETTE =
   'M793.8 793.8 L100.0 793.8 L97.7 793.8 L96.8 760.9 L103.2 717.3 L110.5 699.1 L120.5 685.5 L129.1 678.6 L142.7 674.1 L179.1 655.9 L237.3 617.7 L242.7 612.3 L248.2 610.5 L260.9 599.5 L274.5 592.3 L285.0 580.9 L285.9 564.5 L290.5 554.5 L285.9 527.3 L277.7 509.1 L267.7 502.7 L266.8 499.1 L261.4 495.5 L261.4 490.9 L252.3 481.8 L251.4 473.6 L238.6 446.4 L231.4 414.5 L230.5 380.0 L233.2 362.7 L235.9 307.3 L235.0 290.0 L232.3 286.4 L233.2 280.0 L231.4 275.5 L233.2 257.3 L226.8 242.7 L228.6 226.4 L225.0 200.0 L231.4 190.0 L233.2 178.2 L244.1 167.3 L254.1 150.0 L285.5 120.5 L307.3 119.5 L339.1 112.3 L349.1 107.7 L363.6 96.8 L374.5 95.0 L399.1 95.0 L425.5 104.1 L436.4 104.1 L447.3 108.6 L466.4 124.1 L490.9 137.7 L501.4 149.1 L505.9 160.9 L509.5 164.5 L519.1 171.4 L525.5 172.3 L535.0 181.8 L539.5 192.7 L537.7 206.4 L532.3 212.7 L530.5 221.8 L523.2 230.9 L523.2 235.5 L514.1 245.5 L519.5 250.9 L519.5 257.3 L516.4 261.4 L506.4 260.5 L502.3 263.6 L499.5 278.2 L495.0 285.5 L495.9 301.8 L492.3 314.5 L491.4 339.1 L493.6 342.3 L505.5 343.2 L510.5 348.2 L515.0 367.3 L505.9 405.5 L493.2 435.5 L490.9 437.7 L479.1 437.7 L476.8 440.0 L474.1 451.8 L475.9 488.2 L503.6 516.8 L539.1 543.2 L556.4 546.8 L628.2 579.5 L650.9 586.8 L672.7 598.6 L684.5 601.4 L721.8 604.1 L755.5 616.8 L763.2 624.5 L772.3 639.1 L780.5 665.5 L787.7 704.5 L791.4 712.7 L793.8 720.9 L793.8 793.8Z'
 
 /**
- * The phone layout (picker.css: the halves stack under 768 px). The SAME
- * query decides the shell's portrait encode in CSS and the surface's in JS,
- * so the two always draw the same file — the swap never fetches.
+ * The phone layout (picker.css: under 768 px the halves stack, or sit side
+ * by side on a phone held sideways). The SAME query decides the shell's
+ * portrait encode in CSS and the surface's in JS, so the two always draw
+ * the same file — the swap never fetches.
  */
 export const PICKER_PHONE_QUERY = '(max-width: 767.98px)'
 
-/** The portrait encode phones draw (the figure box is ≈ 270 CSS px there;
- *  660 px is the hero's phone encode too, so the request is shared). */
+/** The portrait encode phones draw (the figure box is ≈ 270 CSS px stacked,
+ *  under 480 held sideways; 660 px is the hero's phone encode too, so the
+ *  request is shared). */
 export const PICKER_PHONE_PORTRAIT_WIDTH = 660
 
 export interface PickerPortraitSources {

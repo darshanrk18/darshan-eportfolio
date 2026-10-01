@@ -15,14 +15,17 @@
  * themselves (its group lookup misses), so with groups the first row — and
  * Enter — would be the best match of the FIRST group, not of the list
  * (typing `choose` selected "Go to Contact" over "Choose your edition").
+ * The palette ranks and filters those rows itself (./paletteRank, cmdk's
+ * filtering off): cmdk's own sort missed rows that mount after it, so a
+ * pasted query could leave the best match fourth.
  *
  * Motion: scale 0.98→1, 150ms swift (globals.css collapses it under
  * html[data-motion='reduced']). ARIA + focus trap come from cmdk's dialog.
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { Command, CommandDialog, defaultFilter } from 'cmdk'
+import { Command, CommandDialog } from 'cmdk'
 import { createCommandCtx, getCurrentEdition } from '@/lib/commands/context'
 import { runGuideAction } from '@/lib/guide/actions'
 import {
@@ -44,13 +47,26 @@ import {
 import { usePrefersReducedMotion } from '@/lib/motion/useReducedMotion'
 import { useSignalStore } from '@/lib/state/store'
 import { trackPaletteAction } from '@/lib/utils/analytics'
+import { SKILLS_PREFIX, paletteQuery, rankRows, type RankedRow } from './paletteRank'
 
 interface PaletteDialogProps {
   onClose: () => void
 }
 
-/** `skills > <query>` — the typed route into the nested skills page. */
-const SKILLS_PREFIX = /^skills\s*>\s*(.*)$/i
+/** A row of the ranked list: what ./paletteRank scores, and how it renders. */
+interface PaletteRow extends RankedRow {
+  render: () => ReactNode
+}
+
+/* Each row's cmdk keywords — one definition, used by the rendered item and
+   by the ranking, so the two can never score differently. */
+const itemKeywords = (cmd: CommandEntry) => [cmd.title, ...(cmd.aliases ?? []), ...cmd.keywords]
+const narratorKeywords = ({ label, cmd }: { label: string; cmd: CommandEntry }) => [
+  label,
+  cmd.title,
+  ...(cmd.aliases ?? []),
+]
+const SKILLS_MENU_KEYWORDS = ['skills', 'skill', 'toolchain']
 
 /**
  * v2 §10.2 — the narrator. The palette's first group ("Next") suggests the
@@ -90,31 +106,6 @@ function narratorRowsFor(
   return rows
 }
 
-/**
- * cmdk filter: strip the `skills >` prefix so the remainder scores against
- * skill nodes; empty queries show everything (cmdk group logic hides the rest).
- *
- * Ranking: a literal hit always outranks a fuzzy one, so the row whose title
- * or keyword actually contains what was typed is the one Enter runs (typing
- * `choose` selects "Choose your edition", not a row that merely has those
- * letters scattered through its keywords). Ties fall back to cmdk's score.
- */
-export function paletteFilter(value: string, search: string, keywords?: string[]): number {
-  const q = (SKILLS_PREFIX.exec(search)?.[1] ?? search).trim()
-  if (q === '') return 1
-  const fuzzy = defaultFilter(value, q, keywords)
-  const needle = q.toLowerCase()
-  const hay = [value, ...(keywords ?? [])].map((s) => s.toLowerCase())
-  const bonus = hay.some((s) => s === needle)
-    ? 3
-    : hay.some((s) => s.split(/\s+/).some((w) => w.startsWith(needle)))
-      ? 2
-      : hay.some((s) => s.includes(needle))
-        ? 1
-        : 0
-  return bonus > 0 ? bonus + fuzzy : fuzzy
-}
-
 export default function PaletteDialog({ onClose }: PaletteDialogProps) {
   const router = useRouter()
   const reduced = usePrefersReducedMotion()
@@ -124,7 +115,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
   const [page, setPage] = useState<'root' | 'skills'>('root')
 
   const skillsMode = page === 'skills' || SKILLS_PREFIX.test(search)
-  const searching = (SKILLS_PREFIX.exec(search)?.[1] ?? search).trim() !== ''
+  const searching = paletteQuery(search) !== ''
 
   // v2 §10.2 — narrator rows for the section currently in view.
   const activeSection = useSignalStore((s) => s.activeSection)
@@ -179,7 +170,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
     <Command.Item
       key={cmd.id}
       value={cmd.id}
-      keywords={[cmd.title, ...(cmd.aliases ?? []), ...cmd.keywords]}
+      keywords={itemKeywords(cmd)}
       onSelect={() => runCommand(cmd)}
       className="sig-palette-item type-code"
     >
@@ -193,12 +184,14 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
   )
 
   /* v3 §2.6 — the guide's next untried item ("Try: Light up the toolkit"). */
+  const guideKeywords =
+    guideNext === null ? [] : ['try', 'next', 'guide', guideLabel(guideNext, edition)]
   const renderGuideNext = () =>
     guideNext === null ? null : (
       <Command.Item
         key={`next-guide-${guideNext}`}
         value={`next-guide-${guideNext}`}
-        keywords={['try', 'next', 'guide', guideLabel(guideNext, edition)]}
+        keywords={guideKeywords}
         onSelect={() => {
           onClose()
           trackPaletteAction(`guide-${guideNext}`)
@@ -222,7 +215,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
     <Command.Item
       key="skills-menu"
       value="skills-menu"
-      keywords={['skills', 'skill', 'toolchain']}
+      keywords={SKILLS_MENU_KEYWORDS}
       onSelect={() => {
         setPage('skills')
         setSearch('')
@@ -235,17 +228,50 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
   )
 
   /* v2 §10.2 — a narrator row for the section in view. */
-  const renderNarrator = ({ label, cmd }: { label: string; cmd: CommandEntry }) => (
+  const renderNarrator = (row: { label: string; cmd: CommandEntry }) => (
     <Command.Item
-      key={`next-${cmd.id}`}
-      value={`next-${cmd.id}`}
-      keywords={[label, cmd.title, ...(cmd.aliases ?? [])]}
-      onSelect={() => runCommand(cmd)}
+      key={`next-${row.cmd.id}`}
+      value={`next-${row.cmd.id}`}
+      keywords={narratorKeywords(row)}
+      onSelect={() => runCommand(row.cmd)}
       className="sig-palette-item type-code"
     >
-      <span>{label}</span>
+      <span>{row.label}</span>
     </Command.Item>
   )
+
+  /* While a query is typed (or on the skills page) the rows are ranked here,
+     best match first, and rendered in exactly that order (./paletteRank). */
+  const itemRow = (cmd: CommandEntry): PaletteRow => ({
+    value: cmd.id,
+    keywords: itemKeywords(cmd),
+    render: () => renderItem(cmd),
+  })
+  const ranked: PaletteRow[] = skillsMode
+    ? rankRows(skillCommands.map(itemRow), search)
+    : searching
+      ? rankRows(
+          [
+            ...(guideNext === null
+              ? []
+              : [
+                  {
+                    value: `next-guide-${guideNext}`,
+                    keywords: guideKeywords,
+                    render: renderGuideNext,
+                  },
+                ]),
+            ...narratorRows.map((row) => ({
+              value: `next-${row.cmd.id}`,
+              keywords: narratorKeywords(row),
+              render: () => renderNarrator(row),
+            })),
+            ...GROUP_ORDER.flatMap((group) => grouped.get(group) ?? []).map(itemRow),
+            { value: 'skills-menu', keywords: SKILLS_MENU_KEYWORDS, render: renderSkillsMenu },
+          ],
+          search
+        )
+      : []
 
   return (
     <>
@@ -259,7 +285,7 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
         overlayClassName="sig-palette-overlay"
         contentClassName="sig-palette-content"
         {...{ 'data-component': 'CommandPalette', 'data-island': 'client' }}
-        filter={paletteFilter}
+        shouldFilter={false}
         loop
         onKeyDown={onDialogKeyDown}
       >
@@ -279,19 +305,20 @@ export default function PaletteDialog({ onClose }: PaletteDialogProps) {
           <Command.Empty className="sig-palette-empty type-code">no results</Command.Empty>
 
           {skillsMode ? (
-            <Command.Group heading={groupHeading('skill')} className="sig-palette-group">
-              {skillCommands.map(renderItem)}
-            </Command.Group>
+            ranked.length > 0 ? (
+              <Command.Group heading={groupHeading('skill')} className="sig-palette-group">
+                {ranked.map((row) => row.render())}
+              </Command.Group>
+            ) : null
           ) : searching ? (
-            <Command.Group
-              heading={<span className="type-label-xs">Results</span>}
-              className="sig-palette-group"
-            >
-              {guideNext !== null ? renderGuideNext() : null}
-              {narratorRows.map(renderNarrator)}
-              {GROUP_ORDER.flatMap((group) => grouped.get(group) ?? []).map(renderItem)}
-              {renderSkillsMenu()}
-            </Command.Group>
+            ranked.length > 0 ? (
+              <Command.Group
+                heading={<span className="type-label-xs">Results</span>}
+                className="sig-palette-group"
+              >
+                {ranked.map((row) => row.render())}
+              </Command.Group>
+            ) : null
           ) : (
             <>
               {/* v2 §10.2 — the narrator: first group, above Navigate.

@@ -26,6 +26,7 @@ import {
 import {
   EDITION_ATTR,
   EDITION_STORAGE_KEY,
+  EDITION_THEME_COLOR,
   PICK_ATTR,
   type Edition,
   type EditionVia,
@@ -39,6 +40,7 @@ import type { ProjectSlug } from '@/lib/data/projects'
 export {
   EDITION_ATTR,
   EDITION_STORAGE_KEY,
+  EDITION_THEME_COLOR,
   INTRO_ATTR,
   INTRO_SESSION_KEY,
   PICK_ATTR,
@@ -58,15 +60,6 @@ export const EDITION_SWITCH_ATTR = 'data-edition-switch'
  */
 export const SWITCH_ORIGIN_X_VAR = '--switch-x'
 export const SWITCH_ORIGIN_Y_VAR = '--switch-y'
-/**
- * v3 §2.2 — `<meta name="theme-color">` per edition. The SSR meta is dark
- * for both schemes; syncEditionMeta() corrects it after mount / on switch.
- */
-export const EDITION_THEME_COLOR: Record<Edition, string> = {
-  screen: '#050607',
-  print: '#f3e8cf',
-}
-
 /**
  * v2 §6.3 — localStorage flag ('1') that the site had been visited before.
  * v3: the boot overlay that WROTE it is retired; the key stays because the
@@ -177,8 +170,11 @@ export function otherEdition(edition: Edition): Edition {
 
 /**
  * v3 §2.2 — point every `<meta name="theme-color">` at the edition's page
- * colour. Called by applyEdition() and by EditionToggle on mount (the SSR
- * meta is dark; a stored PRINT visitor gets paper after hydration).
+ * colour (EDITION_THEME_COLOR, defined beside the pre-paint script). That
+ * includes the pre-paint script's lead meta, first in <head>: React does not
+ * own it, so it keeps this colour through client-side navigations that
+ * re-render the server's metas SCREEN-dark. Called by applyEdition() on
+ * every switch, and by EditionToggle on mount as a safety net.
  */
 export function syncEditionMeta(edition: Edition): void {
   if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return

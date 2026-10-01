@@ -1,8 +1,8 @@
 /**
  * Web app manifest (v3 §2.8 / §3): SCREEN colours (the default edition —
- * the theme-color meta is corrected per edition at runtime by
- * syncEditionMeta), the Studio Seal knockout as the icon (SVG + the PNG
- * fallbacks Phase B rendered).
+ * the theme-color meta follows the edition in the page itself: the pre-paint
+ * script's lead meta, rewritten by syncEditionMeta on a switch), the Studio
+ * Seal knockout as the icon (SVG + the PNG fallbacks Phase B rendered).
  */
 
 import type { MetadataRoute } from 'next'

@@ -116,6 +116,27 @@ html[data-edition='print'] {
 .pw-tabs::-webkit-scrollbar {
   display: none;
 }
+/* A strip that has to scroll (the phone row, or a narrow bar) fades out over
+   its last 28 px instead of cutting a word at the edge, and the fade clears
+   as the strip reaches its end. It is scroll-driven, so it exists only while
+   the strip overflows; engines without scroll timelines keep the plain edge. */
+@supports (animation-timeline: scroll()) {
+  .pw-tabs {
+    animation: pw-tabs-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+@keyframes pw-tabs-fade {
+  0%,
+  90% {
+    -webkit-mask-image: linear-gradient(to left, transparent, #000 28px);
+    mask-image: linear-gradient(to left, transparent, #000 28px);
+  }
+  100% {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
 .pw-tab {
   flex-shrink: 0;
   min-height: 44px;
@@ -125,6 +146,15 @@ html[data-edition='print'] {
   cursor: pointer;
   white-space: nowrap;
   position: relative;
+}
+/* A window with one tab (a project without games) shows its name whole where
+   it fits and ends it in an ellipsis where it does not, instead of cutting a
+   letter at the strip's edge. */
+.pw-tab:only-child {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pw-tagline {
   white-space: nowrap;
@@ -394,10 +424,16 @@ html[data-edition='print'] {
 }
 
 /* ---- Connect Four ------------------------------------------------------- */
+/* The board is sized to the room it actually gets: the cell, gap and padding
+   keep the frame's proportions and shrink together when the game's width
+   (the query container, 100cqi) is narrower than the drawn board, so the
+   seventh column never runs past the frame. The full sizes still apply
+   wherever they fit. */
 .c4 {
-  --c4-cell: 50px;
-  --c4-gap: 9px;
-  --c4-pad: 16px;
+  container-type: inline-size;
+  --c4-cell: min(50px, (100cqi - 2px) * 50 / 436);
+  --c4-gap: min(9px, (100cqi - 2px) * 9 / 436);
+  --c4-pad: min(16px, (100cqi - 2px) * 16 / 436);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -475,6 +511,7 @@ html[data-edition='print'] {
   z-index: 2;
 }
 .c4-col {
+  position: relative;
   display: grid;
   grid-template-rows: repeat(6, var(--c4-cell));
   gap: var(--c4-gap);
@@ -482,7 +519,13 @@ html[data-edition='print'] {
   border: 0;
   background: transparent;
   cursor: pointer;
-  min-width: 44px;
+}
+/* Each column's target reaches halfway across the gaps beside it, so the
+   seven targets meet edge to edge without overlapping. */
+.c4-col::after {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--c4-gap) / -2);
 }
 .c4-col:disabled {
   cursor: default;
@@ -576,6 +619,7 @@ html[data-edition='print'] {
   padding: 0 var(--c4-pad);
   align-items: end;
   justify-items: center;
+  pointer-events: none;
 }
 .c4-bar {
   display: block;
@@ -619,12 +663,13 @@ html[data-edition='print'] {
   margin: 12px 0 0;
   max-width: 52ch;
 }
-/* Phone board (S4 §2 reflow): 36 px cells, 6 gap, 12 padding → 312 wide. */
+/* Phone board (S4 §2 reflow): 36 px cells, 6 gap, 12 padding → 312 wide,
+   scaled down together when the game is narrower than that. */
 @media (max-width: 420px) {
   .c4 {
-    --c4-cell: 36px;
-    --c4-gap: 6px;
-    --c4-pad: 12px;
+    --c4-cell: min(36px, (100cqi - 2px) * 36 / 312);
+    --c4-gap: min(6px, (100cqi - 2px) * 6 / 312);
+    --c4-pad: min(12px, (100cqi - 2px) * 12 / 312);
   }
 }
 
@@ -1233,6 +1278,11 @@ html[data-edition='screen'] {
       white-space: normal;
       width: 100%;
     }
+    /* The words take the free width, so the dismiss stays at the right end
+       even when the line is short (the touch wording fits on one line). */
+    .c4-coach-text {
+      flex: 1 1 auto;
+    }
   }
 
   /* ---- the rack (posters) ------------------------------------------------ */
@@ -1297,6 +1347,25 @@ html[data-edition='screen'] {
   .rk-award svg {
     color: var(--accent-electron);
   }
+  /* The words stop 8 px short of the plate's bar rail. The plate is drawn
+     cover-fit, so the rail starts at max(73.3% of the plate, 50% + 41.8 px);
+     in the award's own width (the plate less 25 px) that leaves
+     max(50% + 3.3 px, 73.33% - 32.7 px) after the 30 px laurels and gap. On
+     a card too narrow for the one-line sub-line it breaks in balance
+     ("Google MLOps / Project Expo") instead of running into the bars. The
+     70 px floor keeps "Google MLOps" on one line on the narrowest two-up
+     phone cards (360-376), where its glyphs still clear the rail by 5.5 px
+     or more. A halo in the plate's own black keeps the drifting points off
+     the glyphs. */
+  .rk-award > span {
+    max-width: max(70px, 50% + 3.3px, 73.33% - 32.7px);
+  }
+  .rk-award b,
+  .rk-award span span {
+    text-shadow:
+      0 0 2px #08090c,
+      0 0 6px #08090c;
+  }
   .rk-award b {
     display: block;
     font: 600 9.5px/1 var(--font-display);
@@ -1309,6 +1378,7 @@ html[data-edition='screen'] {
     margin-top: 3px;
     font: 400 10px/1 var(--font-body);
     color: var(--text-secondary);
+    text-wrap: balance;
   }
   .rk-body {
     padding: 12px 14px 14px;
@@ -1351,6 +1421,25 @@ html[data-edition='screen'] {
     border-radius: 3px;
     background: var(--ed-tint);
     font-size: 10.5px;
+  }
+  /* A long name (no logo) may run a few px into the card's right padding, as
+     drawn; only on a card whose text column is under 140 px (the two-up
+     phone rack at 360-395, the six-up rack at 1101-1147), where "Mixed
+     Integer Programming" would reach the card's clipped edge, does it wrap
+     inside its box. The span's negative margins keep a one-line chip the
+     same height there. */
+  .rk-bill {
+    container-type: inline-size;
+  }
+  @container (width < 140px) {
+    .rk-bill li[data-boxed] {
+      max-width: 100%;
+      white-space: normal;
+    }
+    .rk-bill li[data-boxed] > span {
+      margin-block: -0.1em;
+      line-height: 1.2;
+    }
   }
   .rk-more {
     display: none;
@@ -1725,10 +1814,13 @@ html[data-edition='print'] {
   }
 
   /* ---- Connect Four ------------------------------------------------------ */
+  /* 42 px cells + 10 padding + the 4 px ink frame, in the first column (the
+     game's width less the 140 px balloon column and the 22 px gap); scaled
+     down together when that column is narrower than the 322 px board. */
   .c4 {
-    --c4-cell: 42px;
+    --c4-cell: min(42px, (100cqi - 170px) * 42 / 314);
     --c4-gap: 0px;
-    --c4-pad: 10px;
+    --c4-pad: min(10px, (100cqi - 170px) * 10 / 314);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 140px;
     grid-template-rows: auto auto auto;
@@ -1770,6 +1862,15 @@ html[data-edition='print'] {
     margin: 0;
     width: max-content;
     white-space: nowrap;
+  }
+  /* Outside a project window (the /arcade board) the row also carries New
+     game, which is wider than the balloon column: it takes a row of its own
+     under the bars instead of spilling over them. */
+  @media (min-width: 600px) {
+    :not(.pw-live) > .c4 > .c4-status {
+      grid-column: 1 / -1;
+      grid-row: 4;
+    }
   }
   .c4-dot,
   .c4-status-text {
@@ -2045,8 +2146,38 @@ html[data-edition='print'] {
     .c4-say::after {
       display: none;
     }
+    /* One column: the board may use the game's full width (308 px drawn). */
     .c4 {
-      --c4-cell: 40px;
+      --c4-cell: min(40px, (100cqi - 8px) * 40 / 300);
+      --c4-pad: min(10px, (100cqi - 8px) * 10 / 300);
+    }
+  }
+  /* A game narrower than 410 px beside the balloon column (the two-column
+     window at 900-985, the /arcade window at 1024-1063) would squeeze the
+     board under 32 px cells and run the 26 px drop keys together: it takes
+     the phone reflow instead, one column with the board at up to 40 px
+     cells. The query reads the .c4 itself, so it applies to its children;
+     the variables are set on them for the same reason. */
+  @container (width < 410px) {
+    .c4-board-wrap,
+    .c4-keys,
+    .c4-evals,
+    .c4-say,
+    .c4-coach,
+    .c4-status,
+    :not(.pw-live) > .c4 > .c4-status {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      --c4-cell: min(40px, (100cqi - 8px) * 40 / 300);
+      --c4-pad: min(10px, (100cqi - 8px) * 10 / 300);
+    }
+    .c4-status,
+    :not(.pw-live) > .c4 > .c4-status {
+      order: 10;
+      justify-self: end;
+    }
+    .c4-say::after {
+      display: none;
     }
   }
 
@@ -2205,13 +2336,22 @@ html[data-edition='print'] {
   .rk-award {
     display: none !important;
   }
+  /* P4: the burst is slapped on the bottom of the plate, on its rule. The
+     plate's chart is the confidence-bar rail on the right, drawn cover-fit
+     into a 101 px tall plate, so the rail starts at max(73.33%, 50% +
+     37.7 px) of the cover; the burst's right point stops 4 px short of it
+     (right: min(26.67%, 50% - 37.7 px) + 4 px) at every cover width. top:
+     70 px puts its lowest point on the rule (24 px band + 104 px plate) and
+     4.5 px above the title's glyphs, and it never reaches the next cover.
+     The award sets on two lines ("3rd / place"). */
   .rk-burst {
     position: absolute;
-    right: 8px;
-    top: 96px;
+    right: calc(min(26.67%, 50% - 37.7px) + 4px);
+    top: 70px;
     z-index: 3;
     width: 62px;
     height: 62px;
+    padding: 0 12px;
     font-size: 12.5px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -2321,8 +2461,9 @@ html[data-motion='reduced'] .c4-bar {
 /* ============================================================================
    /work/[slug] — the permalink page's own furniture (app/work/[slug]/page.tsx)
    ========================================================================== */
+/* Block padding only: the side gutter comes from .container-site. */
 .wk-page {
-  padding: 40px 0 96px;
+  padding-block: 40px 96px;
 }
 .wk-page-nav-row {
   display: flex;

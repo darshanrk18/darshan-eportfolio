@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { figures, markSkills } from '@/components/experience/marks'
-import { PRINT_PLATES } from '@/components/experience/copy'
+import { PRINT_PLATES, XP_COPY } from '@/components/experience/copy'
 import { cityOf, commits, jobIds, nextMarker, showBranch } from '@/lib/data/experience'
 import { PHOTOS } from '@/lib/data/photos'
 import { profile } from '@/lib/data/profile'
@@ -139,6 +139,22 @@ describe('markSkills (the bullet highlight)', () => {
         .filter((s) => s.skill)
         .map((s) => s.text)
     ).toEqual(['React'])
+  })
+})
+
+describe('the skills-per-job prompt, mouse or touch (lib/utils/input.ts)', () => {
+  it('keeps the approved mouse wording per edition', () => {
+    expect(XP_COPY.prompt).toEqual({
+      screen: 'Turn this on, then hover a job.',
+      print: 'Switch it on, then pick a job.',
+    })
+  })
+
+  it('says tap on a touch screen, where nothing hovers (a tap picks the job)', () => {
+    expect(XP_COPY.promptTouch.screen).toBe('Turn this on, then tap a job.')
+    // PRINT already says "pick", which a tap does: one wording for both
+    expect(XP_COPY.promptTouch.print).toBe(XP_COPY.prompt.print)
+    for (const line of Object.values(XP_COPY.promptTouch)) expect(line).not.toMatch(/hover|click/i)
   })
 })
 
