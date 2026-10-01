@@ -6,6 +6,13 @@ new design of the whole site; the numbers in parentheses are pull requests.
 
 ## [Unreleased]
 
+### Changed
+
+- The thin progress line at the top of the page draws itself instead of using
+  the animation library, so the home page loads 2.7 KB less JavaScript. It
+  also follows the true scroll position while the page below is still
+  loading. (#28)
+
 ### Fixed
 
 - In SCREEN, the hero's moving field comes back after a switch to PRINT and

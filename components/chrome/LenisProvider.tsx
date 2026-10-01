@@ -18,8 +18,8 @@
  *
  * No velocity bus (§5.1 correction): Lenis animates NATIVE scrollTop, so the
  * glyph field's uTurb (window.scrollY deltas in its ticker callback) and the
- * Motion useScroll consumers (top bar, compiled %, DAG draw) keep working
- * untouched and simply feel authored.
+ * scroll listeners (the top bar's progress line) keep working untouched and
+ * simply feel authored.
  */
 
 import { useEffect } from 'react'
