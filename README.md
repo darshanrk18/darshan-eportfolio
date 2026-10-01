@@ -225,16 +225,16 @@ State shared between islands (the edition mirror, the palette and guide state, t
 
 ## Performance and accessibility
 
-Production Lighthouse, mobile, on **September 30, 2026** (v3.0.0):
+Production Lighthouse, mobile, on **September 30, 2026** (v3.1.0):
 
 | Page | Visit | Performance | LCP | Runs |
 |---|---|:---:|:---:|---|
-| `/` | First visit (the picker) | **81** | 4.2 s | median of 3 |
-| `/` | Return visit, SCREEN | **96** | 2.7 s | 1 |
-| `/` | Return visit, PRINT (the intro plays) | **74** | 6.6 s | 1 |
+| `/` | First visit (the picker) | **87** | 3.9 s | median of 3 |
+| `/` | Return visit, SCREEN | **97** | 2.5 s | median of 3 |
+| `/` | Return visit, PRINT (the intro plays) | **80** | 4.9 s | median of 3 |
 | `/cv` | First visit | **99** | 2.0 s | median of 3 |
-| `/work/ticket-forge` | First visit | **99** | 2.1 s | median of 3 |
-| `/arcade` | First visit | **96** | 2.6 s | 1 |
+| `/work/ticket-forge` | First visit | **98** | 2.2 s | median of 3 |
+| `/arcade` | First visit | **97** | 2.5 s | median of 3 |
 
 **Accessibility 100** and **Best Practices 100** on all six. **SEO 100** on every page except `/arcade`, which is `noindex` on purpose.
 
@@ -243,7 +243,7 @@ Production Lighthouse, mobile, on **September 30, 2026** (v3.0.0):
 
 <br>
 
-Lighthouse 12.8.2 in headless Chrome with the default mobile settings: simulated throttling (150 ms round trip, about 1.6 Mbps, 4× CPU slowdown) on a 412 px wide screen. Runs were made one at a time against the production deployment, with nothing else running. The first visit uses a fresh profile, so it measures the picker. Return visits reuse a profile with a stored edition; a new tab has no session flag, so the PRINT intro plays and its largest paint is an intro frame. Single runs vary: the three first-visit runs scored 74, 81 and 85, which is why the headline pages report the median of three.
+Lighthouse 12.8.2 in headless Chrome with the default mobile settings: simulated throttling (150 ms round trip, about 1.6 Mbps, 4× CPU slowdown) on a 412 px wide screen. Runs were made one at a time against the production deployment, with nothing else running. The first visit uses a fresh profile, so it measures the picker. Return visits reuse a profile with a stored edition; a new tab has no session flag, so the PRINT intro plays and its largest paint is an intro frame. Single runs vary (the three return-SCREEN runs scored 83, 97 and 97), so every row is the median of three. On the first visit the largest paint is the picker's title, drawn in the first frame; the simulated LCP is later than the first paint because the simulation also counts every file that finishes downloading before that frame.
 
 </details>
 
