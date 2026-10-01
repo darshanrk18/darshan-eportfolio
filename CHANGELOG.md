@@ -6,6 +6,11 @@ new design of the whole site; the numbers in parentheses are pull requests.
 
 ## [Unreleased]
 
+### Fixed
+
+- In SCREEN, the hero's moving field comes back after a switch to PRINT and
+  back; it used to stay the still drawing until the page was reloaded. (#24)
+
 ## [3.1.0] - 2026-09-30
 
 The site's own address, a new share card, a rebuilt `/cv`, a public
