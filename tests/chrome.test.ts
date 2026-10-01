@@ -98,6 +98,12 @@ describe('bundle hygiene — build evidence only in the lazy panel (§1.8, §7)'
     'components/palette/BuildInfo.client.tsx',
   ]
 
+  it('the scroll-progress bar draws itself, without motion (its scroll tracking would join the first load)', () => {
+    const src = read('components/chrome/ScrollProgress.tsx')
+    expect(src).not.toMatch(/from 'motion|from 'framer-motion/)
+    expect(src).toContain("addEventListener('scroll', schedule, { passive: true })")
+  })
+
   it('nothing in the immediate chrome imports lib/build/inject or the manifest', () => {
     for (const rel of immediate) {
       const src = read(rel)
