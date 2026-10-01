@@ -58,6 +58,36 @@ new design of the whole site; the numbers in parentheses are pull requests.
   unchanged. (#7)
 - In Experience, a highlighted figure no longer takes the comma after it
   (as in "S3,"); a thousands comma ("10,000+") still belongs to the figure. (#12)
+- Tablets and phones held sideways no longer cut off the top bar: below 1130 px
+  of header width it switches to the compact bar. Its Menu sheet gains a
+  Search / Jump row, scrolls with a mouse wheel or trackpad on short windows,
+  keeps keyboard focus inside it in Safari, and opens above the reduced-motion
+  offer and the guide. PRINT's "No. 1 · 10¢" box shows only where the
+  masthead has room, Safari on Retina Macs included. (#16)
+- The edition picker fits short screens and phones on their side: the seal
+  scales with the screen so it no longer covers "Choose your edition", No. 1
+  stays off the photograph, and on short phones the button no longer covers
+  the masthead. (#16)
+- Connect Four fits its pane at every width. In PRINT between 900 and 1070 px
+  the last two columns hung off the board; there the game now stacks in one
+  column. On `/arcade`, New game no longer overlaps the thinking bars. (#16)
+- `/work` pages have their side margin back on phones, a window tab that does
+  not fit ends in an ellipsis instead of a cut letter, and every chapter tag
+  is in capitals. (#16)
+- Ticket-Forge's award sits clear of the chart and the title in both
+  editions, and a long skill chip wraps inside its card. (#16)
+- On phones, the IEEE branch in Experience stays inside its card, PRINT's
+  Skills caption wraps inside its panel, and the console's suggestions fade at
+  the edge when more are off to the side; a suggestion focused with the
+  keyboard scrolls fully into view. (#16)
+- Touch screens no longer show "Press ⌘K", and the guide, Experience and
+  Connect Four say tap instead of press or hover. (#16)
+- Keyboard focus stays on the page after choosing an edition, skipping the
+  intro or switching editions. (#16)
+- The browser's bar colour follows the stored edition on every page, `/cv`
+  and `/work` included. (#16)
+- The palette puts the best match first however the query arrives, pasted
+  text included. (#16)
 
 ### Security
 
