@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-14T06:37:54.852Z",
-  "totalFirstLoadGzKb": 175.1,
+  "generatedAt": "2026-11-14T06:50:59.456Z",
+  "totalFirstLoadGzKb": 175.2,
   "sharedGzKb": 101.3,
   "routes": [
     {
       "route": "/",
-      "firstLoadGzKb": 175.1,
+      "firstLoadGzKb": 175.2,
       "routeGzKb": 73.8
     },
     {

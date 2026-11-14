@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { figures, markSkills } from '@/components/experience/marks'
 import { PRINT_PLATES, XP_COPY } from '@/components/experience/copy'
-import { cityOf, commits, jobIds, nextMarker, showBranch } from '@/lib/data/experience'
+import { campusRoles, cityOf, commits, jobIds, nextMarker, showBranch } from '@/lib/data/experience'
 import { PHOTOS } from '@/lib/data/photos'
 import { profile } from '@/lib/data/profile'
 import { buildCitation } from '@/components/experience/citation'
@@ -37,6 +37,17 @@ describe('experience data (director call (b))', () => {
       'schneider',
       'ieee-tag',
     ])
+  })
+
+  it('lists the campus roles as the résumé does, newest first, off the graph', () => {
+    expect(campusRoles.map((r) => r.role)).toEqual([
+      'Residential Security Office Proctor, Northeastern University',
+      'Treasurer, AWS Builders at Northeastern',
+    ])
+    expect(campusRoles.map((r) => r.period)).toEqual(['Oct 2026 – Present', 'May 2026 – Present'])
+    for (const r of campusRoles) expect(r.line.length).toBeGreaterThan(10)
+    // never graph entries: the career graph stays the three job panels
+    expect(commits.some((c) => /Treasurer|Proctor/.test(c.role))).toBe(false)
   })
 
   it('keeps the AWS internship to its three bullets and the allowed outcome', () => {

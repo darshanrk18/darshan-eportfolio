@@ -1,6 +1,9 @@
 /**
  * Content data — experience (CONTENT_FINAL 2026-09-23, newest first).
- * Exactly these entries exist; do not add roles.
+ * Exactly these entries exist; do not add roles to `commits` — the career
+ * graph's node styling and fork geometry assume the three job panels.
+ * Campus roles (Nov 2026 résumé) live in `campusRoles`, drawn as the
+ * aside's card beside Education, never as graph panels.
  * AWS internship = exactly its three bullets + the allowed outcome line —
  * never team names, mentors, compensation, or internal system details.
  *
@@ -207,6 +210,29 @@ export const commits: readonly CommitEntry[] = [
 export function getCommit(id: CommitId): CommitEntry | undefined {
   return commits.find((c) => c.id === id)
 }
+
+/** A campus role beside the jobs — Nov 2026 résumé, Leadership & Campus Involvement. */
+export interface CampusRole {
+  /** Role and organisation as the résumé prints them. */
+  role: string
+  /** The résumé's one-line description. */
+  line: string
+  period: string
+}
+
+/** Current campus roles, newest first (the aside's card under Education). */
+export const campusRoles: readonly CampusRole[] = [
+  {
+    role: 'Residential Security Office Proctor, Northeastern University',
+    line: 'Monitor access and assist residents',
+    period: 'Oct 2026 – Present',
+  },
+  {
+    role: 'Treasurer, AWS Builders at Northeastern',
+    line: 'Manage club finances and help organize AWS workshops',
+    period: 'May 2026 – Present',
+  },
+]
 
 /** The city alone ('Boston, MA' → 'Boston') — the PRINT narration captions. */
 export function cityOf(location: string): string {

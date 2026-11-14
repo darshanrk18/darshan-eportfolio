@@ -28,6 +28,7 @@ import { commitBlame, isBlameJobId } from './blame'
 import CareerDraw from './CareerDagIsland'
 import { buildCitation } from './citation'
 import CopyCitation from './CopyCitation.client'
+import CampusCard from './CampusCard'
 import { PRINT_PLATES, XP_COPY } from './copy'
 import EducationCard from './EducationCard'
 import SkillsPerJob from './SkillsPerJobIsland'
@@ -344,6 +345,7 @@ export default function Experience() {
                 <span className="xp-photo-low" />
               </figure>
               <EducationCard />
+              <CampusCard />
               <SkillsPerJob />
             </aside>
           </div>

@@ -14,6 +14,7 @@ export const XP_COPY = {
   chapter: 'CH. IV',
   printTitle: 'The Field Years',
   educationLabel: 'Education',
+  campusLabel: 'Campus involvement',
   readPaper: 'Read the paper',
   copyCitation: 'Copy the citation',
   copied: 'Copied',
@@ -37,7 +38,7 @@ export const XP_COPY = {
   jobName: (company: string) => `${company} — skills highlighted`,
   tileName: (label: string) => `${label} — open it in the toolkit`,
   graphLabel: 'Experience, newest first',
-  asideLabel: 'Education, and the skills each job used',
+  asideLabel: 'Education, campus involvement, and the skills each job used',
 } as const
 
 /** P5 plate photos and captions per job (new copy approved in the P5 frame). */
