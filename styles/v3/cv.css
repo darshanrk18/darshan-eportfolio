@@ -378,6 +378,7 @@ html[data-edition='print'] .cv-photo {
   body:has(#experience:target) .cv-toc a[href='#experience']::before,
   body:has(#projects:target) .cv-toc a[href='#projects']::before,
   body:has(#publication:target) .cv-toc a[href='#publication']::before,
+  body:has(#leadership:target) .cv-toc a[href='#leadership']::before,
   body:has(#skills:target) .cv-toc a[href='#skills']::before,
   body:has(#education:target) .cv-toc a[href='#education']::before {
     width: 22px;
@@ -1035,6 +1036,7 @@ html[data-edition='print'] .cv-photo {
     & body:has(#experience:target) :is(.cv-toc, .cv-jump) a[href='#experience'],
     & body:has(#projects:target) :is(.cv-toc, .cv-jump) a[href='#projects'],
     & body:has(#publication:target) :is(.cv-toc, .cv-jump) a[href='#publication'],
+    & body:has(#leadership:target) :is(.cv-toc, .cv-jump) a[href='#leadership'],
     & body:has(#skills:target) :is(.cv-toc, .cv-jump) a[href='#skills'],
     & body:has(#education:target) :is(.cv-toc, .cv-jump) a[href='#education'] {
       color: var(--text-primary);
@@ -1042,6 +1044,7 @@ html[data-edition='print'] .cv-photo {
     & body:has(#experience:target) .cv-toc a[href='#experience']::before,
     & body:has(#projects:target) .cv-toc a[href='#projects']::before,
     & body:has(#publication:target) .cv-toc a[href='#publication']::before,
+    & body:has(#leadership:target) .cv-toc a[href='#leadership']::before,
     & body:has(#skills:target) .cv-toc a[href='#skills']::before,
     & body:has(#education:target) .cv-toc a[href='#education']::before {
       background: var(--accent-signal);
@@ -1379,6 +1382,7 @@ html[data-edition='print'] .cv-photo {
     & body:has(#experience:target) .cv-toc a[href='#experience']::before,
     & body:has(#projects:target) .cv-toc a[href='#projects']::before,
     & body:has(#publication:target) .cv-toc a[href='#publication']::before,
+    & body:has(#leadership:target) .cv-toc a[href='#leadership']::before,
     & body:has(#skills:target) .cv-toc a[href='#skills']::before,
     & body:has(#education:target) .cv-toc a[href='#education']::before {
       height: 4px;
@@ -1590,7 +1594,7 @@ html[data-edition='print'] .cv-photo {
    print of '/' is untouched. */
 @page cv {
   size: Letter;
-  margin: 0.5in 0.55in 0.55in;
+  margin: 0.5in 0.55in 0.5in;
 
   @bottom-right {
     content: counter(page) ' / ' counter(pages);
@@ -1638,9 +1642,10 @@ html[data-edition='print'] .cv-photo {
     display: grid;
     grid-template-columns: 1.9in minmax(0, 1fr);
     column-gap: 0.28in;
-    /* 9.6 pt: the largest size that still makes two pages with a fallback
-       face in place of Archivo (10 pt fits only with Archivo loaded). */
-    font: 400 9.6pt/1.36 var(--cv-sans);
+    /* 9.4 pt: the largest size that still makes two pages — page 1 must
+       close over Leadership and the Publication, page 2 holds Projects
+       whole — with a fallback face in place of Archivo. */
+    font: 400 9.4pt/1.28 var(--cv-sans);
     color: #111;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -1662,7 +1667,7 @@ html[data-edition='print'] .cv-photo {
     grid-template-rows: auto auto 1fr;
     column-gap: 0.3in;
     align-items: start;
-    padding-bottom: 9pt;
+    padding-bottom: 5pt;
     margin-bottom: 4pt;
     border-bottom: 1.2pt solid #111;
   }
@@ -1734,7 +1739,7 @@ html[data-edition='print'] .cv-photo {
   }
   .cv-h2,
   .cv-h2s {
-    padding: 8pt 0 3pt;
+    padding: 6pt 0 3pt;
     font: 600 8pt/1.2 var(--cv-mono);
     letter-spacing: 0.28em;
     text-transform: uppercase;
@@ -1743,6 +1748,11 @@ html[data-edition='print'] .cv-photo {
   }
 
   /* ---- page 1: the rail beside Experience ------------------------------- */
+  /* The screen's 64px column offset is air the paper can't spare. */
+  .cv-ref,
+  #experience {
+    margin-top: 6px;
+  }
   .cv-ref {
     grid-column: 1;
     grid-row: 2;
@@ -1802,7 +1812,7 @@ html[data-edition='print'] .cv-photo {
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 10pt;
     align-items: baseline;
-    padding: 6pt 0 7pt;
+    padding: 5pt 0 6pt;
     break-inside: avoid;
   }
   /* The rule between entries hangs under the upper one (screen draws it over
@@ -1864,7 +1874,7 @@ html[data-edition='print'] .cv-photo {
     padding-left: 10pt;
   }
   .cv-bullets li + li {
-    margin-top: 1.5pt;
+    margin-top: 1.2pt;
   }
   /* borders, not backgrounds: they print with "background graphics" off */
   .cv-bullets li::before {
@@ -1881,22 +1891,59 @@ html[data-edition='print'] .cv-photo {
     font-weight: 600;
   }
 
-  /* ---- projects + publication: full width, the year in the margin ------- */
-  #projects {
+  /* ---- leadership + publication close page 1; projects take page 2 ------ */
+  /* Paper order differs from the screen on purpose: Leadership and the
+     Publication are short, full-width bands that fill page 1 under the
+     columns, and Projects — taller than the space either page could share —
+     moves to page 2 whole. Page 1 reads person, page 2 reads work. */
+  #leadership {
     grid-column: 1 / -1;
     grid-row: 3;
-    margin-top: 2pt;
   }
   #publication {
     grid-column: 1 / -1;
     grid-row: 4;
+  }
+  #projects {
+    grid-column: 1 / -1;
+    grid-row: 5;
     margin-top: 2pt;
+  }
+  /* One line per role, as the résumé prints it: "role: line        date". */
+  #leadership .cv-edu > li {
+    position: relative;
+    padding: 3pt 1.35in 0 0;
+  }
+  #leadership .cv-edu > li + li {
+    margin-top: 0;
+    padding-top: 2.5pt;
+    border-top: 0;
+  }
+  #leadership .cv-edu h3,
+  #leadership .cv-edu .deg {
+    display: inline;
+    margin: 0;
+  }
+  #leadership .cv-edu h3::after {
+    content: ': ';
+    font-weight: 400;
+  }
+  #leadership .cv-edu .when {
+    position: absolute;
+    right: 0;
+    top: 4.5pt;
+    margin: 0;
+    text-align: right;
+    font: 400 7.8pt/1.45 var(--cv-mono);
+  }
+  #leadership .cv-edu > li + li .when {
+    top: 4pt;
   }
   .cv-proj,
   .cv-pub {
     grid-template-columns: 0.5in minmax(0, 1fr);
     column-gap: 0.16in;
-    padding: 5.5pt 0 6.5pt;
+    padding: 4pt 0 5pt;
   }
   .cv-proj > *,
   .cv-pub > * {
@@ -1943,5 +1990,14 @@ html[data-edition='print'] .cv-photo {
   .cv-doi {
     margin-top: 1.5pt;
     font: 400 7.4pt/1.45 var(--cv-mono);
+  }
+  /* DOI and the paper address share one line, so the Publication band stays
+     short enough to close page 1. */
+  .cv-pub .cv-doi,
+  .cv-pub .cv-links {
+    display: inline-block;
+  }
+  .cv-pub .cv-doi {
+    margin-right: 14pt;
   }
 }
