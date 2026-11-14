@@ -45,6 +45,11 @@
   grid-column: 2;
   grid-row: 1 / 3;
 }
+/* The aside's cards (Education, then Campus involvement) breathe apart in
+   both editions; each edition draws its own card chrome. */
+.xp-edu + .xp-edu {
+  margin-top: 34px;
+}
 .xp-head,
 .xp-main,
 .xp-aside {
