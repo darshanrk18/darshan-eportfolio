@@ -385,12 +385,12 @@ export default function Hero() {
           <div className="hero-foot-l ed-screen-only mouse-only">
             <PalettePill />
           </div>
+          <ReplayIntro label={cover.replayIntro} />
           <a className="hero-next ed-screen-only" href="#about">
             {screen.nextLabel}
             <Arrow />
           </a>
           <div className="hero-imprint ed-print-only">
-            <ReplayIntro label={cover.replayIntro} />
             <span className="ed-cmyk" aria-hidden="true">
               <i />
               <i />

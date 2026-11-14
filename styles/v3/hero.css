@@ -807,17 +807,41 @@ html[data-edition='screen'] {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
   }
 
-  /* ---- foot: the ⌘K hint · Next ---------------------------------------- */
+  /* ---- foot: the ⌘K hint · Replay the intro · Next --------------------- */
   .hero-foot {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 16px;
     min-height: 24px;
     margin-top: 16px;
     z-index: 3;
     font: 400 12.5px/1 var(--font-body);
     color: var(--text-tertiary);
+  }
+  .hero-replay-intro {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--ed-glass-edge);
+    border-top-color: var(--ed-glass-edge-top);
+    border-radius: 999px;
+    background: var(--ed-glass-sheen), rgba(18, 21, 26, 0.55);
+    box-shadow: inset 0 1px 0 var(--ed-glass-hi);
+    font: 500 12.5px/1 var(--font-body);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--dur-micro) var(--ease-swift),
+      border-color var(--dur-micro) var(--ease-swift);
+  }
+  .hero-replay-intro:hover {
+    color: var(--text-primary);
+    border-color: var(--ed-glass-edge-top);
+  }
+  .hero-replay-intro svg {
+    color: var(--ed-link);
   }
   .hero-pill {
     display: inline-flex;
@@ -1606,14 +1630,32 @@ html[data-edition='print'] {
     gap: 12px;
   }
   .hero-replay-intro {
-    padding: 0 0 2px;
-    border: 0;
-    border-bottom: 2px solid var(--accent-signal);
-    background: none;
-    font: 600 12px/1 var(--font-body);
-    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 2px solid var(--text-primary);
+    border-radius: 0;
+    background: var(--ed-white);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    font: 700 12px/1 var(--font-body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--text-primary);
     cursor: pointer;
+    transition: none;
+  }
+  .hero-replay-intro:hover {
+    background: var(--accent-amber);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+  }
+  .hero-replay-intro:active {
+    translate: 2px 2px;
+    box-shadow: 1px 1px 0 var(--text-primary);
+  }
+  .hero-replay-intro svg {
+    color: var(--accent-signal);
   }
   .hero-imprint .ed-cmyk {
     margin-left: 6px;

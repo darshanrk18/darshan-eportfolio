@@ -1680,18 +1680,27 @@ html[data-edition='print'] {
   .ct-replay {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-    padding: 0 0 2px;
-    border: 0;
-    border-bottom: 2px solid var(--accent-signal);
-    background: transparent;
-    font: 600 13px/1.3 var(--font-body);
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    border: 2px solid var(--text-primary);
+    background: var(--accent-amber);
+    box-shadow: 3px 3px 0 var(--text-primary);
+    font: 700 12px/1 var(--font-body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--text-primary);
     cursor: pointer;
   }
   .ct-replay:hover {
-    border-bottom-width: 3px;
+    background: var(--ed-white);
+  }
+  .ct-replay:active {
+    translate: 2px 2px;
+    box-shadow: 1px 1px 0 var(--text-primary);
+  }
+  .ct-replay svg {
+    color: var(--accent-signal);
   }
   .ct-tbc {
     position: relative;
