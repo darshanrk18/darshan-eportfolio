@@ -1,8 +1,9 @@
 /**
  * Content data — the résumé as /cv reads it (owner decision "A but my
- * current resume", Sep 30 2026). The text follows the owner's LaTeX résumé
- * word for word, including the three bench projects the .tex keeps
- * commented out (TRIPLAY_AI, Calendar Application, Box Archive).
+ * current resume", Sep 30 2026; text synced to the owner's Nov 2026 .tex).
+ * The text follows the owner's LaTeX résumé word for word, including the
+ * three bench projects the .tex keeps commented out (TRIPLAY_AI, Calendar
+ * Application, Box Archive).
  *
  * SERVER ONLY: app/cv/page.tsx is the one importer (tests/cv.test.ts
  * enforces it). Never import this from lib/data/projects.ts, profile.ts or
@@ -12,10 +13,12 @@
  * `**…**` marks the résumé's bold runs (the metrics); richSegments() splits
  * them for the page and plainText() drops the marks.
  *
- * Two verified site facts the résumé leaves out are kept on purpose: the
- * AWS offer line and Schneider Electric's SURGE Award (both read from
- * lib/data/experience.ts). Trackfolio is not on the résumé: its bullets are
- * the site's own `build` and `result` lines (lib/data/projects.ts).
+ * One verified site fact the résumé leaves out is kept on purpose: the
+ * AWS offer line (read from lib/data/experience.ts). The Surge award is on
+ * the résumé itself since Nov 2026 (a Schneider bullet); the award tag next
+ * to the company name stays as the design's visual signal for it.
+ * Trackfolio is not on the résumé: its bullets are the site's own `build`
+ * and `result` lines (lib/data/projects.ts).
  *
  * Never here: a phone number (the downloadable PDF keeps it; the web page
  * does not) or a grade figure.
@@ -59,13 +62,20 @@ export function plainText(text: RichText): string {
 /* Sections                                                                  */
 /* ------------------------------------------------------------------------- */
 
-export type ResumeSectionId = 'experience' | 'projects' | 'publication' | 'skills' | 'education'
+export type ResumeSectionId =
+  | 'experience'
+  | 'projects'
+  | 'publication'
+  | 'leadership'
+  | 'skills'
+  | 'education'
 
 /** Section titles in the résumé's words (the ids are the page's deep links). */
 export const resumeSections: Record<ResumeSectionId, string> = {
   experience: 'Experience',
   projects: 'Projects',
   publication: 'Publication',
+  leadership: 'Leadership & Campus Involvement',
   skills: 'Technical Skills',
   education: 'Education',
 }
@@ -85,7 +95,7 @@ export const resumeEducation: readonly ResumeSchool[] = [
   {
     school: 'Northeastern University',
     degree: 'Master of Science in Computer Science',
-    period: 'Jan 2025 – Dec 2026 (Expected)',
+    period: 'Jan 2025 – Dec 2026',
     location: 'Boston, MA',
   },
   {
@@ -105,7 +115,7 @@ export interface ResumeSkillRow {
   items: readonly string[]
 }
 
-/** The résumé's six rows, in its order. */
+/** The résumé's five rows, in its order. */
 export const resumeSkills: readonly ResumeSkillRow[] = [
   {
     label: 'Languages',
@@ -129,16 +139,31 @@ export const resumeSkills: readonly ResumeSkillRow[] = [
     items: ['React', 'Redux', 'Next.js', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'pgvector'],
   },
   {
-    label: 'Cloud',
-    items: ['AWS (Lambda, S3, EC2, ECS, ECR, IAM, CDK)', 'Azure', 'GCP'],
-  },
-  {
-    label: 'DevOps',
-    items: ['Docker', 'Kubernetes', 'Terraform', 'Jenkins', 'GitHub Actions', 'Git', 'Linux/Unix'],
+    label: 'Cloud & DevOps',
+    items: [
+      'AWS (Lambda, S3, EC2, ECS, ECR, IAM, CDK)',
+      'Azure',
+      'GCP',
+      'Docker',
+      'Kubernetes',
+      'Terraform',
+      'Linux/Unix',
+    ],
   },
   {
     label: 'Tools & Testing',
-    items: ['JUnit', 'Mockito', 'PyTest', 'Playwright', 'AWS CloudWatch', 'Prometheus', 'Grafana'],
+    items: [
+      'Git',
+      'Jenkins',
+      'GitHub Actions',
+      'JUnit',
+      'Mockito',
+      'PyTest',
+      'Playwright',
+      'AWS CloudWatch',
+      'Prometheus',
+      'Grafana',
+    ],
   },
 ]
 
@@ -169,9 +194,9 @@ export const resumeExperience: readonly ResumeJob[] = [
     period: 'Jun 2026 – Aug 2026',
     location: 'Boston, MA',
     bullets: [
-      'Designed and built a serverless prototype that automatically captures visual evidence for cloud security workflows using Java, Python, AWS Lambda, S3 and browser automation.',
-      'Defined infrastructure as code with AWS CDK, IAM and Docker; hardened the service with input validation, timeout handling, fault-tolerant execution and observability.',
-      'Built comprehensive automated validation spanning a Java evidence collector with **100% test coverage**, Python Lambda unit tests and an end-to-end integration suite validating success and failure paths against a live AWS environment.',
+      'Designed and built an end-to-end serverless prototype in Java and Python that automatically captures visual evidence for cloud security workflows, using AWS Lambda, S3 and browser automation.',
+      'Defined the infrastructure as code with AWS CDK, IAM and Docker, and made the service fault tolerant through input validation, timeout handling and built-in observability.',
+      'Achieved **100% test coverage** on the Java evidence collector, unit tested the Python Lambda, and built an end-to-end integration suite that validates success and failure paths against a live AWS environment.',
     ],
     outcome: getCommit('aws-intern')?.outcome,
   },
@@ -183,7 +208,7 @@ export const resumeExperience: readonly ResumeJob[] = [
     period: 'Sep 2025 – Dec 2025',
     location: 'Boston, MA',
     bullets: [
-      'Mentored **300+ graduate students** in labs and office hours on Java OOP, SOLID principles, UML, design patterns, debugging and unit testing with JUnit and JaCoCo.',
+      'Mentored **300+ graduate students** in labs and office hours on Java OOP, SOLID principles, UML and design patterns, and reviewed their code and unit tests (JUnit, JaCoCo).',
     ],
   },
   {
@@ -193,9 +218,10 @@ export const resumeExperience: readonly ResumeJob[] = [
     period: 'Feb 2021 – Nov 2023',
     location: 'Bengaluru, India',
     bullets: [
-      'Built enterprise workflow applications with Python/Flask, React, Node.js and MySQL used by **10,000+ employees**; cut API response times by **30%** through SQL query optimization and caching.',
-      'Automated Microsoft 365 administration and migration workflows with Python, PowerShell, Microsoft Graph API and Azure AD, reducing manual operational effort by **60%**.',
-      'Containerized backend services with Docker and Kubernetes, built CI/CD pipelines in Jenkins and GitHub Actions, and added Prometheus/Grafana monitoring for consistent deployments and operational visibility.',
+      'Designed and built internal workflow applications in Python/Flask, React, Node.js and MySQL used by **10,000+ employees**, and cut API response times by **30%** through SQL query optimization and caching.',
+      'Automated Microsoft 365 administration and migration workflows with Python, PowerShell, Microsoft Graph API and Azure AD, cutting manual effort by **60%**.',
+      'Containerized backend services with Docker and Kubernetes, built CI/CD pipelines in Jenkins and GitHub Actions, and added Prometheus/Grafana monitoring so releases stayed consistent and issues were quick to trace.',
+      "Won the **Surge award**, Schneider Electric's highest employee recognition, for building the Box Archive document platform.",
     ],
     award: getCommit('schneider')?.award,
   },
@@ -249,11 +275,20 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     title: 'Ticket-Forge',
     year: '2026',
     award: '3rd Place, Google – MLOps Project Expo',
-    stack: ['Python', 'FastAPI', 'PostgreSQL', 'pgvector', 'Docker', 'GitHub Actions'],
+    stack: [
+      'Python',
+      'FastAPI',
+      'PostgreSQL',
+      'pgvector',
+      'Airflow',
+      'MLflow',
+      'Docker',
+      'GitHub Actions',
+    ],
     bullets: [
-      'Built an AI-powered engineer recommendation system that ranks engineers for software tickets using ticket context, engineer profiles, historical assignments, workload and recent experience signals.',
-      'Implemented pgvector similarity search, confidence scoring, explainability and cold-start recommendations.',
-      'Presented alongside **28 other teams** at **Google’s Cambridge, MA office** as part of Northeastern’s Machine Learning Operations Project Expo.',
+      'Built an ML-driven recommendation engine that matches software tickets to the best-fit engineers using ticket context, engineer profiles, assignment history, workload and recent experience, cutting down manual triage.',
+      'Implemented pgvector similarity search with confidence scoring, explainability and cold-start recommendations, and ran ticket-replay and evaluation pipelines on Apache Airflow with MLflow experiment tracking.',
+      'Presented alongside **28 other teams** at **Google’s Cambridge, MA office** during Northeastern’s MLOps Project Expo.',
     ],
   },
   // Not on the résumé: name, stack and both bullets (`build`, `result`) are the site's.
@@ -264,8 +299,8 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     year: '2025',
     stack: ['Python', 'OpenCV', 'MediaPipe', 'NumPy', 'Pandas', 'Pygame'],
     bullets: [
-      'Built an AI game suite featuring Connect Four with Minimax and Alpha-Beta pruning, Snake with A* pathfinding, and gesture-based Rock-Paper-Scissors using OpenCV and MediaPipe.',
-      'Achieved **91% optimal move selection** in Connect Four and **88% food-acquisition efficiency** in Snake across **100+ simulations**, with visual explainability overlays for AI decisions.',
+      'Built an AI game suite with Connect Four (Minimax with Alpha-Beta pruning), Snake (A* pathfinding) and gesture-based Rock-Paper-Scissors using OpenCV and MediaPipe.',
+      'Achieved **91% optimal move selection** in Connect Four and **88% food-acquisition efficiency** in Snake across **100+ simulations**, with on-screen overlays that explain each AI decision.',
     ],
   },
   {
@@ -274,8 +309,8 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     year: '2025',
     stack: ['React', 'Node.js', 'Express.js', 'MySQL', 'REST APIs'],
     bullets: [
-      'Built a full-stack expense-sharing platform, designing normalized relational schemas and REST APIs for users, groups, expenses, settlements and balance tracking.',
-      'Engineered database workflows using stored procedures, triggers, ACID transactions, indexing and pagination, with real-time updates and automated testing/CI for consistency, reliability and performance.',
+      'Designed and built a full-stack expense-sharing platform with a normalized relational schema and REST APIs covering users, groups, expenses, settlements and balance tracking.',
+      'Implemented stored procedures, triggers and ACID transactions to keep balances consistent, sped up queries with indexing and pagination, and shipped real-time updates backed by automated tests in CI.',
     ],
   },
   {
@@ -284,8 +319,8 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     year: '2025',
     stack: ['Java', 'Swing', 'MVC', 'Design Patterns'],
     bullets: [
-      'Built a Java Swing desktop calendar application using MVC with recurring events, multiple calendars, time-zone handling and event CRUD functionality.',
-      'Applied SOLID principles and extensible design patterns including Command, Adapter, Strategy and Visitor to structure application behavior and support maintainable feature development.',
+      'Built a Java Swing desktop calendar using MVC, with recurring events, multiple calendars, time-zone handling and full event CRUD.',
+      'Followed SOLID principles and used the Command, Adapter, Strategy and Visitor patterns to keep the code easy to extend as features were added.',
     ],
   },
   {
@@ -294,8 +329,8 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     year: '2023',
     stack: ['Python', 'Flask', 'MySQL', 'Docker', 'Kubernetes', 'OAuth'],
     bullets: [
-      'Built a document management platform using Python/Flask and MySQL, integrating PingID OAuth for authenticated access to shared files and folders.',
-      'Containerized the application with Docker and deployed it on Kubernetes, and optimized MySQL database procedures to improve response performance by approximately **30%**.',
+      'Built a document management platform with Python/Flask and MySQL, using PingID OAuth to control access to shared files and folders.',
+      'Containerized the application with Docker, deployed it on Kubernetes, and tuned MySQL stored procedures to improve response times by about **30%**.',
     ],
   },
   {
@@ -305,7 +340,7 @@ const PROJECT_TEXT: readonly ProjectText[] = [
     year: '2021',
     stack: ['Python', 'Mixed Integer Programming', 'React'],
     bullets: [
-      'Developed a Mixed Integer Programming (MIP) model to minimize distributed medical sample testing costs; **published in IEEE Xplore**.',
+      'Developed a Mixed Integer Programming model that minimizes distributed sample testing costs; **published in IEEE Xplore**.',
     ],
   },
 ]
@@ -354,6 +389,32 @@ export function projectLinks(slug: ProjectSlug): ResumeLink[] {
   }
   return out
 }
+
+/* ------------------------------------------------------------------------- */
+/* Leadership & campus involvement                                           */
+/* ------------------------------------------------------------------------- */
+
+export interface ResumeLeadershipRole {
+  /** 'Treasurer, AWS Builders at Northeastern'. */
+  role: string
+  /** The one-line description after the colon on the résumé. */
+  line: string
+  period: string
+}
+
+/** The résumé's Leadership & Campus Involvement rows (Nov 2026), in its order. */
+export const resumeLeadership: readonly ResumeLeadershipRole[] = [
+  {
+    role: 'Treasurer, AWS Builders at Northeastern',
+    line: 'Manage club finances and help organize AWS workshops',
+    period: 'May 2026 – Present',
+  },
+  {
+    role: 'Residential Security Office Proctor, Northeastern University',
+    line: 'Monitor access and assist residents',
+    period: 'Oct 2026 – Present',
+  },
+]
 
 /* ------------------------------------------------------------------------- */
 /* Contact                                                                   */

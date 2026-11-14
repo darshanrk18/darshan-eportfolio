@@ -32,6 +32,7 @@ import {
   resumeContact,
   resumeEducation,
   resumeExperience,
+  resumeLeadership,
   resumeProjects,
   resumeSections,
   resumeSkills,
@@ -67,7 +68,7 @@ const scholarlyJsonLd = {
 const PAPER_FACES = ['s4', 's5', 's6', 's7', 'm4', 'm5', 'm6'] as const
 
 /** The story's order, then the rail's (the running head lists them all). */
-const TOC = ['experience', 'projects', 'publication', 'skills', 'education'] as const
+const TOC = ['experience', 'projects', 'publication', 'leadership', 'skills', 'education'] as const
 
 /* Digits need no wrapper: SCREEN's body stack puts Tenor Sans figures in
    front of Marcellus (--font-screen-body, app/globals.css). */
@@ -82,7 +83,7 @@ function Rich({ text }: { text: RichText }) {
   )
 }
 
-/** A date range that never breaks inside ('Jan 2025 – Dec 2026 (Expected)'). */
+/** A date range that never breaks inside ('Jan 2025 – Dec 2026'). */
 function DateRange({ text }: { text: string }) {
   return <span className="cv-date">{text}</span>
 }
@@ -343,6 +344,24 @@ export default function CvPage() {
                 ) : null}
               </article>
             </div>
+          </section>
+
+          <section id="leadership" className="cv-sec" aria-labelledby="h-leadership">
+            <h2 className="cv-h2" id="h-leadership">
+              <span>{resumeSections.leadership}</span>
+            </h2>
+            {/* Same row anatomy as Education, so .cv-edu styles both. */}
+            <ul className="cv-edu">
+              {resumeLeadership.map((r) => (
+                <li key={r.role}>
+                  <h3>{r.role}</h3>
+                  <p className="deg">{r.line}</p>
+                  <p className="when">
+                    <DateRange text={r.period} />
+                  </p>
+                </li>
+              ))}
+            </ul>
           </section>
         </div>
 

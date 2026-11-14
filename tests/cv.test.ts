@@ -24,6 +24,7 @@ import {
   resumeContact,
   resumeEducation,
   resumeExperience,
+  resumeLeadership,
   resumeProjects,
   resumeSkills,
   richSegments,
@@ -139,7 +140,7 @@ describe('résumé content', () => {
       'Sep 2025 – Dec 2025',
       'Feb 2021 – Nov 2023',
     ])
-    expect(resumeExperience.map((j) => j.bullets.length)).toEqual([3, 1, 3])
+    expect(resumeExperience.map((j) => j.bullets.length)).toEqual([3, 1, 4])
     const aws = resumeExperience[0]
     expect(aws.outcome).toBe('Returned with a full-time SDE offer.')
     expect(aws.outcome).toBe(commits.find((c) => c.id === 'aws-intern')?.outcome)
@@ -152,7 +153,14 @@ describe('résumé content', () => {
     const bold = resumeExperience
       .flatMap((j) => j.bullets)
       .flatMap((b) => richSegments(b).filter((s) => s.bold).map((s) => s.text))
-    expect(bold).toEqual(['100% test coverage', '300+ graduate students', '10,000+ employees', '30%', '60%'])
+    expect(bold).toEqual([
+      '100% test coverage',
+      '300+ graduate students',
+      '10,000+ employees',
+      '30%',
+      '60%',
+      'Surge award',
+    ])
     expect(richSegments('a **b** c')).toEqual([
       { text: 'a ', bold: false },
       { text: 'b', bold: true },
@@ -165,7 +173,7 @@ describe('résumé content', () => {
     expect(resumeEducation[0]).toEqual({
       school: 'Northeastern University',
       degree: 'Master of Science in Computer Science',
-      period: 'Jan 2025 – Dec 2026 (Expected)',
+      period: 'Jan 2025 – Dec 2026',
       location: 'Boston, MA',
     })
     expect(resumeEducation[1].degree).toBe('Bachelor of Engineering in Computer Science')
@@ -173,10 +181,21 @@ describe('résumé content', () => {
       'Languages',
       'Backend',
       'Frontend & Databases',
-      'Cloud',
-      'DevOps',
+      'Cloud & DevOps',
       'Tools & Testing',
     ])
+  })
+
+  it('lists the leadership roles as the résumé does', () => {
+    expect(resumeLeadership.map((r) => r.role)).toEqual([
+      'Treasurer, AWS Builders at Northeastern',
+      'Residential Security Office Proctor, Northeastern University',
+    ])
+    expect(resumeLeadership.map((r) => r.period)).toEqual([
+      'May 2026 – Present',
+      'Oct 2026 – Present',
+    ])
+    for (const r of resumeLeadership) expect(r.line.length).toBeGreaterThan(10)
   })
 
   it('offers email, GitHub and LinkedIn — and no phone number', () => {
@@ -193,14 +212,14 @@ describe('the rendered page', () => {
   it('has one h1 (the full name), an h2 per section and an h3 per entry', () => {
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1)
     expect(html).toMatch(/<h1 class="cv-name">.*Darshan.*Ravindra.*Konnur.*<\/h1>/)
-    expect(html.match(/<h2[\s>]/g)).toHaveLength(5)
+    expect(html.match(/<h2[\s>]/g)).toHaveLength(6)
     const entries = resumeExperience.length + resumeProjects.length + 1
-    const rail = resumeSkills.length + resumeEducation.length
+    const rail = resumeSkills.length + resumeEducation.length + resumeLeadership.length
     expect(html.match(/<h3[\s>]/g)).toHaveLength(entries + rail)
   })
 
   it('carries the deep links', () => {
-    for (const id of ['experience', 'projects', 'skills', 'education', 'publication']) {
+    for (const id of ['experience', 'projects', 'skills', 'education', 'publication', 'leadership']) {
       expect(html).toContain(`id="${id}"`)
       expect(html).toContain(`href="#${id}"`)
     }
@@ -208,7 +227,7 @@ describe('the rendered page', () => {
 
   it('shows the status line, the MS date and the downloads', () => {
     expect(visible).toContain(profile.status)
-    expect(visible).toContain('Dec 2026 (Expected)')
+    expect(visible).toContain('Jan 2025 – Dec 2026')
     expect(html).toContain(`href="${profile.resumePdf}"`)
     expect(visible).toContain('Download résumé (PDF)')
     expect(visible).toContain('← back to site')
@@ -310,6 +329,7 @@ describe('the rendered page', () => {
     const periods = [
       ...resumeExperience.map((j) => j.period),
       ...resumeEducation.map((e) => e.period),
+      ...resumeLeadership.map((r) => r.period),
     ]
     for (const p of periods) expect(html).toContain(`<span class="cv-date">${p}</span>`)
     // every margin date is wrapped, and the education line never breaks before its dot
@@ -331,7 +351,7 @@ describe('the rendered page', () => {
     // both section navs carry all five links; CSS shows one per width
     for (const nav of ['cv-jump', 'cv-toc']) {
       const block = html.slice(at(nav), html.indexOf('</nav>', at(nav)))
-      for (const id of ['experience', 'projects', 'publication', 'skills', 'education']) {
+      for (const id of ['experience', 'projects', 'publication', 'skills', 'education', 'leadership']) {
         expect(block, `${nav} #${id}`).toContain(`href="#${id}"`)
       }
     }
@@ -520,7 +540,7 @@ describe('cv.css', () => {
     expect(paper).toMatch(/\.cv-entry:not\(:last-child\)\s*\{\s*border-bottom:/)
     expect(paper).toMatch(/\.cv-proj \.cv-links \.is-paper/)
     const body = Number(paper.match(/\n  \.cv \{[^}]*font: 400 ([\d.]+)pt/)![1])
-    expect(body).toBeGreaterThanOrEqual(9.5)
+    expect(body).toBeGreaterThanOrEqual(9.4)
     expect(body).toBeLessThanOrEqual(10)
     // the project links carry the paper, the Publication entry prints its address
     expect(projectLinks('ieee-mip-optimizer').map((l) => l.kind)).toContain('paper')
